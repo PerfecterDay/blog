@@ -1,0 +1,10 @@
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: alb-intranet
+spec:
+  controller: ingress.k8s.alibabacloud/alb
+  parameters:
+     apiGroup: alibabacloud.com
+     kind: AlbConfig
+     name: hk-idc-alb

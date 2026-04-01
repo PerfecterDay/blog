@@ -1,0 +1,37 @@
+@startuml
+abstract class Template{
+    templateMethod(){... primitiveOperation1() ... primitiveOperation2() ... }
+    abstract primitiveOperation1()
+    abstract primitiveOperation2()
+    ' //其它方法()
+}
+
+class ConcreteClass{
+    primitiveOperation1()
+    primitiveOperation2()
+    // 其它方法()
+}
+
+
+Template <|-- ConcreteClass
+
+
+note left of Template
+    抽象类包含了模板方法
+end note
+
+note left of Template::primitiveOperation1
+   模板方法调用了定义算法操作步骤的抽象方法，这些抽象方法的具体
+   实现由子类实现。
+end note
+
+note right of Template::primitiveOperation2
+    模板方法在实现算法的过程中，用到了抽象的原语操作。模板方法本身
+    和这两个操作的具体实现之间被解耦了。
+end note
+
+note left of ConcreteClass
+   可能有点多个具体类，每个都实现了模板方法所需的抽象的原语操作。
+end note
+
+@enduml

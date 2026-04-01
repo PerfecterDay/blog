@@ -1,0 +1,40 @@
+@startuml
+interface Component{
+    operation()
+    add(Component)
+    remove(Component)
+    getChild(int)
+}
+
+class Client{
+}
+
+class Leaf{
+    operation()
+}
+
+class Composite{
+    Collection<Component> componnets
+    operation()
+    add(Component)
+    remove(Component)
+    getChild(int)
+    //其它方法()
+}
+
+Component <|.. Leaf
+Component <|.. Composite
+Component <-- Client
+Composite::componnets --> Component
+
+Client -[hidden] Component
+
+note top of Client
+    客户端使用 Component 接口操作组合中的对象
+end note
+
+note top of Component
+   Component 为组合中所有对象定义一个接口，不管是组合对象还是叶子节点。
+end note
+
+@enduml

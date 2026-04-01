@@ -1,0 +1,11 @@
+apiVersion: alibabacloud.com/v1
+kind: AlbConfig
+metadata:
+  name: prd-demo
+spec:
+  config:
+    name: prd-demo
+    addressType: Internet
+    zoneMappings:
+    - vSwitchId: vsw-j6cdylo2medu5bi9mdyrr 
+    - vSwitchId: vsw-j6c7spm122hut8iuwi94x

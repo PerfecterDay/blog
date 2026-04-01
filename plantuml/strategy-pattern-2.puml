@@ -1,0 +1,37 @@
+@startuml
+
+class Duck{
+    quack()
+    swim()
+    fly()
+    {abstract} display()
+}
+
+class MallardDuck{
+    display(){// 绿头鸭}
+}
+
+class RedheadDuck{
+    display(){// 红头鸭}
+}
+
+class RbberDuck{
+    display(){// 橡皮鸭}
+    quack(){// 覆盖成吱吱叫}
+}
+
+Duck <|-- MallardDuck
+Duck <|-- RedheadDuck
+Duck <|-- RbberDuck
+Duck <|-- “其它类型鸭子继承 Duck 类”
+
+
+note left of Duck::fly
+    超类中加上 fly() 就会导致所有的子类都具备 fly() 方法，连那些不该具备的子类也
+    无法免除
+end note
+
+note left of RbberDuck::quack
+    橡皮鸭子不会呱呱叫，所以把 quack() 覆盖成吱吱叫（squeak）
+end note
+@enduml

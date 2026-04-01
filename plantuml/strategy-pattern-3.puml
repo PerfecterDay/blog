@@ -1,0 +1,47 @@
+@startuml
+
+class Duck{
+    swim()
+    {abstract} display()
+}
+
+interface Flyable{
+    {abstract} fly()
+}
+
+interface Quackable{
+    {abstract} quack()
+}
+
+class MallardDuck{
+    display(){// 绿头鸭}
+    fly()
+    quack()
+}
+
+class RedheadDuck{
+    display(){// 红头鸭}
+    fly()
+    quack()
+}
+
+class RubberDuck{
+    display()
+    quack()
+}
+
+class DecoyDuck{
+    display()
+}
+
+Duck <|-- MallardDuck
+Flyable <|.. MallardDuck
+Quackable <|.. MallardDuck
+Duck <|-- RedheadDuck
+Flyable <|.. RedheadDuck
+Quackable <|.. RedheadDuck
+Duck <|-- RubberDuck
+Quackable <|.. RubberDuck
+Duck <|-- DecoyDuck
+Duck <|-- “其它类型鸭子继承 Duck 类”
+@enduml

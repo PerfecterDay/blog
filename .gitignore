@@ -1,0 +1,7 @@
+.idea/
+# .css/
+# .js/
+*.DS_Store
+.obsidian/
+/demo
+.zed

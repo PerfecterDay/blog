@@ -1,0 +1,99 @@
+@startuml
+class Duck{
+    FlyBehavior flyBehavior
+    QuacBehavior quackBehavior
+
+    swim()
+    {abstract} display()
+
+    performFly()
+    performQuack()
+    setFlyBehavior()
+    setQuackBehavior()
+   
+}
+
+class MallardDuck{
+    display(){// 绿头鸭}
+
+}
+
+class RedheadDuck{
+    display(){// 红头鸭}
+
+}
+
+class RubberDuck{
+    display()
+}
+
+class DecoyDuck{
+    display()
+}
+
+interface FlyBehavior{
+    {abstract} fly()
+}
+
+class FlyWithWings {
+    fly(){//fly with wiings}
+}
+
+class FlyNoWay{
+    fly(){// do nothing}
+}
+
+interface QuacBehavior{
+    {abstract} quack()
+}
+
+class Quack{
+    quack(){// 呱呱叫}
+}
+
+class Squeak{
+    quack(){//吱吱叫}
+}
+
+class MuteQuack{
+    quack(){// do nothing}
+}
+
+
+together {
+    interface FlyBehavior
+    class FlyWithWings
+    class FlyNoWay
+}
+
+together {
+    interface QuacBehavior
+    class Quack
+    class Squeak
+    class MuteQuack
+}
+
+together {
+    class Duck
+    class MallardDuck
+    class RedheadDuck
+    class RubberDuck
+    class DecoyDuck
+}
+
+FlyBehavior <|.. FlyWithWings
+FlyBehavior <|.. FlyNoWay
+
+QuacBehavior <|.. Quack
+QuacBehavior <|.. Squeak
+QuacBehavior <|.. MuteQuack
+
+Duck <|-- MallardDuck
+Duck <|-- RedheadDuck
+Duck <|-- RubberDuck
+Duck <|-- DecoyDuck
+Duck <|-- “其它类型鸭子继承 Duck 类”
+
+Duck o-right- FlyBehavior
+Duck o-right- QuacBehavior
+@enduml

@@ -1,0 +1,51 @@
+@startuml
+interface Collection{
+    createIterator()
+    // 其它方法
+}
+
+class Client{
+}
+
+interface Iterator{
+    hasNext()
+    next()
+    remove()
+}
+
+class ConcreteCollection{
+    createIterator()
+    //其它方法()
+}
+
+class ConcreteIterator{
+    hasNext()
+    next()
+    remove()
+}
+
+Collection <|.. ConcreteCollection
+Iterator <|.. ConcreteIterator
+Collection <-- Client
+Iterator <-- Client
+Collection-[hidden]Client
+Client-[hidden]Iterator
+ConcreteCollection --> ConcreteIterator
+ConcreteCollection -[hidden] ConcreteIterator
+
+note left of Collection
+    有一个创建迭代器对象的接口，这样客户端只要面向迭代器编程即可
+end note
+
+note right of Iterator
+   所有迭代器都必须实现的接口，它包含一些方法，利用这些方法可以遍历集合中的元素。
+end note
+
+note bottom of ConcreteIterator
+    具体迭代器负责管理具体的遍历过程
+end note
+
+note bottom of ConcreteCollection
+   具体的集合对象必须实现创建迭代器的方法。
+end note
+@enduml

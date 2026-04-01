@@ -1,0 +1,32 @@
+@startuml
+
+class Duck{
+    quack()
+    swim()
+    {abstract} display()
+}
+
+class MallardDuck{
+    display(){// 绿头鸭}
+}
+
+class RedheadDuck{
+    display(){// 红头鸭}
+}
+
+Duck <|-- MallardDuck
+Duck <|-- RedheadDuck
+Duck <|-- “其它类型鸭子继承 Duck 类”
+
+note left of Duck::quack
+    所有鸭子都会呱呱叫也会游泳，所以由超类负责实现这部分代码
+end note
+
+note right of Duck::display
+    每种鸭子的外观都不同，所以display是抽象的，由各个子类自定义实现
+end note
+
+note left of MallardDuck::display
+    所有鸭子都会呱呱叫也会游泳，所以由超类负责实现这部分代码
+end note
+@enduml

@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AQS 动画详解</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.4;margin:0;padding:20px}
+    .wrap{max-width:980px;margin:0 auto}
+    h1{font-size:22px;margin-bottom:6px}
+    .controls{display:flex;gap:8px;margin:10px 0}
+    /* button{border:1px solid #374151;color:#e6eef6;padding:8px 12px;border-radius:6px;cursor:pointer} */
+    button:active{transform:translateY(1px)}
+    /* .stage{background:#0b1220;border-radius:10px;padding:18px;border:1px solid #111827} */
+    .panel{display:flex;gap:12px}
+    .diagram{flex:1;min-height:260px;background:linear-gradient(180deg,#061021,#071226);border-radius:8px;padding:12px;border:1px solid #082036}
+    .text{width:360px;padding:12px;background:#071226;border-radius:8px;border:1px solid #082036}
+    .node{display:inline-block;padding:8px 12px;border-radius:6px;margin-right:6px;background:#0b2440;border:1px solid #173455;color:#cfe6ff}
+    .head{background:#1e3a8a}
+    .tail{background:#065f46}
+    .waiting{background:#7c3aed}
+    .running{background:#dc2626}
+    .slot{height:56px;border:1px dashed rgba(255,255,255,0.04);display:flex;align-items:center;padding:8px;border-radius:6px}
+    .arrow{font-weight:700;color:#9fb7d8;margin:0 8px}
+    pre{background:#02101a;padding:12px;border-radius:6px;overflow:auto}
+    .meta{opacity:0.85;font-size:13px;margin-top:12px}
+    .legend{display:flex;gap:8px;margin-top:8px}
+    .legend .item{display:flex;align-items:center;gap:6px}
+    .swatch{width:14px;height:14px;border-radius:3px}
+    footer{margin-top:12px;color:#9fb7d8}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Java AQS（AbstractQueuedSynchronizer）原理动画详解</h1>
+    <div class="controls">
+      <button id="prev">◀ 上一步</button>
+      <button id="play">▶ 播放</button>
+      <button id="next">下一步 ▶</button>
+      <div style="margin-left:auto">步骤：<span id="step">0</span> / <span id="max">7</span></div>
+    </div>
+
+    <div class="stage">
+      <div class="panel">
+        <div class="diagram" id="diagram">
+          <!-- diagram rendered by JS -->
+        </div>
+
+        <div class="text" id="explain">
+          <!-- explanation rendered by JS -->
+        </div>
+      </div>
+
+      <div class="meta">
+        图示说明：AQS 使用一个 FIFO 等待队列（CLH-like），节点表示等待线程或条件。队列通过 head/tail 指针管理，线程通过 CAS 插入节点。核心操作：acquire、release、acquireShared、releaseShared 以及 park/unpark。
+        <div class="legend">
+          <div class="item"><span class="swatch" style="background:#1e3a8a"></span> head (持有锁 / 运行)</div>
+          <div class="item"><span class="swatch" style="background:#065f46"></span> tail (刚入队)</div>
+          <div class="item"><span class="swatch" style="background:#7c3aed"></span> waiting (被阻塞、park)</div>
+          <div class="item"><span class="swatch" style="background:#dc2626"></span> running (线程获得同步状态)</div>
+        </div>
+      </div>
+    </div>
+    <footer>提示：你可以播放并观察每一步对应的伪代码与队列状态。</footer>
+  </div>
+
+<script>
+const steps = [
+  {
+    title: '初始：无线程持有锁，队列为空',
+    nodes: [],
+    code: `// state = 0 (unlocked)\n// head = tail = null` 
+  },
+  {
+    title: '线程 T1 尝试 acquire (CAS 成功) —— 直接获得同步状态',
+    nodes: [{id:'T1', role:'running'}],
+    code: `if (tryAcquire()) {\n  setExclusiveOwnerThread(T1);\n  state = 1;\n  return;\n}`
+  },
+  {
+    title: '线程 T2 尝试 acquire 失败（state 已被占用），入队尾部（CAS tail）',
+    nodes: [{id:'T1', role:'head'},{id:'T2', role:'tail'}],
+    code: `// tryAcquire() 返回 false\nNode node = new Node(T2);\nNode pred = tail;\nnode.prev = pred;\nif (!compareAndSetTail(pred, node)) retry;\n// 然后 park 自己等待` 
+  },
+  {
+    title: 'T2 在队列中检查前驱，发现前驱为 head 且前驱未释放 -> park',
+    nodes: [{id:'T1', role:'head'},{id:'T2', role:'waiting'}],
+    code: `while (true) {\n  Node p = node.prev;\n  if (p == head && tryAcquire()) {\n    setHead(node); return;\n  }\n  LockSupport.park(this); // 阻塞\n}`
+  },
+  {
+    title: 'T1 release：调用 release()，state 变为 0，unpark 下一个等待线程',
+    nodes: [{id:'T1', role:'head'},{id:'T2', role:'waiting'}],
+    code: `if (tryRelease()) {\n  Node h = head;\n  Node s = h.next;\n  if (s != null) LockSupport.unpark(s.thread);\n}`
+  },
+  {
+    title: 'T2 被 unpark，执行 tryAcquire 并成功，成为新的 head，继续持有锁',
+    nodes: [{id:'T2', role:'running'}],
+    code: `// wake up -> tryAcquire() 成功\nsetHead(node);\nclear node.prev & next;\nowner = T2; state = 1;` 
+  },
+  {
+    title: 'Shared 模式示意：多个 reader 并行 acquireShared 成功（共享），writer 等待',
+    nodes: [{id:'R1', role:'running'},{id:'R2', role:'running'},{id:'W1', role:'tail'}],
+    code: `// acquireShared: tryAcquireShared() 返回 >=0 表示成功并让下一个 shared 也能成功\n// write (exclusive) 需要等待所有 shared 释放` 
+  }
+];
+
+let idx = 0;
+const max = steps.length - 1;
+document.getElementById('max').textContent = max;
+function render(i){
+  const d = steps[i];
+  const diagram = document.getElementById('diagram');
+  const explain = document.getElementById('explain');
+  document.getElementById('step').textContent = i;
+  // render diagram
+  diagram.innerHTML = '';
+  const title = document.createElement('div');
+  title.style.fontWeight='700'; title.style.marginBottom='8px'; title.textContent = d.title;
+  diagram.appendChild(title);
+
+  // queue area
+  const queue = document.createElement('div');
+  queue.style.display='flex'; queue.style.alignItems='center'; queue.style.gap='8px';
+  queue.style.marginTop='6px';
+  if (d.nodes.length === 0) {
+    const empty = document.createElement('div');
+    empty.className='slot'; empty.textContent='(empty queue)';
+    queue.appendChild(empty);
+  } else {
+    d.nodes.forEach(n=>{
+      const span = document.createElement('div');
+      span.className='node'; span.textContent = n.id;
+      if (n.role === 'head') span.classList.add('head');
+      if (n.role === 'tail') span.classList.add('tail');
+      if (n.role === 'waiting') span.classList.add('waiting');
+      if (n.role === 'running') span.classList.add('running');
+      queue.appendChild(span);
+    });
+  }
+  diagram.appendChild(queue);
+
+  // code
+  const pre = document.createElement('pre'); pre.textContent = d.code;
+  diagram.appendChild(pre);
+
+  // explain
+  explain.innerHTML = `<strong>要点：</strong><br>${explainHTML(i)}`;
+}
+
+function explainHTML(i){
+  switch(i){
+    case 0: return 'AQS 的初始状态：state=0 (未被占用)，head/tail 为空。';
+    case 1: return '快速路径：线程尝试通过 CAS 更新 state（tryAcquire），若成功则直接获得锁，不进队列。';
+    case 2: return '慢路径：tryAcquire 失败，线程构造 Node 并通过 CAS 插入到 tail，形成 FIFO 等待队列。';
+    case 3: return '线程入队后循环检查前驱是否为 head 且能成功获取锁；否则调用 LockSupport.park() 阻塞。';
+    case 4: return '释放（release）会设置 state，并 unpark head.next（下一个等待线程），唤醒它尝试获取锁。';
+    case 5: return '被唤醒的线程会再次尝试获取锁，成功后调用 setHead(node) 并清理链接，成为新的 owner。';
+    case 6: return 'Shared 模式允许多个读者并行成功（tryAcquireShared >=0），写者需要等待所有读者释放。';
+    default: return '';
+  }
+}
+
+render(idx);
+
+document.getElementById('next').addEventListener('click', ()=>{ idx = Math.min(max, idx+1); render(idx); });
+document.getElementById('prev').addEventListener('click', ()=>{ idx = Math.max(0, idx-1); render(idx); });
+let playing=false; let playTimer=null;
+document.getElementById('play').addEventListener('click', ()=>{
+  playing = !playing; document.getElementById('play').textContent = playing ? '|| 暂停' : '▶ 播放';
+  if (playing){ playTimer = setInterval(()=>{ if (idx<max){ idx++; render(idx);} else { clearInterval(playTimer); playing=false; document.getElementById('play').textContent='▶ 播放'; } }, 1600); }
+  else clearInterval(playTimer);
+});
+
+</script>
+</body>
+</html>

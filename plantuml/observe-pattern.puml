@@ -1,0 +1,53 @@
+@startuml
+interface Subject{
+    registerObserver()
+    removeObserver()
+    notifyObserers()
+}
+
+interface Observer{
+    update()
+}
+
+class ConcreteSubject{
+    registerObserver()
+    removeObserver()
+    notifyObserers()
+
+    setState()
+    getState()
+}
+
+class ConcreteObserver{
+    update()
+    //其它观察者的具体方法
+}
+
+Subject <|.. ConcreteSubject
+Observer <|.. ConcreteObserver
+Subject -right-> Observer:每个主题可以有多个观察者
+ConcreteSubject <-right- ConcreteObserver:主题
+
+note left of Subject
+    这是主题接口，对象使用此接口注册为观察者，或者把自己从观察者中删除
+end note
+
+note left of ConcreteSubject
+    一个具体主题总是实现主题接口，除了注册和撤销方法之外，具体主题还实现了
+    notifyObserers() 方法，策方法用于在状态改变时通知所有当前观察者更新。
+end note
+
+note bottom of ConcreteSubject
+    一个具体主题也可能有设置和获取状态的方法
+end note
+
+note right of Observer
+    所有潜在的观察者必须实现观察者接口，这个接口只有 update() 一个方法，当主题
+    状态改变时，它被调用
+end note
+
+note bottom of ConcreteObserver
+    具体的观察者可以是实现此接口的任意类。观察者必须注册具体主题
+    以便接收更新。
+end note
+@enduml

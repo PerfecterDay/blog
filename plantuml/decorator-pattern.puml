@@ -1,0 +1,69 @@
+@startuml
+abstract class Component{
+    methodA()
+    methodB()
+    // 其它方法
+}
+
+class ConcreteComponent{
+    methodA()
+    methodB()
+    // 其它方法()
+}
+
+abstract class Decorator{
+    Component ConcreteComponent
+    methodA()
+    methodB()
+}
+
+class ConcreteDecoratorA{
+    Component ConcreteComponent
+    methodA()
+    methodB()
+    //其它方法()
+}
+
+class ConcreteDecoratorB{
+    Component ConcreteComponent
+    Object newState
+    methodA()
+    methodB()
+    //其它方法()
+}
+
+Component <|-- ConcreteComponent
+Component <|-- Decorator
+ConcreteComponent -[hidden] Decorator
+Decorator <|-- ConcreteDecoratorA
+Decorator <|-- ConcreteDecoratorB
+ConcreteDecoratorA -[hidden] ConcreteDecoratorB
+
+Component <-- Decorator : component
+
+note top on link
+    每个装饰者都"有一个”（包装一个）组件，也就是说，
+    装饰者有一个实例变量以保存某个 Component 引用。
+end note
+
+note right of Component
+   每个组件都可以单独使用，或者被装饰者包起来了使用。
+end note
+
+note right of Decorator
+    这是具体装饰者共同实现的接口
+end note
+
+note left of ConcreteComponent
+   ConcreteComponent 是我们将要动态地加上新行为的被包装对象，
+   拓展自 Component
+end note
+
+note right of ConcreteDecoratorB
+    装饰者可以拓展 Component 的状态
+end note
+
+note left of ConcreteDecoratorA
+    ConcreteDecorator 有一个实例变量，可以记录所装饰的对象
+end note
+@enduml

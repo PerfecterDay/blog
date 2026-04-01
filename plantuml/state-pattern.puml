@@ -1,0 +1,42 @@
+@startuml
+class Context{
+    State[]/List states
+    request()
+}
+
+interface State{
+    handle()
+}
+
+class ConcreteStateA{
+    handle()
+}
+
+class ConcreteStateB{
+    handle()
+}
+
+
+Context -right-> State
+State <|.. ConcreteStateA
+State <|.. ConcreteStateB
+
+Context-[hidden]State
+ConcreteStateA-[hidden]ConcreteStateB
+
+
+note top of Context
+ Context(上下文)是一个类，它可以拥有一些内部状态。在
+ 我们的例子中，GumballMachine 就是这个 Context
+end note
+
+note left of Context::request
+ 任何时候，只要有人调用 request 方法，都会委托到当前状态的handle 方法进行处理
+end note
+
+note top of State
+ State 接口定义了一个所有具体状态的共同接口：任何状态
+ 都实现这个相同的接口，这样一来，状态之间可以相互替代
+end note
+
+@enduml
