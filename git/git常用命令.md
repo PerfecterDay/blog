@@ -215,3 +215,7 @@ git config http.postBuffer 157286400
 | missing    | 丢失的对象或引用                |
 | corrupted  | 损坏的对象（SHA 不匹配、解析失败） |
 | invalid    | 非法对象结构                    |
+
+
+## git 调试
+`GIT_TRACE=1 GIT_CURL_VERBOSE=1 git push -f`
