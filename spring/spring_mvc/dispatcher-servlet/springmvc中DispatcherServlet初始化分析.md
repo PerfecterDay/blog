@@ -1,6 +1,62 @@
 # Spring MVC 中 DispatcherServlet 
 {docsify-updated}
 
+> https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-servlet/container-config.html
+> https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-servlet.html
+
+## Servlet 注册与配置
+与其他 `Servlet` 一样， `DispatcherServlet` 需要根据 `Servlet` 规范，通过 Java 配置或 `web.xml` 进行声明和映射。随后， `DispatcherServlet` 会利用 Spring 配置来发现其所需的代理组件，以实现请求映射、视图解析、异常处理等功能。
+
+```
+public class MyWebApplicationInitializer implements WebApplicationInitializer {
+
+	@Override
+	public void onStartup(ServletContext servletContext) {
+
+		// Load Spring web application configuration
+		AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
+		context.register(AppConfig.class);
+
+		// Create and register the DispatcherServlet
+		DispatcherServlet servlet = new DispatcherServlet(context);
+		ServletRegistration.Dynamic registration = servletContext.addServlet("app", servlet);
+		registration.setLoadOnStartup(1);
+		registration.addMapping("/app/*");
+	}
+}
+```
+除了直接使用 `ServletContext` API 之外，您还可以继承 `AbstractAnnotationConfigDispatcherServletInitializer` 并重写特定方法。
+
+## 上下文的继承关系及DispatcherServlet的配置
+`DispatcherServlet` 需要一个 `WebApplicationContext` （它是普通 `ApplicationContext` 的扩展）来处理自身的配置。 `WebApplicationContext` 与 `ServletContext` 及其关联的 `Servlet` 之间都是通过引用关联在一起的。它还与 `ServletContext` 绑定，因此应用程序若需访问 `WebApplicationContext` ，可通过 `RequestContextUtils` 的静态方法进行查找。
+
+对于许多应用程序而言，使用单个 `WebApplicationContext` 既简单且足够了。但是某些特定场景下，也可以构建上下文层次结构，其中一个根 `WebApplicationContext` 被多个 `DispatcherServlet` （或其他 `Servlet` ）实例共享，每个实例又都有自己独有的子 `WebApplicationContext` 配置。
+
+根 `WebApplicationContext` 通常包含基础架构 Bean，例如需要在多个 `Servlet` 实例之间共享的数据存储库和业务服务。这些 `Bean` 实际上会被继承，并且可以在特定于 `Servlet` 的子 `WebApplicationContext` 中被重写（即重新声明），该子 `WebApplicationContext` 通常包含特定于给定 `Servlet` 的本地 Bean。下图展示了这种关系：
+
+<center><img src="pics/context-hierarchy.png" width="30%"></center>
+
+可以通过下述配置来配置上下文层级：
+```
+public class MyWebAppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+
+	@Override
+	protected Class<?>[] getRootConfigClasses() {
+		return new Class<?>[] { RootConfig.class };
+	}
+
+	@Override
+	protected Class<?>[] getServletConfigClasses() {
+		return new Class<?>[] { App1Config.class };
+	}
+
+	@Override
+	protected String[] getServletMappings() {
+		return new String[] { "/app1/*" };
+	}
+}
+```
+
 ## DispatcherServlet 的初始化
 首先看 `DispatcherServlet` 继承关系：
 `DispatcherServlet` -> `FrameworkServlet` --> `HttpServletBean` -> `HttpServlet`
@@ -165,69 +221,6 @@ org.springframework.web.servlet.RequestToViewNameTranslator=org.springframework.
 org.springframework.web.servlet.ViewResolver=org.springframework.web.servlet.view.InternalResourceViewResolver
 
 org.springframework.web.servlet.FlashMapManager=org.springframework.web.servlet.support.SessionFlashMapManager
-```
-
-## 上下文的继承关系及DispatcherServlet的配置
-<center><img src="pics/context-hierarchy.png" width="30%"></center>
-
-以下基于代码的配置和xml的配置是等价的：
-```java
-public class MyWebAppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
-	//根上下文
-	@Override
-	protected Class<?>[] getRootConfigClasses() {
-		return new Class<?>[] { RootConfig.class };
-	}
-
-	// Web 配置上下文
-	@Override
-	protected Class<?>[] getServletConfigClasses() {
-		return new Class<?>[] { App1Config.class };
-	}
-
-	// url-mapping
-	@Override
-	protected String[] getServletMappings() {
-		return new String[] { "/app1/*" };
-	}
-
-	//注册自定义的 Filter
-	@Override
-	protected Filter[] getServletFilters() {
-		return new Filter[] {
-			new HiddenHttpMethodFilter(), new CharacterEncodingFilter() };
-	}
-}
-```
-
-```xml
-<web-app>
-
-	<listener>
-		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
-	</listener>
-
-	<context-param>
-		<param-name>contextConfigLocation</param-name>
-		<param-value>/WEB-INF/root-context.xml</param-value>
-	</context-param>
-
-	<servlet>
-		<servlet-name>app1</servlet-name>
-		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
-		<init-param>
-			<param-name>contextConfigLocation</param-name>
-			<param-value>/WEB-INF/app1-context.xml</param-value>
-		</init-param>
-		<load-on-startup>1</load-on-startup>
-	</servlet>
-
-	<servlet-mapping>
-		<servlet-name>app1</servlet-name>
-		<url-pattern>/app1/*</url-pattern>
-	</servlet-mapping>
-
-</web-app>
 ```
 
 ## DispatcherServlet 的工作流程
