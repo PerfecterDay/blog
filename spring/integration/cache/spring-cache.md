@@ -1,86 +1,14 @@
 #  Spring Cache的集成
 {docsify-updated}
-> https://docs.spring.io/spring-framework/reference/integration/cache.html
+> https://docs.spring.io/spring-framework/reference/integration/cache/annotations.html
 
-## 缓存基础知识
-1. 缓存命中率
-	即从缓存中 读取数据的次数与总读取 次数的 比率。一般来说，命中率越高越好。 
-	1. 命中率 = 从缓存中读取的次数/总读取次数(从缓存中读取的次数+从慢速设备上读取的次数)
-	2. Miss率 = 没有从缓存中读取的次数/总读取次数(从缓存中读取的次数+从慢速设备上读取的次数)
+对于缓存声明，Spring 的缓存抽象层提供了一组 Java 注解：
++ `@Cacheable` ：触发缓存操作。
++ `@CacheEvict` ：触发缓存删除。
++ `@CachePut` ：在不干扰方法执行的情况下更新缓存。
++ `@Caching` ：将多个缓存操作重新分组，应用于某个方法。
++ `@CacheConfig` ：在类级别共享一些常见的缓存相关设置。
 
-2. 缓存过期策略
-	即如果缓存满了，从缓存中移除数据的策略。常见的有 LFU 、 LRU 、 FIFO 。
-	+ `FIFO(FirstInFirstOut)`:先进先出策略，即先放入缓存的数据先被移除。
-	+ `LRU(LcastRecentlyUsed)`:最久未使用策略，即上次使用时间距离现在最久的那个数据被移除。
-	+ `LFU(LeastFrequentlyUsed)`:最近最少使用策略，即一定时间段内使用次数(频率)最少的那个数据被移除。
-	+ `TMTL(TimeToLive)`:存活期，即从缓存中创建时间点开始直至到期的一个时间段(不管在这个时间段内有没有访问都将过期)。
-	+ `TTI(TimeToldle)`:空闲期，即一个数据多久没被访问就从缓存中移除的时间。
-
-## 自己实现缓存的简单实现
-```
-public class CacheManager<T> {
-    private Map<String, T> cache = new ConcurrentHashMap<String, T>();
-
-    public T getValue(Object key) {
-        return cache.get(key);
-    }
-
-    public void addOrUpdateCache(String key, T value) {
-        cache.put(key, value);
-    }
-
-    public void evictcache(String key) {
-        if (cache.containsKey(key)) {
-            cache.remove(key);
-        }
-    }
-
-    public void evictCache() {
-        cache.clear();
-    }
-}
-
-public class UserService {
-    private CacheManager<User> cacheManager;
-
-    public UserService() {
-        //构造一个缓存管理器
-        cacheManager = new CacheManager<>();
-    }
-    public User getUserById(String userId) {
-        //首先查询缓存
-        User result = cacheManager.getValue(userId);
-        if (result != null) {
-            System.out.println("get from cache... . " + userId);
-            return result;
-        }
-        result = getFromDB(userId);
-        if (result != null) {
-            //将结果更新到缓存中去
-            cacheManager.addOrUpdateCache(userId, result);
-        }
-        return result;
-    }
-
-    public void reload() {
-        cacheManager.evictCache();
-    }
-
-    private User getFromDB(String userId) {
-        System.out.println("real querying db..." + userId);
-        return new User(userId);
-    }
-}
-```
-
-使用SpringCache带来的好处如下:
-+ 支持开箱即用(Out-Of-The-Box)，并提供基本的Cache抽象，方便切换各种底层Cache。
-+ 类似于Spring提供的数据库事务管理，通过Cache注解即可实现缓存逻辑透明化，让开发者关注业务逻辑。
-+ 当事务回滚时，缓存也会自动回滚。
-+ 支持比较复杂的缓存逻辑。
-+ 提供缓存编程的一致性抽象，方便代码维护
-
-需要注意的是`Spring Cache`并不针对多进程的应用环境进行专门的处理，也就是说，当应用程序处于分布式或者集群环境下时，需要针对具体的缓存进行相应的配置。
 
 ## Spring Cache 的注解
 1. @Cacheable  
