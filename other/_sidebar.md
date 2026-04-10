@@ -11,3 +11,6 @@
 * [MacOs](/other/mac操作汇总.md)
 * [sdkman](/other/sdkman.md)
 * [postman](/other/postman.md)
+* [sing-box](#)
+  * [代理简介](/other/sing-box/代理.md)
+  * [配置](/other/sing-box/配置.md)

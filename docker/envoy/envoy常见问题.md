@@ -76,3 +76,10 @@ docker run -d -v `pwd`/logs:/var/log --name envoy -e ENVOY_UID=777 -p 9901:9901 
 + `-e loglevel=debug`: 设置日志级别
 logs 文件夹报 permission denied 错误 -> 必须进入容器内部后使用 `chown envoy /tmp` 改变目录所有者，然后运行容器  
 (access_log)[https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log/usage#config-access-log]
+
+
++ 路由正则太复杂也会报错：`envoy RE2 program size of 117 > max program size of 100 set for the error level threshold. Increase configured max program size if necessary.` ,修复方案就是将路由拆分成多条
+  ```
+  safe_regex: { google_re2: {}, regex: "^/user/(488/sms|captcha|version/getAIDrawTemplate|version/isMainLand|version/promotionTemplate|version/activityTemplate2).*" }
+  safe_regex: { google_re2: {}, regex: "^/user/(488/sms|h5/getJwt|captcha|version/.*Template.*|version/isMainLand|version/getSensorsSource).*" }
+  ```
