@@ -120,6 +120,7 @@
   * [Spring Cache](#)
     * [理解Spring cache抽象](/spring/integration/cache/理解spring-cache抽象.md)
     * [Spring cahce注解声明](/spring/integration/cache/spring-cache.md)
+    * [配置缓存实现](/spring/integration/cache/配置缓存实现.md)
   * [Spring JMS集成](/spring/integration/spring-JMS集成.md)
   * [Spring Email](/spring/integration/spring-email.md)
   * [Spring rpc框架](/spring/integration/spring-rpc框架分析.md)
