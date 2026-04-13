@@ -116,7 +116,7 @@ public Optional<Book> findBook(String name)
 
 ### Available Caching SpEL Evaluation Context
 每个 SpEL 表达式都会在专用的上下文中进行求值。除了内置参数外，该框架还提供了与缓存相关的专用元数据，例如参数名称。下表列出了上下文中可用的项目，以便您将其用于键值和条件计算：
-<center><img src="pics/cache-spel.png" alt=""></center>
+<center><img src="pics/cache-spel.png" width="80%"></center>
 
 ## @CachePut  
 当需要在不干扰方法执行的情况下更新缓存时，可以使用 `@CachePut` 注解。也就是说，该方法会始终被调用，其结果将根据 `@CachePut` 的配置选项存入缓存。它支持与 `@Cacheable` 相同的配置选项，应用于缓存填充，而非方法执行流的优化。以下示例使用了 `@CachePut` 注解：
