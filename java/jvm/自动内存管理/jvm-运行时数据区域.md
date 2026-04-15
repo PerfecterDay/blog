@@ -4,8 +4,8 @@
 
 
 <center>
-<img src="pics/jvm运行时数据区.png" alt="JVM运行时数据区" width="40%" >
-<img src="pics/java-memory-model.png" alt="JVM运行时数据区" width="55%" >
+<img src="pics/jvm运行时数据区.png" alt="JVM运行时数据区" width="45%" >
+<img src="pics/java-memory-model.png" alt="JVM运行时数据区" width="54%" >
 
 <img src="pics/jvm-memory.webp" alt="JVM运行时数据区" width="100%" >
 </center>
@@ -49,6 +49,7 @@ Java 堆可以是固定大小的，也可以是可扩展的。当前主流虚拟
 + `-Xmx<size>` :设置堆内存最大值，`-Xmx1g`
 + `-XX:+HeapDumpOnOutOfMemoryError` :异常时 Dump 出当前内存堆转储快照。
 + `jhat -port 7401 -J-Xmx4G dump.hprof`: 使用 jhat 分析 Dump 出来的转储快照。
++ `-XX:+HeapDumpOnOutOfMemoryError -Xms20m -Xmx20m`
 
 ### 方法区(元数据区)
 方法区与 Java 堆一样，是各个线程共享的内存区域，用于存储已被虚拟机加载的**类信息(方法代码)、常量、静态变量、 JIT 编译后代码等数据**。 JVM 规范对方法区的限制非常宽松，除了和 Java 堆一样不需要连续的物理内存外和可以选择固定大小或可扩展外，还可以不实现垃圾收集。此区域的的内存回收目标主要是针对常量池的回收和类的卸载。
@@ -118,7 +119,12 @@ JIT 编译器本身也需要内存来完成工作。通过关闭分层编译或�
 ## 实例
 阿里云上服务 `jinfo 8` 显示的 JVM Flags:
 ```
--XX:CICompilerCount=4 -XX:ConcGCThreads=2 -XX:G1ConcRefinementThreads=8 -XX:G1HeapRegionSize=1048576 -XX:GCDrainStackTargetSize=64 -XX:InitialHeapSize=257949696 -XX:MarkStackSize=4194304 -XX:MaxHeapSize=4127195136 -XX:MaxNewSize=2475687936 -XX:MinHeapDeltaBytes=1048576 -XX:NonNMethodCodeHeapSize=5835340 -XX:NonProfiledCodeHeapSize=122911450 -XX:ProfiledCodeHeapSize=122911450 -XX:ReservedCodeCacheSize=251658240 -XX:+SegmentedCodeCache -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseG1GC
+-XX:CICompilerCount=4 -XX:ConcGCThreads=2 -XX:G1ConcRefinementThreads=8 -XX:G1HeapRegionSize=1048576 
+-XX:GCDrainStackTargetSize=64 -XX:InitialHeapSize=257949696 -XX:MarkStackSize=4194304 
+-XX:MaxHeapSize=4127195136 -XX:MaxNewSize=2475687936 -XX:MinHeapDeltaBytes=1048576 
+-XX:NonNMethodCodeHeapSize=5835340 -XX:NonProfiledCodeHeapSize=122911450 -XX:ProfiledCodeHeapSize=122911450 
+-XX:ReservedCodeCacheSize=251658240 -XX:+SegmentedCodeCache -XX:+UseCompressedClassPointers 
+-XX:+UseCompressedOops -XX:+UseG1GC
 ```
 
 G1 算法有多个阶段，其中一些是 "stop the world" 阶段，即在垃圾收集期间停止应用程序，还有一些阶段是在应用程序运行时并发的（候选标记等），因此要考虑到这些信息： `ParallelGCThreads` 选项会影响在应用程序线程停止时阶段的G1线程数，而 `ConcGCThreads` 标志会影响用于G1与应用程序并发阶段的线程数。

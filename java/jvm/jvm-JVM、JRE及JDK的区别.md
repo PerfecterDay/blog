@@ -210,3 +210,12 @@ major version 属于 class 文件格式规范（JVMS）。
 | 63            | Java 19      |
 | 64            | Java 20      |
 | 65            | Java 21      |
+
+## macos 编译 JDK 
+1. `gcl https://github.com/openjdk/jdk.git`
+2. `bash configure` 根据报错提示安装以下工具
+   1. 安装 xcode
+   2. jdk 版本 26+
+   3. `xcodebuild -downloadComponent MetalToolchain` 安装 metal
+3. `make images`
+4. `./build/*/images/jdk/bin/java -version` 查看编译好的 jvm 版本
