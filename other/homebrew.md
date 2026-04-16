@@ -1,18 +1,29 @@
 # Mac Homebrew 的使用
 {docsify-updated}
 
->https://zhuanlan.zhihu.com/p/547898033  
->https://www.xiebruce.top/983.html
+> https://chuquan.me/2023/08/27/understand-the-design-of-homebrew/ 
 
-- [Mac Homebrew 的使用](#mac-homebrew-的使用)
-	- [使用代理加速](#使用代理加速)
-	- [安装软件的默认配置文件位置](#安装软件的默认配置文件位置)
-	- [国内 homebrew 加速](#国内-homebrew-加速)
-	- [常用命令](#常用命令)
-	- [Macos 自带的服务管理 launchctl](#macos-自带的服务管理-launchctl)
-	- [brew services](#brew-services)
-		- [Jenv 进行JDK多版本管理](#jenv-进行jdk多版本管理)
-		- [常用命令](#常用命令-1)
+<center><img src="pics/homebrew-04.png" alt=""></center>
+
+## 概念术语
+1. `formula` : Homebrew calls its package definition files “formulae” 
+2. `cask` : `Homebrew-Cask` is an extension to Homebrew to install GUI applications such as Google Chrome or Atom. Homebrew-Cask calls its package definition files “casks”
+3. `prefix` : Homebrew 的安装路径
+4. `keg` ： 指定版本的 `formula` 的安装路径 ，如 `/opt/homebrew/Cellar/foo/0.1`
+5. `rack` ： 包含多个 `keg` 的文件夹路径， 如 `/opt/homebrew/Cellar/foo/`
+6. `Cellar` ： 包含多个 `racks` 的文件夹路径，如 `/opt/homebrew/Cellar`
+7. `keg-only` ： a formula is keg-only if it is not symlinked into Homebrew’s prefix
+8. `opt prefix` : a symlink to the active version of a keg, 如 `/opt/homebrew/opt/foo`
+9. `Caskroom` : 包含多个 `casks` 的目录 ， 如 `/opt/homebrew/Caskroom`
+10. `tap` : directory (and usually Git repository) of formulae, casks and/or external commands
+11. `bottle` : pre-built keg poured into a rack of the Cellar instead of building from upstream sources
+
+## 核心命令
+语法：
+```
+brew --version
+brew command [--verbose|-v|--debug] [options] [formula] …
+```
 
 ## 使用代理加速
 `ALL_PROXY=socks5://127.0.0.1:1080 brew update && brew upgrade`
@@ -21,6 +32,15 @@
  ```
  /opt/homebrew/etc/proxychains.conf
 ```
+
+1. `brew install [formula]`:安装 formula
+2. `brew uninstall [formula]`:卸载 formula
+3. `brew list`: 显示所有安装的 formula
+4. `brew search (text|/text/)`： 查找 formula
+5. `brew cleanup`: 清理缓存
+6. `brew pin jenkins` : 锁定指定的软件版本
+7. `brew list --pinned` : 查看不升级的软件列表
+8. `brew unpin jenkins` : 解锁软件版本
 
 ## 国内 homebrew 加速
 ```
@@ -39,16 +59,6 @@ git clone https://mirrors.ustc.edu.cn/homebrew-cask.git
 echo 'export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles' >> ~/.bash_profile
 source ~/.bash_profile
 ```
-
-## 常用命令
-1. `brew install [formula]`:安装 formula
-2. `brew uninstall [formula]`:卸载 formula
-3. `brew list`: 显示所有安装的 formula
-4. `brew search (text|/text/)`： 查找 formula
-5. `brew cleanup`: 清理缓存
-6. `brew pin jenkins` : 锁定指定的软件版本
-7. `brew list --pinned` : 查看不升级的软件列表
-8. `brew unpin jenkins` : 解锁软件版本
 
 ## Macos 自带的服务管理 launchctl
 > 摘译自 [robots.thoughtbot.com](http://robots.thoughtbot.com/starting-and-stopping-background-services-with-homebrew)
@@ -111,22 +121,6 @@ Removing unused plist /Users/gabe/Library/LaunchAgents/homebrew.mxcl.mysql.plist
 
 `brew services list` 列出的 plist 文件在软件安装包中都会有一个对应的原始文件（在 `brew --cellar` 的对应目录中），每次执行 `brew services start` 启动服务，homebrew 都会将原始文件拷贝到 `~/Library/LaunchAgents`。所以直接边界 `~/Library/LaunchAgents` 目录下的 plist 文件不会生效。需要编辑原始文件。
 
-### Jenv 进行JDK多版本管理
-1. 安装Jenv ：`brew install jenv`
-2. 启用Jenv，需要执行一下命令： add the following to your ~/.zshrc:
-	```
-	export PATH="$HOME/.jenv/bin:$PATH"
-	eval "$(jenv init -)"
-	```
-3. 搜索安装需要的JDK
-   ```
-   brew install adoptopenjdk/openjdk/adoptopenjdk8 --cask
-   brew install adoptopenjdk/openjdk/adoptopenjdk11 --cask
-   ```
-4. jenv versions 显示可用的 JDK 版本，如果没有的话，需要使用 `jenv add [pathToJDK]` 添加安装的JDK
-5. `jenv local [javaversion]` 切换 JDK 版本
-
-`sudo update-alternatives --config java`
 
 ### 常用命令
 ```
