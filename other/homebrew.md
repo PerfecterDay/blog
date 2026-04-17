@@ -2,6 +2,7 @@
 {docsify-updated}
 
 > https://chuquan.me/2023/08/27/understand-the-design-of-homebrew/ 
+> https://docs.brew.sh/Manpage
 
 <center><img src="pics/homebrew-04.png" alt=""></center>
 
