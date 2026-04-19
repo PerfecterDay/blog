@@ -1,9 +1,8 @@
 # Rust 入门
 
-## Linux 安装 Rust
-
+## 安装 Rust
+Rust 由工具 rustup 安装和管理。 
 * `curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh` 或者 `brew install rust rustup`
-* `apt install gcc`
 * 验证: `rustc --version`
 * 升级: `rustup update`
 * 卸载: `rustup self uninstall`
