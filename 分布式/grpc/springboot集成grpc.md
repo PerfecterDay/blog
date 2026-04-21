@@ -1,4 +1,7 @@
 # Springboot 集成 grpc
+{docsify-updated}
+
+> https://github.com/grpc-ecosystem/grpc-spring
 
 ## grpc-spring-boot-starter 依赖
 上述配置过程非常复杂，可以使用开源工具类帮助我们简化这些步骤。

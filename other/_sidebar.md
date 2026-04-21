@@ -12,5 +12,7 @@
 * [sdkman](/other/sdkman.md)
 * [postman](/other/postman.md)
 * [sing-box](#)
+  * [代理协议简介](/other/sing-box/协议简介.md)
   * [代理简介](/other/sing-box/代理.md)
   * [配置](/other/sing-box/配置.md)
+  * [sing-box-subscribe](/other/sing-box/sing-box-subscribe.md)
