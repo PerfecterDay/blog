@@ -11,6 +11,9 @@ Sprinboot 使用代码编程的方式启动内置的 Servlet 容器，通过 `To
 2. 在 `ServletWebServerApplicationContext#createWebServer()` 方法中创建内置的 servlet 容器，使用 `ServletWebServerFactory#getWebServer(ServletContextInitializer... initializers)` 工厂接口方法来创建，可以传入 `ServletContextInitializer` 来配置 servlet。
     <img src="pics/springboot-embed.png" alt="" />
 
+	`ServletWebServerApplicationContext` 负责创建并配置好 `WebServer` 实例，比如创建一个 Tomcat 服务器并且注册 `DispactherServlet` 到容器中。  
+	`WebServerStartStopLifecycle` 负责启动 `WebServer` （tomcat/jetty/undertow)。
+	
 	```java
 	public WebServer getWebServer(ServletContextInitializer... initializers) {
 		if (this.disableMBeanRegistry) {
@@ -51,8 +54,6 @@ Sprinboot 使用代码编程的方式启动内置的 Servlet 容器，通过 `To
 	```
 	在 `selfInitialize` 方法中，会去遍历调用 `ServletContextInitializer#onStartup(ServletContext servletContext)` 方法。
 
-	`ServletWebServerApplicationContext` 负责创建并配置好 `WebServer` 实例，比如创建一个 Tomcat 服务器并且注册 `DispactherServlet` 到容器中。  
-	`WebServerStartStopLifecycle` 负责启动 `WebServer` （tomcat/jetty/undertow)。
 
 3. 在 `ServletContextInitializer` <- `RegistrationBean`<-`DynamicRegistrationBean`<-`ServletRegistrationBean`<-`DispatcherServletRegistrationBean` 的继承体系下，只要我们声明 `DispatcherServletRegistrationBean` 或者 其他的 `RegistrationBean` 类型，springboot 就会帮我们注册到 servlet 容器。
 4. springboot 的 `DispatcherServletAutoConfiguration#DispatcherServletRegistrationConfiguration#dispatcherServletRegistration(DispatcherServlet dispatcherServlet,WebMvcProperties webMvcProperties, ObjectProvider<MultipartConfigElement> multipartConfig)`方法就声明了`DispatcherServletRegistrationBean`，springboot 正是用这种方法实现了 `DispatcherServlet` 在容器中的注册的。

@@ -1,16 +1,5 @@
 # Dump Heap 堆与分析
 {docsify-updated}
-- [Dump Heap 堆与分析](#dump-heap-堆与分析)
-	- [Dump 堆](#dump-堆)
-		- [JDK 工具](#jdk-工具)
-			- [jmap](#jmap)
-			- [jcmd](#jcmd)
-		- [自动捕获堆转储](#自动捕获堆转储)
-	- [Jhat分析Dump堆文件](#jhat分析dump堆文件)
-	- [Eclipse Memory Analyzer 分析 Dump 堆](#eclipse-memory-analyzer-分析-dump-堆)
-		- [Dominator Tree](#dominator-tree)
-		- [Thread Overview线程视图](#thread-overview线程视图)
-
 
 ## Dump 堆
 堆转储是 JVM 中某一时刻内存中所有对象的快照。它们对于排除内存泄漏问题和优化Java应用程序中的内存使用非常有用。

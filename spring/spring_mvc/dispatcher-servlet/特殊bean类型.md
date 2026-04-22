@@ -13,5 +13,5 @@
 + `MultipartResolver`
 + `FlashMapManager`
 
-应用程序可以声明“特殊 Bean 类型”中列出的、用于处理请求的基础设施 Bean。 `DispatcherServlet` 会检查 `WebApplicationContext` 中是否存在以个特殊 Bean。如果存在就是用这个 Bean ，如果没有匹配的 Bean 类型，则会根据 `DispatcherServlet.properties` 中的配置的默认类型。
+应用程序可以声明“特殊 Bean 类型”中列出的、用于处理请求的基础设施 Bean。 `DispatcherServlet` 会检查 `WebApplicationContext` 中是否存在一个特殊 Bean。如果存在就是用这个 Bean ，如果没有匹配的 Bean 类型，则会根据 `DispatcherServlet.properties` 中的配置的默认类型实例化一个。
 
