@@ -10,6 +10,8 @@ Spring MVC 与 Servlet **异步请求处理**深度集成：
 + 控制器可使用响应式客户端并返回响应式类型进行响应处理。
 
 ### DeferredResult
+在 Servlet 容器中启用异步请求处理功能后，控制器方法可以将任何受支持的控制器方法的返回值包装为 `DeferredResult` ，如下例所示：
+
 ```
 @GetMapping("/quotes")
 @ResponseBody
@@ -22,16 +24,22 @@ public DeferredResult<String> quotes() {
 // From some other thread...
 deferredResult.setResult(result);
 ```
+控制器可以异步地从另一个线程返回结果——例如，响应外部事件（JMS 消息）、定时任务或其他事件。
 
 ### Callable
+如以下示例所示，控制器可以将任何受支持的返回值包装为 `java.util.concurrent.Callable`：
+
 ```
 @PostMapping
 public Callable<String> processUpload(final MultipartFile file) {
 	return () -> "someView";
 }
 ```
+随后，可以通过将给定的任务交由已配置的 `AsyncTaskExecutor` 执行来获取返回值。
 
 ### WebAsyncTask
+`WebAsyncTask` 与使用 `Callable` 类似，但允许自定义额外设置，例如请求超时值，并可指定 `AsyncTaskExecutor` 来执行 `java.util.concurrent.Callable`，而非使用 Spring MVC 全局默认的配置。以下是一个使用 `WebAsyncTask` 的示例：
+
 ```
 @GetMapping("/callable")
 WebAsyncTask<String> handle() {
@@ -41,6 +49,26 @@ WebAsyncTask<String> handle() {
 	});
 }
 ```
+
+### 异步请求的处理
+`Servlet` 异步请求处理的简要概述：
++ 可以通过调用 `request.startAsync()` 方法将 `ServletRequest` 设置为异步模式。这样做的主要效果是， `Servlet` （以及任何过滤器）可以退出，但响应仍保持打开状态，以便稍后完成处理。
++ 调用 `request.startAsync()` 会返回一个 `AsyncContext` 对象，可以利用它进一步控制异步处理。例如，它提供了 `dispatch` 方法，该方法与 `Servlet API` 中的 `forward` 类似，不同之处在于它允许应用程序在 `Servlet` 容器线程上继续处理请求。
++ `ServletRequest` 提供了对当前 `DispatcherType` 的访问，可以利用它来区分初始请求的处理、异步分发、转发以及其他分发器类型。
+
+`DeferredResult` 的处理机制如下：
++ 控制器返回一个 `DeferredResult` ，并将其保存在某个内存队列或列表中，以便后续访问。
++ Spring MVC 调用了 `request.startAsync()` 。
++ 与此同时， `DispatcherServlet` 以及所有已配置的过滤器都会退出请求处理线程，但响应仍保持打开状态。
++ 应用程序从某个线程设置了 `DeferredResult` ，而 Spring MVC 将请求发回给 Servlet 容器。
++ `DispatcherServlet` 再次被调用，处理流程将根据异步生成的返回值继续进行。
+
+`Callable` 的工作原理如下：
++ 控制器返回一个 `Callable` 对象。
++ Spring MVC 会调用 `request.startAsync()` ，并将该 `Callable` 提交给 `AsyncTaskExecutor` ，以便在单独的线程中进行处理。
++ 与此同时， `DispatcherServlet` 以及所有过滤器都已退出 `Servlet` 容器线程，但响应仍保持打开状态。
++ 最终， `Callable` 会返回一个结果，Spring MVC 会将请求发回 `Servlet` 容器以完成处理。
++ `DispatcherServlet` 再次被调用，处理流程将根据 `Callable` 异步生成的返回值继续进行。
 
 
 ## 长轮询
