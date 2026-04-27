@@ -71,6 +71,67 @@ WebAsyncTask<String> handle() {
 + `DispatcherServlet` 再次被调用，处理流程将根据 `Callable` 异步生成的返回值继续进行。
 
 
+#### CAllable 详细分析
+测试代码：
+```
+@RestController()
+@RequestMapping(value = "/device", version = "v1.0")
+@RequiredArgsConstructor
+public class TestController {
+
+    @GetMapping(value = "/test",version = "v1.0")
+    public Callable<ResponseEntity> processUpload(final MultipartFile file) {
+        return () -> {
+            Thread.sleep(10000);
+            return ResponseEntity.ok("someView");
+        };
+    }
+}
+```
+
+1. 首先，SpringMvc 会按照跟处理其他请求一样的逻辑调用分到 `processUpload` 方法，并且返回一个 `Callable` 对象
+2. `CallableMethodReturnValueHandler` 会借助 `WebAsyncManager` 开启 `request.startAsync()`
+3. 向线程池提交一个任务，这个任务会调用 `Callable` 对象执行，获取到 `Callable` 的执行结果后调用 `AsyncContext.dispatch()` 方法在次进入 `DispatcherServlet` 处理流程。注意这里， `Spring MVC` 中处理请求的线程，提交完这个任务，就继续往下运行了，不会等待任务的执行结果，这个线程可以去处理其他请求。
+4. Spring MVC 再次调度处理这个请求的时候，发现有 `AsyncContext.hasConcurrentResult()` 为 true ，就不会去调用 `Controller` 中的方法，具体看 `ServletInvocableHandlerMethod.wrapConcurrentResult()` 方法
+5. `DeferredResultMethodReturnValueHandler`、`AsyncTaskMethodReturnValueHandler` 
+
+`WebAsyncManager` 代码跟踪：
+```
+CallableMethodReturnValueHandler.handleReturnValue(...) -> WebAsyncManager.startCallableProcessing(...) 
+
+public void startCallableProcessing(final WebAsyncTask<?> webAsyncTask, Object... processingContext)
+			throws Exception {
+        ...
+		final Callable<?> callable = webAsyncTask.getCallable();
+		...
+		startAsyncProcessing(processingContext); // -> StandardServletAsyncWebRequest.startAsync()  
+-> this.asyncContext = getRequest().startAsync(getRequest(), getResponse());
+
+        // 提交任务到异步线程池中，开启callable 的调用并重新调度请求
+		try {
+			Future<?> future = this.taskExecutor.submit(() -> {
+				Object result = null;
+				try {
+					interceptorChain.applyPreProcess(this.asyncWebRequest, callable);
+					result = callable.call();
+				}
+				catch (Throwable ex) {
+					result = ex;
+				}
+				finally {
+					result = interceptorChain.applyPostProcess(this.asyncWebRequest, callable, result);
+				}
+				setConcurrentResultAndDispatch(result); //调用 AsyncContext.dispatch 方法重新走一遍 DispatcherServlet 的调度
+			});
+			interceptorChain.setTaskFuture(future);
+		}
+		catch (Throwable ex) {
+			Object result = interceptorChain.applyPostProcess(this.asyncWebRequest, callable, ex);
+			setConcurrentResultAndDispatch(result);
+		}
+	}
+```
+
 ## 长轮询
 ```
 @SpringBootApplication
