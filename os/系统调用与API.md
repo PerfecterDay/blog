@@ -21,6 +21,20 @@ C语言里的fread，用于读取文件，在Windows下这个函数的实现可�
 
 但是运行库也有运行库的缺陷，比如C语言的运行库为了保证多个平台之间能够相互通用，于是它只能取各个平台之间功能的交集。比如Windows和Linux都支持文件读写，那么运行库就可以有文件读写的功能；但是Windows原生支持图形和用户交互系统，而Linux却不是原生支持的（通过XWindows），那么CRT就只能把这部分功能省去。因此，一旦程序用到了那些CRT之外的接口，程序就很难保持各个平台之间的兼容性了。
 
+Many C library implementations exist, provided with both various operating systems and C compilers. Some of the popular implementations are the following:
+
++ The BSD libc, various implementations distributed with BSD-derived operating systems
++ GNU C Library (glibc), used in GNU Hurd, GNU/kFreeBSD, and most Linux distributions
++ Microsoft C run-time library, part of Microsoft Visual C++. There are two versions of the library: the + formerly-redistributable (until Visual Studio 2013) MSVCRT which is not compliant to the C99 standard, and the newer UCRT + (Universal C Run Time) shipped as part of Windows 10 and 11 which is C99-compliant [1].
++ dietlibc, an alternative small implementation of the C standard library (MMU-less)
++ μClibc, a C standard library for embedded μClinux systems (MMU-less)
+  + uclibc-ng, an embedded C library, fork of μClibc, still maintained, with memory management unit (MMU) support
++ Newlib, a C standard library for embedded systems (MMU-less)[6] and used in the Cygwin GNU distribution for Windows
++ klibc, primarily for booting Linux systems
++ musl, another lightweight C standard library implementation for Linux systems[7]
++ Bionic, originally developed by Google for the Android embedded system operating system, derived from BSD libc
++ picolibc, developed by Keith Packard, targeting small embedded systems with limited RAM, based on code from Newlib and AVR Libc
+
 ## 系统调用原理
 1. 应用程序通过调用 C 语言函数库中的外壳(wrapper)函数，来发起系统调用。
 2. 对系统调用中断处理例程(稍后介绍)来说，外壳函数必须保证所有的系统调用参数可用。通过堆栈，这些参数传入外壳函数，但内核却希望将这些参数置入特定寄存器。因此，外壳函数会将上述参数复制到寄存器。
@@ -93,3 +107,47 @@ ABI 主要关注的问题有调用约定、字节序、寄存器使用、系统�
 尽管曾经尝试着为特定架构下不同的操作系统（特别是 i386 上的 Umx 操作系统）定义唯一的 ABI ，然而到目前为止还没有取得成效。相反，包括 Linux 在内的操作系统都尝试定义各自独立的 ABI ，这些 ABI 和架构紧密相连。大部分的 ABI 涉及了机器级别的概念，如特定的寄存器或者汇编指令。因此，在 Linux系统中，每一个机器架构都有自己的 ABI 集合，事实上，我们以机器架构的名称呼这些 ABI ，例如 alpha， x86－64。
 
 由LSB 所推广的二进制可移植性与POSIX 所推广的源码可移植性可谓“一时瑜亮”。源码可移植性是指以 C 语言编写的程序可在任何符合 POSIX 规范的系统上编译并运行。而二进制可移植性则要苛刻得多，通常，只要硬件平台不一，便无法实现。二进制可移植性允许我们在某特定平台上将程序一次编译“成型”，然后，便可在任何符合 LSB 标准的 Linux实现上运行该编译好的程序，当然，符合 LSB 标准的 Linux 实现必须运行在相同的硬件平台之上。对于在 Linux 上开发应用程序的独立软件开发商来说，二进制可移植性是其生存的基本前提。 
+
+
+### 标准C与POSIX
+POSIX and the Standard C library (ISO C / C11/C99/etc.) are distinct but overlapping specifications for C programming APIs. Below are the key differences, how they relate, and practical implications.
+
+What each specifies
+
+Standard C library (ISO C): defines the core language and its standard headers (stdio.h, stdlib.h, string.h, math.h, time.h, etc.). Specifies language syntax, types, standard functions for I/O, memory, strings, math, locale, and basic runtime behavior. Intended to be platform-neutral.
+POSIX (Portable Operating System Interface): a family of IEEE/ISO standards specifying OS-level APIs and utilities for Unix-like systems. Covers process control, signals, file and directory operations, pipes, sockets (in later revisions), pthreads, termios, select/poll, extended file attributes, and many command-line utilities and shell behavior.
+Scope and level of abstraction
+
+C Standard: language- and implementation-level runtime services. Focused on portable C program constructs and a minimal standard library.
+POSIX: operating-system services and conventions that go beyond the language: concurrency, process model, filesystem semantics, device I/O, user IDs, environment, and command-line tools.
+Portability and target platforms
+
+C Standard: designed for maximum portability across any platform with a C compiler. Implementations exist on microcontrollers, embedded systems, and exotic platforms.
+POSIX: targets Unix-like systems (Linux, BSDs, macOS partially), not universally available on all embedded or non-Unix OSes (Windows is not POSIX-compliant by default).
+Typical functions only in POSIX (not in Standard C)
+
+fork(), execve(), waitpid(), kill(), sigaction(), pipes (pipe()), open/creat, read/write (POSIX low-level I/O), fcntl, mmap, select/poll/epoll, getpid/getuid, chdir, stat/lstat, pthread_* (POSIX threads), nanosleep (POSIX-specific variants), directory iteration with opendir/readdir, etc.
+Typical functions only in Standard C (portable across platforms)
+
+fopen/fclose, fread/fwrite (stdio buffered I/O), malloc/free, realloc, qsort, bsearch, memcpy/memmove, printf family, fprintf/snprintf, time/gmtime/localtime (with portability caveats), getenv/putenv behavior defined by C standard.
+Overlaps and interactions
+
+Many POSIX functions complement or duplicate standard C functionality at a lower level: POSIX read/write vs. stdio fread/fwrite; POSIX open vs. stdio fopen. Programs use POSIX for fine-grained control (non-blocking I/O, file descriptors, permissions).
+Standards reference each other: POSIX requires support for parts of the C standard; POSIX defines additional headers that extend C.
+Portability strategy for developers
+
+Write strictly to the ISO C standard for maximum portability across diverse platforms.
+Use POSIX when you need OS services (process control, threads, advanced I/O). Guard POSIX usage with conditional compilation (#ifdef _POSIX_VERSION) or build-system checks.
+For cross-platform compatibility including Windows, use abstraction layers (libuv, Boost.Asio, APR), conditional implementations, or rely on libraries that provide uniform APIs.
+Standards timeline and variants
+
+ISO C standard versions: C89/C90, C99, C11, C17, C23.
+POSIX variants: POSIX.1-1990, POSIX.1b (real-time), POSIX.1c (threads), POSIX.1-2001 (Single UNIX Specification alignment), POSIX.1-2008, POSIX.1-2017. Many systems implement subsets; macOS and Linux implement most POSIX features, Windows provides partial compatibility via POSIX subsystems or libraries (Cygwin, MSYS2, Windows Subsystem for Linux).
+Practical checklist when choosing APIs
+
+Need OS-level features (processes, signals, sockets, permissions)? Use POSIX.
+Need basic portable data structures, I/O, memory, formatting? Use Standard C.
+Target non-Unix platforms? Minimize POSIX usage or provide fallbacks.
+Need threads? Prefer pthreads (POSIX) on Unix; on Windows use Win32 threads or a portability layer.
+Summary
+The Standard C library defines the language-level runtime and portable APIs guaranteed across all conforming C implementations. POSIX defines a broader set of operating-system services and utilities for Unix-like environments. Use Standard C for maximum portability; use POSIX for OS-specific capabilities and finer control on Unix-like systems.
