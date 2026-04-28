@@ -1,12 +1,6 @@
 # JavaEE基础之 Filter
 {docsify-updated}
 
-- [JavaEE基础之 Filter](#javaee基础之-filter)
-	- [创建 FIlter](#创建-filter)
-	- [配置 Filter](#配置-filter)
-	- [过滤器排序](#过滤器排序)
-
-
 ## 创建 FIlter
 `Filter` 主要用来在 Servlet 处理请求的前后完成某些操作。
 
@@ -72,4 +66,34 @@ public class FilterDemo02 implements Filter {
 ```
 与编程式添加 `Servlet` 和 `Listener` 一样，这必须要在在 `ServletContext` 配置完成之前完成，因为容器会根据 `ServletContext` 配置决定加载哪些 `Listener/Filter/Servlet` . 所以要在 `ServletContextListener` 的 `contextInitialized()` 方法或者 `ServletContainerInitializer` 中的 `onStartup()` 中注册 `Filter` 。
 
-## 过滤器排序
+
+```
+public enum DispatcherType {
+    /**
+     * {@link RequestDispatcher#forward(ServletRequest, ServletResponse)}
+     */
+    FORWARD,
+
+    /**
+     * {@link RequestDispatcher#include(ServletRequest, ServletResponse)}
+     */
+    INCLUDE,
+
+    /**
+     * Normal (non-dispatched) requests.
+     */
+    REQUEST,
+
+    /**
+     * {@link AsyncContext#dispatch()}, {@link AsyncContext#dispatch(String)} and
+     * {@link AsyncContext#addListener(AsyncListener, ServletRequest, ServletResponse)}
+     */
+    ASYNC,
+
+    /**
+     * When the container has passed processing to the error handler mechanism such as a defined error page.
+     */
+    ERROR
+}
+
+```
