@@ -67,3 +67,45 @@ private static ServletRequestAttributes currentRequestAttributes() {
 ```
 
 与前文呼应了，因为此时处理的线程并不是处理请求的线程，所以获取不到请求对象，抛出异常。
+
+
+```
+protected final void processRequest(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+
+		long startTime = System.currentTimeMillis();
+		Throwable failureCause = null;
+
+		LocaleContext previousLocaleContext = LocaleContextHolder.getLocaleContext();
+		LocaleContext localeContext = buildLocaleContext(request);
+
+		RequestAttributes previousAttributes = RequestContextHolder.getRequestAttributes();
+		ServletRequestAttributes requestAttributes = buildRequestAttributes(request, response, previousAttributes);
+
+		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
+		asyncManager.registerCallableInterceptor(FrameworkServlet.class.getName(), new RequestBindingInterceptor());
+
+		initContextHolders(request, localeContext, requestAttributes);
+
+		try {
+			doService(request, response);
+		}
+		catch (ServletException | IOException ex) {
+			failureCause = ex;
+			throw ex;
+		}
+		catch (Throwable ex) {
+			failureCause = ex;
+			throw new ServletException("Request processing failed: " + ex, ex);
+		}
+
+		finally {
+			resetContextHolders(request, previousLocaleContext, previousAttributes);
+			if (requestAttributes != null) {
+				requestAttributes.requestCompleted();
+			}
+			logResult(request, response, failureCause, asyncManager);
+			publishRequestHandledEvent(request, response, startTime, failureCause);
+		}
+	}
+```

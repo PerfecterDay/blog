@@ -89,8 +89,8 @@ public class TestController {
 }
 ```
 
-1. 首先，SpringMvc 会按照跟处理其他请求一样的逻辑调用分到 `processUpload` 方法，并且返回一个 `Callable` 对象
-2. `CallableMethodReturnValueHandler` 会借助 `WebAsyncManager` 开启 `request.startAsync()`
+1. 首先， `SpringMvc` 会按照跟处理其他请求一样的逻辑调用分到 `processUpload` 方法，并且返回一个 `Callable` 对象
+2. `CallableMethodReturnValueHandler` 会借助 `WebAsyncManager.startCallableProcessing(..)` 开启 `request.startAsync()`，在这一步会调用 `Servlet` 的异步请求支持 API `AsyncContext asyncContext = request.startAsync(..)` 并获取到 `AsyncContext` 对象保存到 `AsyncWebRequest` （Spring的接口）实现中
 3. 向线程池提交一个任务，这个任务会调用 `Callable` 对象执行，获取到 `Callable` 的执行结果后调用 `AsyncContext.dispatch()` 方法在次进入 `DispatcherServlet` 处理流程。注意这里， `Spring MVC` 中处理请求的线程，提交完这个任务，就继续往下运行了，不会等待任务的执行结果，这个线程可以去处理其他请求。 `Callable` -示例中的 `Thread.sleep(10000)` 会在线程池中运行。
 4. Spring MVC 再次调度处理这个请求的时候，发现有 `AsyncContext.hasConcurrentResult()` 为 true ，就不会去调用 `Controller` 中的方法，具体看 `ServletInvocableHandlerMethod.wrapConcurrentResult()` 方法
 5. `DeferredResultMethodReturnValueHandler`、`AsyncTaskMethodReturnValueHandler` 

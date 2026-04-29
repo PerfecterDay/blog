@@ -34,7 +34,7 @@ invocableMethod.invokeAndHandle(webRequest, mavContainer);
 1. 第一个调用 `invokeForRequest()`，该方法会一步步处理请求参数，直到调用完 controller 的方法得到返回值
 2. 第二个是使用 `HandlerMethodReturnValueHandlerComposite` 对象处理返回值。
 
-### 请求参数处理
+### 请求参数处理-`HandlerMethodArgumentResolver`
 ```
 ServletInvocableHandlerMethod.invokeAndHandle -> InvocableHandlerMethod.invokeForRequest ->
     Object[] args = InvocableHandlerMethod.getMethodArgumentValues -> 	
@@ -48,9 +48,45 @@ ServletInvocableHandlerMethod.invokeAndHandle -> InvocableHandlerMethod.invokeFo
     return doInvoke(args);        
 ```
 
+以下是一些常见的 `HandlerMethodArgumentResolver` :
++ `ProxyingHandlerMethodArgumentResolver`
++ `RequestParamMethodArgumentResolver`
++ `RequestParamMapMethodArgumentResolver`
++ `PathVariableMethodArgumentResolver`
++ `PathVariableMapMethodArgumentResolver`
++ `MatrixVariableMethodArgumentResolver`
++ `MatrixVariableMapMethodArgumentResolver`
++ `ServletModelAttributeMethodProcessor`
++ `RequestResponseBodyMethodProcessor`
++ `RequestPartMethodArgumentResolver`
++ `RequestHeaderMethodArgumentResolver`
++ `RequestHeaderMapMethodArgumentResolver`
++ `ServletCookieValueMethodArgumentResolver`
++ `ExpressionValueMethodArgumentResolver`
++ `SessionAttributeMethodArgumentResolver`
++ `RequestAttributeMethodArgumentResolver`
++ `ServletRequestMethodArgumentResolver`
++ `ServletResponseMethodArgumentResolver`
++ `HttpEntityMethodProcessor`
++ `RedirectAttributesMethodArgumentResolver`
++ `ModelMethodProcessor`
++ `MapMethodProcessor`
++ `ErrorsMethodArgumentResolver`
++ `SessionStatusMethodArgumentResolver`
++ `UriComponentsBuilderMethodArgumentResolver`
++ `ApiVersionMethodArgumentResolver`
++ `AppHeaderResolver`
++ `SortHandlerMethodArgumentResolver`
++ `PageableHandlerMethodArgumentResolver`
++ `ProxyingHandlerMethodArgumentResolver`
++ `PrincipalMethodArgumentResolver`
++ `RequestParamMethodArgumentResolver`
++ `ServletModelAttributeMethodProcessor`
+
+
 更详细的处理过程请参照[Spring-MVC中 参数绑定与校验](./springmvc-处理方法的参数解析转换与校验.md)
 
-### 响应参数处理
+### 响应参数处理-`HandlerMethodReturnValueHandler`
 为什么我们在 controller 方法中返回一个自定义的对象，客户端会收到 json 响应呢？ 为什么返回一个 `SseEmitter` 对象就能实现 SSE 呢？
 
 这都是因为 spring 在获取 controller 处理方法的返回值后，会根据返回值调用不同的 `HandlerMethodReturnValueHandler` 对象做进一步处理。
@@ -63,3 +99,20 @@ ServletInvocableHandlerMethod.invokeAndHandle -> InvocableHandlerMethod.invokeFo
 上图中还有许多其他的 `HandlerMethodReturnValueHandler` 类，处理不同的返回值，注意，返回值可以被多个 `HandlerMethodReturnValueHandler` 对象处理，只要 `HandlerMethodReturnValueHandler` 能处理返回值。
 
 `@ControllerAdvice` 和 `@RestControllerAdvice` 都是在这个环节被调用的。
+
+以下是一些常见的 `HandlerMethodReturnValueHandler` 实现：
++ `ModelAndViewMethodReturnValueHandler`
++ `ModelMethodProcessor`
++ `ViewMethodReturnValueHandler`
++ `ResponseBodyEmitterReturnValueHandler`
++ `StreamingResponseBodyReturnValueHandler`
++ `ResponseEntityReturnValueHandler`
++ `HttpHeadersReturnValueHandler`
++ `CallableMethodReturnValueHandler`
++ `DeferredResultMethodReturnValueHandler`
++ `AsyncTaskMethodReturnValueHandler`
++ `ServletModelAttributeMethodProcessor`
++ `RequestResponseBodyMethodProcessor`
++ `ViewNameMethodReturnValueHandler`
++ `MapMethodProcessor`
++ `ServletModelAttributeMethodProcessor`

@@ -24,7 +24,7 @@ public class ExampleAdvice3 {}
 选择器在运行时进行评估，如果大量使用，可能会对性能产生负面影响。
 
 ## 原理
-特定类型的继承关系 `HandlerMethodReturnValueHandler` -> `AbstractMessageConverterMethodProcessor` -> `HttpEntityMethodProcessor/RequestResponseBodyMethodProcessor` 会调用 Advice ，核心代码在: 
+特定类型的继承关系 `HandlerMethodReturnValueHandler` -> `AbstractMessageConverterMethodProcessor` -> `HttpEntityMethodProcessor/RequestResponseBodyMethodProcessor` 会调用 `Advice` ，核心代码在: 
 ```
 AbstractMessageConverterMethodArgumentResolver.readWithMessageConverters(...){
     ...

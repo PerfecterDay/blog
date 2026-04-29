@@ -99,6 +99,7 @@ Redis目录下都会有一个redis.conf配置文件，里面就是Redis的默认
    11. 键重命名： `rename key newkey`, 如果 newkey 已经存在，那么他的值将会被 key 的值覆盖
    12. `renamenx key newkey`： 只有 newkey 不存在时才会重命名成功，由于重命名键期间会执行del命令删除旧的键，如果键对应的值比较大，会存在阻塞Redis的可能性，这点不要忽视。
    13. 随机返回一个键： `randomkey`
+   14. 查看数据库 key 信息：`info keyspace`
 
 3. 信息查看命令
    1. 查看连接的客户端：`redis 127.0.0.1:6379> CLIENT LIST` 
@@ -184,7 +185,7 @@ Redis目录下都会有一个redis.conf配置文件，里面就是Redis的默认
 ## 设置过期时间
 1. `expire key 10000`: 设置 key 过期时间 1000s
 2. `ttl key`: 查看 key 剩余存活时间，单位s，-1 表示没有设置过期时间，-2表示key不存在
-3. `persist key`: 取消key 的过期时间设置
+3. `persist key`: 取消 key 的过期时间设置
    
 下边是 Jedis 连接池的配置参数：
    <center> <img src="pics/jedispool-config.png" width="60%"></center>
