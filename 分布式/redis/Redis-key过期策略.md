@@ -3,30 +3,33 @@
 
 > https://redis.io/docs/reference/eviction/
 
-- [Redis 缓存淘汰策略](#redis-缓存淘汰策略)
-  - [设置最大内存使用量](#设置最大内存使用量)
-  - [配置缓存淘汰策略](#配置缓存淘汰策略)
+Redis 通常被用作缓存，以加快对较慢服务器或数据库的读取访问。由于缓存条目是持久化存储数据的副本，因此当缓存内存不足时，通常可以安全地将其清除（如有必要，将来可以再次缓存）。
 
-### 设置最大内存使用量
+Redis 允许指定一种驱逐策略，当缓存大小超过设定的内存限制时，系统会自动驱逐键。每当客户端执行新命令向缓存添加更多数据时，Redis 都会检查内存使用情况。如果内存使用量超过限制，Redis 就会根据所选的驱逐策略驱逐键，直到总内存使用量降回限制以下。
+
+## 设置最大内存使用量
 `maxmemory` 配置指令可将 Redis 配置为使用指定内存量的数据集。你可以使用 redis.conf 文件，或在运行时使用 CONFIG SET 命令来设置配置指令。
 ```
-maxmemory 100mb
+maxmemory 100mb //配置文件
+CONFIG SET maxmemory 100mb //指令设置
 ```
 将 maxmemory 设置为零，则没有内存限制。这是 64 位系统的默认行为，而 32 位系统使用 3GB 的隐式内存限制。  
 当达到指定的内存量时，eviction policies 配置的策略决定了默认行为。Redis 可以为可能导致使用更多内存的命令返回错误，也可以在每次添加新数据时驱逐一些旧数据，以返回指定限制。
 
-### 配置缓存淘汰策略
+## 配置缓存淘汰策略
 当达到 `maxmemory` 限制时，Redis 所遵循的具体行为是通过 `maxmemory-policy` 配置指令来配置的。
 
 有以下策略可供选择：
-+ `noeviction`：达到内存限制时不保存新值。当数据库使用复制时，这适用于主数据库
-+ `allkeys-lru`：保留最近使用的键值；删除最近最少使用（LRU）的键值
-+ `allkeys-lfu`：保留经常使用的密钥；删除最不经常使用（LFU）的密钥
-+ `volatile-lru`：删除过期字段设置为 true 的最近最少使用的密钥。
-+ `volatile-lfu`：删除过期字段设置为 true 的最不常用密钥。
-+ `allkeys-random`：随机删除密钥，为新添加的数据腾出空间。
-+ `volatile-random`：随机删除过期字段设置为 true 的密钥。
-+ `volatile-ttl`：删除过期字段设置为 true 且剩余生存时间（TTL）值最短的密钥。
++ `noeviction` : Keys are not evicted but the server will return an error when you try to execute commands that cache new data. If your database uses replication then this condition only applies to the primary database. Note that commands that only read existing data still work as normal.
++ `allkeys-lru` : Evict the least recently used (LRU) keys.
++ `allkeys-lrm` : Evict the least recently modified (LRM) keys.
++ `allkeys-lfu` : Evict the least frequently used (LFU) keys.
++ `allkeys-random` : Evict keys at random.
++ `volatile-lru` : Evict the least recently used keys that have an associated expiration (TTL).
++ `volatile-lrm` : Evict the least recently modified keys that have an associated expiration (TTL).
++ `volatile-lfu` : Evict the least frequently used keys that have an associated expiration (TTL).
++ `volatile-random` : Evicts random keys that have an associated expiration (TTL).
++ `volatile-ttl` : Evict keys with an associated expiration (TTL) that have the shortest remaining TTL value.
 
 如果没有符合前提条件的key需要驱逐，则 `volatile-lru、volatile-lfu、volatile-random 和 volatile-ttl` 策略的行为与 noeviction 保持一致。
 

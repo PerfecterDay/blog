@@ -135,3 +135,103 @@ public class ModelAndView {
 			return exMv;
 	}
 因此，我们可以实现 `HandlerExceptionResolver` 接口来统一处理业务代码抛出的异常。
+
+
+## 完整示例
+```
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
+class MyHandlerMapping implements HandlerMapping{
+    @Override
+    public boolean usesPathPatterns() {
+        return HandlerMapping.super.usesPathPatterns();
+    }
+
+    @Override
+    public @Nullable HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
+        if (request.getRequestURI().contains("/foo")) {
+            return new HandlerExecutionChain(new MyHandler());
+        }
+        return null;
+    }
+}
+
+@Component
+@RequiredArgsConstructor
+class MyHandlerAdapter implements HandlerAdapter {
+
+    private final MyArgumentResolver myArgumentResolver;
+    private final MyReturnValueHandler  myReturnValueHandler;
+
+    @Override
+    public boolean supports(@Nullable Object handler) {
+        return handler instanceof MyHandler;
+    }
+
+    @Override
+    public @Nullable ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        Bar bar = (Bar) myArgumentResolver.resolveArgument(null, null, null, null);
+        Foo foo = ((MyHandler) handler).foo(bar);
+        myReturnValueHandler.handleReturnValue(foo,null,null,null);
+        response.getOutputStream().write(String.valueOf(foo.getResult()).getBytes());
+//        response.getOutputStream().write(foo.getResult());  //导致浏览器下载
+        response.flushBuffer();
+        return null;
+    }
+}
+
+//自定义解析参数
+@Component
+class MyArgumentResolver implements HandlerMethodArgumentResolver{
+
+    @Override
+    public boolean supportsParameter(MethodParameter parameter) {
+        return parameter.getParameterType().equals(Bar.class);
+    }
+
+    @Override
+    public @Nullable Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer, NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory) throws Exception {
+        Bar bar = new Bar();
+        bar.setA(10);
+        bar.setB(20);
+        return bar;
+    }
+}
+
+//自定义处理返回值
+@Component
+class MyReturnValueHandler implements HandlerMethodReturnValueHandler {
+    @Override
+    public boolean supportsReturnType(MethodParameter returnType) {
+        return returnType.getParameterType().equals(Foo.class);
+    }
+
+    @Override
+    public void handleReturnValue(@Nullable Object returnValue, MethodParameter returnType, ModelAndViewContainer mavContainer, NativeWebRequest webRequest) throws Exception {
+        Foo foo = (Foo) returnValue;
+        foo.setResult(foo.getResult() + 1);
+    }
+}
+
+
+
+class MyHandler{
+    public Foo foo(Bar bar){
+        System.out.println("处理 bar");
+        Foo foo = new Foo();
+        foo.setResult(bar.getA() + bar.getB());
+        return foo;
+    }
+}
+
+@Data
+class Foo{
+    int result;
+}
+
+@Data
+class Bar{
+    int a;
+    int b;
+}
+```
