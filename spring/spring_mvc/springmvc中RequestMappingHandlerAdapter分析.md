@@ -9,20 +9,62 @@
 此方法是整个类的核心方法，大部分处理流程在这个方法中完成。
 
 ```
-WebDataBinderFactory binderFactory = getDataBinderFactory(handlerMethod);
-ModelFactory modelFactory = getModelFactory(handlerMethod, binderFactory);
-ServletInvocableHandlerMethod invocableMethod = createInvocableHandlerMethod(handlerMethod);
-if (this.argumentResolvers != null) {
-	invocableMethod.setHandlerMethodArgumentResolvers(this.argumentResolvers);
+protected @Nullable ModelAndView invokeHandlerMethod(HttpServletRequest request,
+			HttpServletResponse response, HandlerMethod handlerMethod) throws Exception {
+
+    WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
+    AsyncWebRequest asyncWebRequest = WebAsyncUtils.createAsyncWebRequest(request, response);
+    asyncWebRequest.setTimeout(this.asyncRequestTimeout);
+
+    asyncManager.setTaskExecutor(this.taskExecutor);
+    asyncManager.setAsyncWebRequest(asyncWebRequest);
+    asyncManager.registerCallableInterceptors(this.callableInterceptors);
+    asyncManager.registerDeferredResultInterceptors(this.deferredResultInterceptors);
+
+    // Obtain wrapped response to enforce lifecycle rule from Servlet spec, section 2.3.3.4
+    response = asyncWebRequest.getNativeResponse(HttpServletResponse.class);
+
+    ServletWebRequest webRequest = (asyncWebRequest instanceof ServletWebRequest ?
+            (ServletWebRequest) asyncWebRequest : new ServletWebRequest(request, response));
+
+    WebDataBinderFactory binderFactory = getDataBinderFactory(handlerMethod);
+    ModelFactory modelFactory = getModelFactory(handlerMethod, binderFactory);
+
+    ServletInvocableHandlerMethod invocableMethod = createInvocableHandlerMethod(handlerMethod);
+    if (this.argumentResolvers != null) {
+        invocableMethod.setHandlerMethodArgumentResolvers(this.argumentResolvers);
+    }
+    if (this.returnValueHandlers != null) {
+        invocableMethod.setHandlerMethodReturnValueHandlers(this.returnValueHandlers);
+    }
+    invocableMethod.setDataBinderFactory(binderFactory);
+    invocableMethod.setParameterNameDiscoverer(this.parameterNameDiscoverer);
+    invocableMethod.setMethodValidator(this.methodValidator);
+
+    ModelAndViewContainer mavContainer = new ModelAndViewContainer();
+    mavContainer.addAllAttributes(RequestContextUtils.getInputFlashMap(request));
+    modelFactory.initModel(webRequest, mavContainer, invocableMethod);
+
+    if (asyncManager.hasConcurrentResult()) {
+        Object result = asyncManager.getConcurrentResult();
+        Object[] resultContext = asyncManager.getConcurrentResultContext();
+        Assert.state(resultContext != null && resultContext.length > 0, "Missing result context");
+        mavContainer = (ModelAndViewContainer) resultContext[0];
+        asyncManager.clearConcurrentResult();
+        LogFormatUtils.traceDebug(logger, traceOn -> {
+            String formatted = LogFormatUtils.formatValue(result, !traceOn);
+            return "Resume with async result [" + formatted + "]";
+        });
+        invocableMethod = invocableMethod.wrapConcurrentResult(result);
+    }
+
+    invocableMethod.invokeAndHandle(webRequest, mavContainer);
+    if (asyncManager.isConcurrentHandlingStarted()) {
+        return null;
+    }
+
+    return getModelAndView(mavContainer, modelFactory, webRequest);
 }
-if (this.returnValueHandlers != null) {
-	invocableMethod.setHandlerMethodReturnValueHandlers(this.returnValueHandlers);
-}
-invocableMethod.setDataBinderFactory(binderFactory);
-invocableMethod.setParameterNameDiscoverer(this.parameterNameDiscoverer);
-ModelAndViewContainer mavContainer = new ModelAndViewContainer();
-......
-invocableMethod.invokeAndHandle(webRequest, mavContainer);
 ```
 
 有几个重要的对象 `WebDataBinderFactory` , `ModelFactory` , `ModelAndViewContainer` ,`ServletInvocableHandlerMethod` 。
@@ -31,7 +73,7 @@ invocableMethod.invokeAndHandle(webRequest, mavContainer);
 <center><img src="pics/handlermappingAdapter1.png" width="50%"></center>
 
 上图中红圈的地方是核心的两个方法：
-1. 第一个调用 `invokeForRequest()`，该方法会一步步处理请求参数，直到调用完 controller 的方法得到返回值
+1. 第一个调用 `invokeForRequest()`，该方法会一步步处理请求参数，直到调用完 `controller` 的方法得到返回值
 2. 第二个是使用 `HandlerMethodReturnValueHandlerComposite` 对象处理返回值。
 
 ### 请求参数处理-`HandlerMethodArgumentResolver`
