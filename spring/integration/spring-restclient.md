@@ -287,6 +287,75 @@ ClientHttpConnector connector = new HttpComponentsClientHttpConnector(client);
 WebClient webClient = WebClient.builder().clientConnector(connector).build();
 ```
 
+## 忽略证书/host匹配的检查
+Providing an X509TrustManager that does not do certificate verification (as in the answers above) is insufficient to disable hostname verification because the implementation of SSLContext "wraps" the provided X509TrustManager with an X509ExtendedTrustManager if it is not an X509ExtendedTrustManager. The wrapping "Extended" X509ExtendedTrustManager performs hostname verification.
+
+```
+X509ExtendedTrustManager -> AbstractTrustManagerWrapper -> X509TrustManagerImpl
+
+TrustManager[] trustAll = new TrustManager[]{
+		new X509ExtendedTrustManager() {
+			public X509Certificate[] getAcceptedIssuers() {
+				return null;
+			}
+
+			public void checkClientTrusted(
+					final X509Certificate[] a_certificates,
+					final String a_auth_type) {
+			}
+
+			public void checkServerTrusted(
+					final X509Certificate[] a_certificates,
+					final String a_auth_type) {
+			}
+
+			public void checkServerTrusted(
+					final X509Certificate[] a_certificates,
+					final String a_auth_type,
+					final Socket a_socket) {
+			}
+
+			@Override
+			public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) throws CertificateException {
+
+			}
+
+			public void checkClientTrusted(
+					final X509Certificate[] a_certificates,
+					final String a_auth_type,
+					final SSLEngine a_engine) {
+			}
+
+			public void checkServerTrusted(
+					final X509Certificate[] a_certificates,
+					final String a_auth_type,
+					final SSLEngine a_engine) {
+			}
+		}
+};
+SSLContext sslContext = SSLContext.getInstance("TLS");
+sslContext.init(null, trustAll, new SecureRandom());
+
+HttpClient httpClient = HttpClient.newBuilder()
+		.connectTimeout(Duration.ofSeconds(3))// 建连超时
+		.sslContext(sslContext)
+		.build();
+
+RestClient restClient = RestClient.builder()
+		.requestFactory(new JdkClientHttpRequestFactory(httpClient))
+		.configureMessageConverters(builder -> {
+			builder.addCustomConverter(new ClientAuthClientConfiguration.TextHtmlJacksonConverter(new JsonMapper()));
+		})
+		.baseUrl(smsGatewayProperties.getUrl())
+		.build();
+
+HttpServiceProxyFactory httpServiceProxyFactory = HttpServiceProxyFactory
+		.builderFor(RestClientAdapter.create(restClient)).build();
+
+return httpServiceProxyFactory.createClient(ISmsClient.class);
+```
+
+
 ## HTTP Service Client-OpenFeign 的替代
 > https://docs.spring.io/spring-framework/reference/integration/rest-clients.html#rest-http-service-client
 
