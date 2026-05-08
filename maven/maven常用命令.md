@@ -1,12 +1,6 @@
 #  maven 常用命令参数和配置
 {docsify-updated}
 
-- [maven 常用命令参数和配置](#maven-常用命令参数和配置)
-  - [maven 常用命令](#maven-常用命令)
-  - [maven 常用配置](#maven-常用配置)
-  - [maven 问题](#maven-问题)
-
-
 ## maven 常用命令
 0. `mvn -B archetype:generate -DgroupId=com.my -DartifactId=simple-weather -DpackageName=com.baicy -Dversion=1.0 `: 以batch模式创建新项目，会选择 Archetype ，可能需要删除 settings配置文件中 archetypeRepository 和 archetypeCatalog 配置。
 1. `mvn archetype:generate -DgroupId=com.coder.wang -DartifactId=maven-count-plugin -DarchetypeArtifactId=maven-archetype-plugin -DarchetypeVersion=3.0 `:使用指定的 Archetype 生成项目。
@@ -62,16 +56,22 @@
 <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-clean-plugin</artifactId>
-        <version>3.3.2</version>
-        <configuration>
-          <filesets>
-            <fileset>
-              <directory>${project.basedir}/logs</directory>
-            </fileset>
-          </filesets>
-        </configuration>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>3.3.2</version>
+          <configuration>
+              <filesets>
+                  <fileset>
+                      <directory>${project.basedir}/logs</directory>
+                  </fileset>
+                  <fileset>
+                      <directory>${project.basedir}</directory>
+                      <includes>
+                          <include>cap.pid</include>
+                      </includes>
+                  </fileset>
+              </filesets>
+          </configuration>
       </plugin>
     </plugins>
   </build>

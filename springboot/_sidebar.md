@@ -24,3 +24,4 @@
 * [Springboot集成consul](/spring-cloud/springboot集成consul.md)
 * [Springboot集成TOTP和DUO](/springboot/springboot集成TOTP和DUO.md)
 * [Springboot 集成flyway](/springboot/springboot-flyway集成.md)
+* [Springboot 优雅打印日志-logbook](/springboot/springboot-优雅日志集成.md)

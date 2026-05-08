@@ -107,6 +107,7 @@
     * [Spring-MVC中 DispatcherServlet](/spring/spring_mvc/dispatcher-servlet/springmvc中DispatcherServlet初始化分析.md)
     * [Spring-MVC的 HandlerMapping 配置](/spring/spring_mvc/springmvc-HandlerMapping配置.md)
     * [Spring-MVC中 RequestMappingHandlerAdapter](/spring/spring_mvc/springmvc中RequestMappingHandlerAdapter分析.md)
+    * [Spring-MVC中的 HttpMessageConverter](/spring/spring_mvc/springmvc-HttpMessageConverter.md)
     * [Spring-MVC中 参数绑定与校验](/spring/spring_mvc/springmvc-处理方法的参数解析转换与校验.md)
     * [Spring-MVC的内置Filter](/spring/spring_mvc/springmvc提供的内置Filter.md)
     * [Spring-MVC的Controller方法](/spring/spring_mvc/springmvc-请求处理方法.md)

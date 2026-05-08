@@ -1,7 +1,6 @@
 # Spring MVC 中 RequestMappingHandlerAdapter 分析
 {docsify-updated}
 
-
 ## handleInternal 方法
 在 handleInternal 方法中最主要的是调用 invokeHandlerMethod 方法。
 

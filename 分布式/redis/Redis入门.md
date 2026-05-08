@@ -82,7 +82,7 @@ Redis目录下都会有一个redis.conf配置文件，里面就是Redis的默认
 ## 常用命令
 
 1. 配置命令
-   1. 查看所有配置： `config get *`
+   1. 查看所有配置： `config get *` / `CONFIG GET *memory*`
    2. 查看指定配置：`config get XXX`
    3. 设置config： `config set xxx xxx`
 2. 键通用命令

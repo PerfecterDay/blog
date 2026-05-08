@@ -42,6 +42,12 @@ Redis默认采用LZF算法对生成的RDB文件做压缩处理，压缩后的文
 
 如果Redis加载损坏的RDB文件时拒绝启动，可以使用Redis提供的 `redis-check-dump` 工具检测RDB文件并获取对应的错误报告。
 
+### RDB 文件的恢复
+如果想将一个 RDB 文件恢复到一个 redis 实例中：
+1. 停止redis 服务
+2. 将备份的 RDB 文件拷贝到目标 redis 实例的 rdb 备份文件夹下，并重命名为指定的备份文件名
+3. 启动 redis 服务，redis 会自动加载 rdb 文件中的数据
+
 ### RDB的优缺点
 
 1. RDB的优点：
