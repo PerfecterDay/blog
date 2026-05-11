@@ -13,8 +13,6 @@
   * [Springboot 集成jasypt](/springboot/配置/jasypt集成.md)
   * [Springboot 集成vault](/springboot/配置/vault集成.md)
 * [Springboot Actuator](/springboot/springboot-actutor.md)
-* [Spring Async](/springboot/spring-async集成.md)
-* [Spring 缓存](/springboot/spring-cache.md)
 * [Spring cloud common](/spring-cloud/spring-cloud.md)
 * [Spring cloud open feign](/spring-cloud/spring-cloud-openfeign.md)
 * [Spring cloud loadbancer](/spring-cloud/spring-cloud-loadbancer.md)
@@ -25,3 +23,4 @@
 * [Springboot集成TOTP和DUO](/springboot/springboot集成TOTP和DUO.md)
 * [Springboot 集成flyway](/springboot/springboot-flyway集成.md)
 * [Springboot 优雅打印日志-logbook](/springboot/springboot-优雅日志集成.md)
+* [Springboot 启动时写入PID到文件](/springboot/springboot写入pid到文件.md)

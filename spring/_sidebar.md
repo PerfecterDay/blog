@@ -7,6 +7,7 @@
 * [Core](#)
   * [Spring core Ioc](#)
     * [Spring 容器与Bean概览](/spring/core/core-ioc/spring-容器与Bean概览.md)
+    * [Spring IOC-核心原理](/spring/core/core-ioc/spring-ioc-核心原理.md)
     * [Dependencies](#)
       * [Spring Dependency Injection](/spring/core/core-ioc/dependencies/spring-依赖注入.md)
       * [Spring dependson 与延迟初始化](/spring/core/core-ioc/dependencies/spring-dependson和延迟初始化.md)
@@ -31,7 +32,6 @@
     * [BeanFactory API](/spring/core/core-ioc/spring-BeanFactory.md)
     <!-- * [Spring的启动](/spring/spring_mvc/spring的启动.md)
     * [Spring IOC-bean的定义](/spring/core/core-ioc/spring-ioc-bean的定义.md)
-    * [Spring IOC-核心原理](/spring/core/core-ioc/spring-ioc-核心原理.md)
     * [动态注册 Bean-ImportBeanDefinitionRegistrar](/spring/core/core-ioc/spring-ioc-ImportBeanDefinitionRegistrar.md)
     * [Spring IOC-基于注解的配置](/spring/core/core-ioc/spring-ioc-基于注解的配置.md)
     * [Spring IOC-基于Java的配置](/spring/core/core-ioc/spring-ioc-基于Java的配置.md) -->

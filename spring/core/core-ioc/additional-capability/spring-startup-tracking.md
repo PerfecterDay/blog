@@ -9,7 +9,7 @@
 通过特定指标追踪应用程序启动步骤，不仅有助于了解启动阶段的时间消耗情况，还能作为全面理解上下文生命周期的有效途径。
 
 `AbstractApplicationContext`（及其子类）通过 `ApplicationStartup` 进行指标观测，该启动器收集有关不同启动阶段的 `StartupStep` 数据：
-+ 应用上下文生命周期 （base packages scanning, config classes management)
++ 应用上下文生命周期 (base packages scanning, config classes management)
 + Bean生命周期 (instantiation, smart initialization, post processing)
 + 应用事件处理
 
@@ -40,7 +40,7 @@ spring:
 ```
 
 要开始收集自定义的 `StartupStep` ，组件可以直接从 `ApplicationCOntext` 中获取 `ApplicationStartup` 实例: 
-+ 让组件实现 ApplicationStartupAware 接口
++ 让组件实现 `ApplicationStartupAware` 接口
 + 在任何注入点请求 `ApplicationStartup` 类型， 使用 `@Autowired/@Inject` 等注解注入即可
 
 
