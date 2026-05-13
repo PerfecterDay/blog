@@ -6,6 +6,7 @@
 * [Json与Yaml简介](/spring/json与yaml简介.md)
 * [Core](#)
   * [Spring core Ioc](#)
+    * [Spring 一文精通](/spring/core/core-ioc/spring-杂谈.md)
     * [Spring 容器与Bean概览](/spring/core/core-ioc/spring-容器与Bean概览.md)
     * [Spring IOC-核心原理](/spring/core/core-ioc/spring-ioc-核心原理.md)
     * [Dependencies](#)

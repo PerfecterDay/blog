@@ -94,6 +94,7 @@ public interface BeanFactoryPostProcessor {
 
 ### ApplicationContext 如何调用 BeanFactoryPostProcessor
 请阅读 `AbstractApplicationContext` 的 `invokeBeanFactoryPostProcessors` 方法：
+```
 protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
     PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
 
@@ -105,6 +106,9 @@ protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory b
         beanFactory.setTempClassLoader(new ContextTypeMatchClassLoader(beanFactory.getBeanClassLoader()));
     }
 }
+```
+
+`PostProcessorRegistrationDelegate` 统一管理了 `BeanFactoryPostProcessor` 和 `BeanPostProcessor` 的注册与调用逻辑。
 
 ### PropertySourcesPlaceholderConfigurer
 `PropertySourcesPlaceholderConfigurer` 可以将配置文件中的属性注入到 `BeanDefinition` 中。

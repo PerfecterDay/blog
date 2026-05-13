@@ -79,6 +79,8 @@
 ```
 curl https://www.baidu.com/ --silent --write-out "%{size_download}\n" --output /dev/null
 curl https://www.baidu.com/ --silent -H "Accept-Encoding: gzip,deflate" --write-out "%{size_download}\n" --output /dev/null
+
+gzip -S .gzip -d a.gzip 
 ```
 
 ### 网站测速
