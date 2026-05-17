@@ -129,27 +129,11 @@ protected <T> T doGetBean(
 				if (dependsOn != null) {
 					for (String dep : dependsOn) {
 						if (isDependent(beanName, dep)) {
-							throw new BeanCreationException(mbd.getResourceDescription(), beanName,
-									"Circular depends-on relationship between '" + beanName + "' and '" + dep + "'");
+							....
 						}
 						registerDependentBean(dep, beanName);
 						try {
 							getBean(dep);
-						}
-						catch (NoSuchBeanDefinitionException ex) {
-							throw new BeanCreationException(mbd.getResourceDescription(), beanName,
-									"'" + beanName + "' depends on missing bean '" + dep + "'", ex);
-						}
-						catch (BeanCreationException ex) {
-							if (requiredType != null) {
-								// Wrap exception with current bean metadata but only if specifically
-								// requested (indicated by required type), not for depends-on cascades.
-								throw new BeanCreationException(mbd.getResourceDescription(), beanName,
-										"Failed to initialize dependency '" + ex.getBeanName() + "' of " +
-												requiredType.getSimpleName() + " bean '" + beanName + "': " +
-												ex.getMessage(), ex);
-							}
-							throw ex;
 						}
 					}
 				}
@@ -160,13 +144,7 @@ protected <T> T doGetBean(
 						try {
 							return createBean(beanName, mbd, args);
 						}
-						catch (BeansException ex) {
-							// Explicitly remove instance from singleton cache: It might have been put there
-							// eagerly by the creation process, to allow for circular reference resolution.
-							// Also remove any beans that received a temporary reference to the bean.
-							destroySingleton(beanName);
-							throw ex;
-						}
+						.....
 					});
 					beanInstance = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);
 				}
@@ -188,13 +166,7 @@ protected <T> T doGetBean(
             //创建其他 Scope 类型的 bean
 				else {
 					String scopeName = mbd.getScope();
-					if (!StringUtils.hasLength(scopeName)) {
-						throw new IllegalStateException("No scope name defined for bean '" + beanName + "'");
-					}
-					Scope scope = this.scopes.get(scopeName);
-					if (scope == null) {
-						throw new IllegalStateException("No Scope registered for scope name '" + scopeName + "'");
-					}
+					....
 					try {
 						Object scopedInstance = scope.get(beanName, () -> {
 							beforePrototypeCreation(beanName);
@@ -207,18 +179,10 @@ protected <T> T doGetBean(
 						});
 						beanInstance = getObjectForBeanInstance(scopedInstance, name, beanName, mbd);
 					}
-					catch (IllegalStateException ex) {
-						throw new ScopeNotActiveException(beanName, scopeName, ex);
-					}
+					...
 				}
 			}
-
-			catch (BeansException ex) {
-				beanCreation.tag("exception", ex.getClass().toString());
-				beanCreation.tag("message", String.valueOf(ex.getMessage()));
-				cleanupAfterBeanCreationFailure(beanName);
-				throw ex;
-			}
+			.....
 			finally {
 				beanCreation.end();
 				if (!isCacheBeanMetadata()) {
@@ -230,8 +194,14 @@ protected <T> T doGetBean(
 		return adaptBeanInstance(name, beanInstance, requiredType);
 	}
 ```
+1. 尝试从手动注册的 bean 中获取，手动注册是指通过如 `SingletonBeanRegistry.registerSingleton(String beanName, Object singletonObject)` 等方法注册到 `BeanFactory` 中的 bean ，如果有就直接返回
+2. 如果当前 `BeanFactory` 没有 bean 的定义，尝试从父 `BeanFactory` 中获取，如果获取到则返回
+3. 如果有依赖的 bean 就先依次创建好 `depends-on` 的 bean
+4. 如果是 `singleton` 类型的 bean 则进入创建 `singleton` 流程
+5. 如果是 `prototype` 类型的 bean 则进入创建 `prototype` 流程
+6. 如果是其他 `Scope` 类型的 bean 则使用指定的 `Scope` 创建bean
 
-最终都会调用 `createBean(...)` 方法。
+4,5,6 步骤最终都会调用到 `createBean(...)` 方法。
 
 ### AbstractAutowireCapableBeanFactory.createBean
 以下就是 `AbstractAutowireCapableBeanFactory.createBean(...)` 的核心代码:
@@ -359,7 +329,9 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 }
 ```
 
-OK，回到 `createBean(...)` ，如果 `Object bean = resolveBeforeInstantiation(beanName, mbdToUse)` 返回的是 `null`，则会继续执行 `doCreateBean(...)` 方法，否则会直接返回这个实例对象。
+OK，回到 `createBean(...)` ，这个方法的核心逻辑就是
+1. 尝试 `Object bean = resolveBeforeInstantiation(beanName, mbdToUse)` 获取 bean，如果有定义的 `InstantiationAwareBeanPostProcessor` 返回了 bean 实例，则使用 `BeanPostProcessor`处理完bean后直接返回该 bean 实例
+2. 否则继续执行 `doCreateBean(...)` 方法生成 bean
 
 ### AbstractAutowireCapableBeanFactory.doCreateBean
 ```
@@ -712,3 +684,5 @@ Spring 的 `BeanFactory` 中获取 bean 时，有几个扩展点：
 8. 执行完初始化方法之后会执行 `BeanPostProcessor.postProcessAfterInitialization(...)` 方法处理 bean。
 
 1，2，3，4 处理的都是对象的实例化过程，5，6 处理的都是对象实例化后，属性注入前的处理，7，8 处理的都是对象实例化并且属性注入后，初始化前后的处理。
+
+另外，还有一点需要强调的是，如果直接使用 `BeanFactory` ，要想使用 `BeanPostProcessor` ,  `InstantiationAwareBeanPostProcessor` 这些扩展点，必须手动实例化这些组件实例并且注册到 `BeanFactory` 中才能生效。 `BeanFactoryPostProcessor` 则必须实例化后手动调用处理 `BeanFactory` 才能生效。
