@@ -5,7 +5,7 @@
 ```
 @SpringBootApplication
 @EnableAsync
-@MapperScan({"com.demo.gjyw.repo.mapper", "com.demo.gjyw.repo.mapper.cms"})
+@MapperScan({"com.demo.demo.repo.mapper", "com.demo.demo.repo.mapper.cms"})
 public class App {
     public static void main(String[] args) {
         SpringApplication springApplication = new SpringApplicationBuilder(App.class).build();

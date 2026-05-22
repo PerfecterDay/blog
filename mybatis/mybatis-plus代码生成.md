@@ -21,7 +21,7 @@ public class MsgCenterApp {
                             .outputDir("/Users/coder_wang/Workspace/msg-center/msg-center/msg-center-service/src/main/java"); // 指定输出目录
                 })
                 .packageConfig(builder -> {
-                    builder.parent("com.demo.gjyw.repo.dao") // 设置父包名
+                    builder.parent("com.demo.demo.repo.dao") // 设置父包名
                             .pathInfo(Collections.singletonMap(OutputFile.xml, "/Users/coder_wang/Workspace/msg-center/msg-center/msg-center-service/src/main/resources/mappers")); // 设置mapperXml生成路径
                 })
                 .strategyConfig(builder -> {

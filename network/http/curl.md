@@ -18,7 +18,7 @@
 7. `--data-raw`： 发送原始数据体
 	```
 	curl --location --request POST 'https://10.187.144.42:8000/trade/' \
-	--header 'App-Name: gtjagjapp' \
+	--header 'App-Name: demogjapp' \
 	--header 'App-ID: sdsdawdsads' \
 	--header 'Content-Type: application/json' \
 	--data-raw '[

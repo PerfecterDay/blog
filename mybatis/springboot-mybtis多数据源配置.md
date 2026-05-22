@@ -3,8 +3,8 @@
 
 ```
 @Configuration
-@MapperScan(basePackages = "com.demo.gjyw.repo.dao.mapper.user",sqlSessionFactoryRef = "userSqlSessionFactory",sqlSessionTemplateRef = "userSqlSessionTemplate")
-@MapperScan(basePackages = "com.demo.gjyw.repo.dao.mapper.edp",sqlSessionFactoryRef = "edpSqlSessionFactory",sqlSessionTemplateRef = "edpSqlSessionTemplate")
+@MapperScan(basePackages = "com.demo.demo.repo.dao.mapper.user",sqlSessionFactoryRef = "userSqlSessionFactory",sqlSessionTemplateRef = "userSqlSessionTemplate")
+@MapperScan(basePackages = "com.demo.demo.repo.dao.mapper.edp",sqlSessionFactoryRef = "edpSqlSessionFactory",sqlSessionTemplateRef = "edpSqlSessionTemplate")
 public class MybatisPlusConfig {
 
     @Bean("user")

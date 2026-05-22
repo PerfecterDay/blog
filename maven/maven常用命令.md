@@ -84,7 +84,7 @@
 
 2. 如何将一个 lib 引入到项目中并打进jar 包内 ？[参考](https://stackoverflow.com/questions/364114/can-i-add-jars-to-maven-2-build-classpath-without-installing-them)
 在pom 项目中引入一个开发项目所在路径的一个本地 repo。假如，特殊jar 包在项目的 libs 文件夹下，那么:
-   1. 第一步安装jar 文件到项目目录中： `mvn install:install-file -DlocalRepositoryPath=lib -DcreateChecksum=true -Dpackaging=jar -Dfile=lib/ZHConverter.jar -DgroupId=com.demo.gjyw -DartifactId=ZHConverter -Dversion=1.0 -DgeneratePom=true`
+   1. 第一步安装jar 文件到项目目录中： `mvn install:install-file -DlocalRepositoryPath=lib -DcreateChecksum=true -Dpackaging=jar -Dfile=lib/ZHConverter.jar -DgroupId=com.demo.demo -DartifactId=ZHConverter -Dversion=1.0 -DgeneratePom=true`
    2. 在pom 中添加本地仓库配置:
       ```
       <repository>
@@ -96,7 +96,7 @@
    3. 添加依赖：
       ```
       <dependency>
-       <groupId>com.demo.gjyw</groupId>
+       <groupId>com.demo.demo</groupId>
        <artifactId>ZHConverter</artifactId>
        <version>1.0</version>
       </dependency>

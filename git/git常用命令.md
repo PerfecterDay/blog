@@ -15,7 +15,7 @@
   1. 新建config文件配置远程连接端口： touch ~/.ssh/config
   2. 添加如下内容 
 	```
-	Host gjywgitlab.demo.net
+	Host demogitlab.demo.net
 	Port 223
 	PreferredAuthentications publickey
 	IdentityFile ~/.ssh/id_rsa
@@ -43,7 +43,7 @@ git config --global https.proxy http://127.0.0.1:7890
 ```
 
 #### 配置账号密码避免每次都要输入账号密码
-1. `git config --global url."https://wangzhongzhu026484:wzz900119!@gjywgitlab.demo.net".insteadOf "http://gjywgitlab.demo.net"`
+1. `git config --global url."https://wangzhongzhu026484:wzz900119!@demogitlab.demo.net".insteadOf "http://demogitlab.demo.net"`
 2. 配置用户名、密码：
    ```
    git config --global user.name 用户名
@@ -119,7 +119,7 @@ git config --global https.proxy http://127.0.0.1:7890
 18. `git push remote :remotebranch` :删除remote的remotebranch分支
 19. `git push remote --delete remotebranch` :删除remote的remotebranch分支
 20. `git push` : 如果当前分支只有一个追踪分支，那么主机名都可以省略
-21. `git ls-remote -h -- ssh://git@gjywgitlab.demo.net:223/demo-app-platform/user-center-g/user-center-service.git`
+21. `git ls-remote -h -- ssh://git@demogitlab.demo.net:223/demo-app-platform/user-center-g/user-center-service.git`
 
 
 #### 常见问题

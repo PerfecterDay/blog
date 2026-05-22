@@ -25,7 +25,7 @@
 1. `SpringApplicationRunListener` 是通过 `SpringFactoriesLoader` 加载的，所以必须在 `META-INF/spring.factories`中声明：
    ```
 	org.springframework.boot.SpringApplicationRunListener=\
-	com.demo.gjyw.MyRunnerListener
+	com.demo.demo.MyRunnerListener
    ```
    因为 `SpringApplication` 没有提供 `addSpringApplicationRunListener` 之类的方法，而是采用 SPI 机制，所以只能用上述方法。  
 2. 自定义一个类`SpringApplicationRunListener`接口，实现类应该定义一个接受 `SpringApplication` 实例和`String[]`参数的公共构造函数。`SpringApplication` 每次运行都会创建一个新的 `SpringApplicationRunListener` 实例。

@@ -327,27 +327,23 @@ private void processImports(ConfigurationClass configClass, SourceClass currentS
 以上代码可以看出，分别处理了 `ImportSelector` 、`BeanRegistrar` 、`ImportBeanDefinitionRegistrar` 、`@Configuration` 配置类。
 
 
-
+```
 @EnableAspectJAutoProxy → AspectJAutoProxyRegistrar
 @EnableTransactionManagement → TransactionManagementConfigurationSelector（用 ImportSelector，但底层结合 Registrar）
 @EnableFeignClients → FeignClientsRegistrar
 @EnableConfigurationProperties → EnableConfigurationPropertiesRegistrar
 Spring Data 的 @Enable*Repositories → *RepositoriesRegistrar
+```
 
+1. 它是单例 + 无状态的临时对象：Registrar 由 new 实例化，不进入 Spring 容器，用完就丢。所以不要在 Registrar 字段里存运行期状态。
+2. 它能拿到 4 种"基础设施"，但拿不到完整 IoC
+    通过两种方式注入：
 
-① 它是单例 + 无状态的临时对象
-Registrar 由 new 实例化，不进入 Spring 容器，用完就丢。所以不要在 Registrar 字段里存运行期状态。
-
-② 它能拿到 4 种"基础设施"，但拿不到完整 IoC
-通过两种方式注入：
-
-构造器注入：public MyRegistrar(Environment env, BeanFactory bf, ClassLoader cl, ResourceLoader rl) 任意组合
-Aware 接口：EnvironmentAware / BeanFactoryAware / BeanClassLoaderAware / ResourceLoaderAware
-但拿不到其他 Bean 的实例（因为此时 Bean 都还没实例化）。
-
-③ 不能在里面注册 BeanDefinitionRegistryPostProcessor
-④ Registrar 的执行时机
-它在 BeanFactoryPostProcessor 阶段（具体说在 BeanDefinitionRegistryPostProcessor 阶段）执行，早于任何 Bean 的实例化。它注册的 BeanDefinition 也会被后续的 BeanFactoryPostProcessor（比如属性占位符解析）正常处理。
+    构造器注入：`public MyRegistrar(Environment env, BeanFactory bf, ClassLoader cl, ResourceLoader rl)` 任意组合
+    `Aware` 接口： `EnvironmentAware / BeanFactoryAware / BeanClassLoaderAware / ResourceLoaderAware`
+    但拿不到其他 Bean 的实例（因为此时 Bean 都还没实例化）。
+3. 不能在里面注册 `BeanDefinitionRegistryPostProcessor`
+4. `Registrar` 的执行时机: 它在 `BeanFactoryPostProcessor` 阶段（具体说在 `BeanDefinitionRegistryPostProcessor` 阶段）执行，早于任何 Bean 的实例化。它注册的 `BeanDefinition` 也会被后续的 `BeanFactoryPostProcessor` （比如属性占位符解析）正常处理。
 
 
 ## ClassPathBeanDefinitionScanner

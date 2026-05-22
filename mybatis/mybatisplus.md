@@ -5,7 +5,7 @@
 
 
 ```
-@MapperScan("com.demo.gjyw.repo.mapper") // 指定扫描 mapper 的包
+@MapperScan("com.demo.demo.repo.mapper") // 指定扫描 mapper 的包
 
 ```
 

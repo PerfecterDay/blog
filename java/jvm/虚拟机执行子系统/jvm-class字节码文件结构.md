@@ -23,11 +23,11 @@ Classfile /Workspace/java-demo/target/classes/com/demo/HelloWorld.class
   Last modified 2026年3月28日; size 592 bytes
   SHA-256 checksum 43403b75c50903a9b7c4579568fc6f98f78e6ca11550c3e8be7757715d0a920b
   Compiled from "HelloWorld.java"
-public class com.demo.gjyw.HelloWorld
+public class com.demo.demo.HelloWorld
   minor version: 0
   major version: 65
   flags: (0x0021) ACC_PUBLIC, ACC_SUPER
-  this_class: #21                         // com/demo/gjyw/HelloWorld
+  this_class: #21                         // com/demo/demo/HelloWorld
   super_class: #2                         // java/lang/Object
   interfaces: 0, fields: 0, methods: 2, attributes: 1
 Constant pool:
@@ -51,13 +51,13 @@ Constant pool:
   #18 = Utf8               java/io/PrintStream
   #19 = Utf8               println
   #20 = Utf8               (Ljava/lang/String;)V
-  #21 = Class              #22            // com/demo/gjyw/HelloWorld
-  #22 = Utf8               com/demo/gjyw/HelloWorld
+  #21 = Class              #22            // com/demo/demo/HelloWorld
+  #22 = Utf8               com/demo/demo/HelloWorld
   #23 = Utf8               Code
   #24 = Utf8               LineNumberTable
   #25 = Utf8               LocalVariableTable
   #26 = Utf8               this
-  #27 = Utf8               Lcom/demo/gjyw/HelloWorld;
+  #27 = Utf8               Lcom/demo/demo/HelloWorld;
   #28 = Utf8               main
   #29 = Utf8               ([Ljava/lang/String;)V
   #30 = Utf8               args
@@ -66,7 +66,7 @@ Constant pool:
   #33 = Utf8               SourceFile
   #34 = Utf8               HelloWorld.java
 {
-  public com.demo.gjyw.HelloWorld();
+  public com.demo.demo.HelloWorld();
     descriptor: ()V
     flags: (0x0001) ACC_PUBLIC
     Code:
@@ -78,7 +78,7 @@ Constant pool:
         line 7: 0
       LocalVariableTable:
         Start  Length  Slot  Name   Signature
-            0       5     0  this   Lcom/demo/gjyw/HelloWorld;
+            0       5     0  this   Lcom/demo/demo/HelloWorld;
 
   public static void main(java.lang.String[]);
     descriptor: ([Ljava/lang/String;)V

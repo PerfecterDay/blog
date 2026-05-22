@@ -31,6 +31,7 @@
    ```
 
 ## RAG：
+
 何时	在 LLM 调用之前,每一轮对话都会执行(每次 chat())
 触发条件	只要 QuestionAnswerAdvisor 在 advisor 链里就无条件执行 —— LLM 不参与决策
 检索 query	直接取当前 user message 的纯文本(chatClientRequest.prompt().getUserMessage().getText())

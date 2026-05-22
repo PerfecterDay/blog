@@ -427,11 +427,11 @@ javax.xml.bind.JAXBException: Implementation of JAXB-API has not been found on m
 	at javax.xml.bind.ContextFinder.find(ContextFinder.java:421)
 	at javax.xml.bind.JAXBContext.newInstance(JAXBContext.java:721)
 	at javax.xml.bind.JAXBContext.newInstance(JAXBContext.java:662)
-	at com.demo.gjyw.utils.XmlUtils.beanToXml(XmlUtils.java:39)
-	at com.demo.gjyw.service.impl.CmsSendBoServiceImpl.sendBoCms(CmsSendBoServiceImpl.java:30)
-	at com.demo.gjyw.business.login.TradeLoginServiceV2.getCmsAccountInfo(TradeLoginServiceV2.java:144)
-	at com.demo.gjyw.business.login.TradeLoginServiceV2.findUserTradeAcctType(TradeLoginServiceV2.java:179)
-	at com.demo.gjyw.business.UserService.lambda$getUserInfoV2$1(UserService.java:117)
+	at com.demo.demo.utils.XmlUtils.beanToXml(XmlUtils.java:39)
+	at com.demo.demo.service.impl.CmsSendBoServiceImpl.sendBoCms(CmsSendBoServiceImpl.java:30)
+	at com.demo.demo.business.login.TradeLoginServiceV2.getCmsAccountInfo(TradeLoginServiceV2.java:144)
+	at com.demo.demo.business.login.TradeLoginServiceV2.findUserTradeAcctType(TradeLoginServiceV2.java:179)
+	at com.demo.demo.business.UserService.lambda$getUserInfoV2$1(UserService.java:117)
 	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1700)
 	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.exec(CompletableFuture.java:1692)
 	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:290)
@@ -488,14 +488,14 @@ static String firstByServiceLoaderDeprecated(Class spiClass,
 10.4.152.170
 iZj6c5i921jg0zpxwdm52oZ
 /home/logs/user-cent...e.log
-content: 2024-05-15 11:51:56.543 [http-nio-8913-exec-9] INFO  com.demo.gjyw.business.UserService  b761d28c-fb26-4e8b-a9cd-aab4c3b56fc6 - Classloader:TomcatEmbeddedWebappClassLoader
+content: 2024-05-15 11:51:56.543 [http-nio-8913-exec-9] INFO  com.demo.demo.business.UserService  b761d28c-fb26-4e8b-a9cd-aab4c3b56fc6 - Classloader:TomcatEmbeddedWebappClassLoader
   context: user
   delegate: true
 ----------> Parent Classloader:
 org.springframework.boot.loader.LaunchedURLClassLoader@1a86f2f1
 
 
-2024-05-15 11:51:56.543 [ForkJoinPool.commonPool-worker-19] INFO  com.demo.gjyw.business.UserService   - Classloader:jdk.internal.loader.ClassLoaders$AppClassLoader@1affbebc
+2024-05-15 11:51:56.543 [ForkJoinPool.commonPool-worker-19] INFO  com.demo.demo.business.UserService   - Classloader:jdk.internal.loader.ClassLoaders$AppClassLoader@1affbebc
 ```
 
 确实是使用了不同的 Classloader ，因为我们使用了 `CompletableFuture` ，并且没有使用自定义的线程池，所以 `CompletableFuture` 会使用默认的 fork-join pool 去执行任务，并且 jaxb 会使用线程的 Classloader 去加载类：`Thread.currentThread().getContextClassLoader();`

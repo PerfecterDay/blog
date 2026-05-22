@@ -26,7 +26,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	pb "gjywgitlab.demo.net/demo-app-platform/go-trade-gmt/grpc_client"
+	pb "demogitlab.demo.net/demo-app-platform/go-trade-gmt/grpc_client"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"log"

@@ -127,8 +127,8 @@ class A extends UserCenterApp<String>{
 
 输出为：
 ```
-public void com.demo.gjyw.A.draw(java.lang.String):false
-public void com.demo.gjyw.A.draw(java.lang.Object):true
+public void com.demo.demo.A.draw(java.lang.String):false
+public void com.demo.demo.A.draw(java.lang.Object):true
 ```
 
 如果改一下代码：
@@ -142,7 +142,7 @@ class A extends UserCenterApp<Object>{
 ```
 输出为：
 ```
-public void com.demo.gjyw.A.draw(java.lang.Object):false
+public void com.demo.demo.A.draw(java.lang.Object):false
 ```
 
 这时候，不需要生成桥方法了。

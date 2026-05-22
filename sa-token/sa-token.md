@@ -53,7 +53,7 @@ Sa-token 登录成功后，会在 Redis 生成三个 key：
     "createTime": 1749192871420,
     "dataMap": {
         "@class": "java.util.concurrent.ConcurrentHashMap",
-        "login_type": ["com.demo.gjyw.business.login.event.LoginType", "TRADE"],
+        "login_type": ["com.demo.demo.business.login.event.LoginType", "TRADE"],
         "dev-id": "259b06f413243fb2081a801b28f3d70b6a1f7acf4fd1b10dd629bf64f3204f78",
         "short_token": "S-c988a151-11af-44a5-af4b-34086007f471"
         },

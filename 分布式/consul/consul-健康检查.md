@@ -71,7 +71,7 @@ spring:
 ```
 {
     "service:trade-center-service-8100": {
-        "Node": "gtjaMac-mini.local",
+        "Node": "demoMac-mini.local",
         "CheckID": "service:trade-center-service-8100",
         "Name": "Service 'trade-center-service' check",
         "Status": "passing",
@@ -89,7 +89,7 @@ spring:
         "ModifyIndex": 0
     },
     "service:trade-center-service-8100-management": {
-        "Node": "gtjaMac-mini.local",
+        "Node": "demoMac-mini.local",
         "CheckID": "service:trade-center-service-8100-management",
         "Name": "Service 'trade-center-service-management' check",
         "Status": "passing",

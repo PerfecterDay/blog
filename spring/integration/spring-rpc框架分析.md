@@ -128,7 +128,7 @@ SgMultilHttpExtConnectionPool -> orgValidate
 sg-monitor-api 注册了 META-INF/demo-multi-sg-services/com.demo.sg.multi.monitor.SgMonitorBehavior SPI, `basic=com.demo.sg.multi.monitor.BasicSgMonitorBehavior`
 
 
-HardWareUtil 获取主机IP  -DgtjaSgHost=xxx 指定绑定的 IP
+HardWareUtil 获取主机IP  -DdemoSgHost=xxx 指定绑定的 IP
 
 
 ## proto文件发布编译流程

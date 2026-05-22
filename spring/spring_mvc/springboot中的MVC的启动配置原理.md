@@ -224,9 +224,9 @@ Springboot 中使用 `ServletWebServerFactoryAutoConfiguration/DispatcherServlet
 	<artifactId>spring-boot-starter-jetty</artifactId>
 </dependency>
 ```
-1. tomcat: 2024-04-29 13:41:25.078 [main] INFO  com.demo.gjyw.UserCenterApp  - Started UserCenterApp in 50.119 seconds (JVM running for 51.346)
-2. un4dertow: 2024-04-29 17:42:40.493 [main] INFO  com.demo.gjyw.UserCenterApp  - Started UserCenterApp in 32.094 seconds (JVM running for 33.4)
-3. jetty: 2024-04-29 17:43:50.493 [main] INFO  com.demo.gjyw.UserCenterApp  - Started UserCenterApp in 32.223 seconds (JVM running for 33.654) 
+1. tomcat: 2024-04-29 13:41:25.078 [main] INFO  com.demo.demo.UserCenterApp  - Started UserCenterApp in 50.119 seconds (JVM running for 51.346)
+2. un4dertow: 2024-04-29 17:42:40.493 [main] INFO  com.demo.demo.UserCenterApp  - Started UserCenterApp in 32.094 seconds (JVM running for 33.4)
+3. jetty: 2024-04-29 17:43:50.493 [main] INFO  com.demo.demo.UserCenterApp  - Started UserCenterApp in 32.223 seconds (JVM running for 33.654) 
 
 ### Springboot 内置容器配置
 > https://docs.spring.io/spring-boot/docs/2.0.9.RELEASE/reference/html/howto-embedded-web-servers.html

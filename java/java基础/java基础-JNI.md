@@ -38,7 +38,7 @@ Java_HelloJNI_sayHello(JNIEnv *env, jclass cls) {
     fflush(stdout);
 }
 ```
-函数名规则： `Java_包名_类名_方法名`，比如 `Java_com_gtja_gjyw_jni_HelloJNI_sayHello`
+函数名规则： `Java_包名_类名_方法名`，比如 `Java_com_demo_demo_jni_HelloJNI_sayHello`
 
 4. 编译
 ```

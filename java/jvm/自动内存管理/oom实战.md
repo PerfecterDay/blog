@@ -30,7 +30,7 @@ Exception in thread "main" java.lang.OutOfMemoryError: Java heap space
 	at java.base/java.util.ArrayList.grow(ArrayList.java:245)
 	at java.base/java.util.ArrayList.add(ArrayList.java:484)
 	at java.base/java.util.ArrayList.add(ArrayList.java:497)
-	at com.gtja.gjyw.HeapOom.main(HeapOom.java:22)
+	at com.demo.demo.HeapOom.main(HeapOom.java:22)
 ```
 
 要解决这个内存区域的异常，常规的处理方法是首先通过内存映像分析工具（如 `Eclipse Memory Analyzer` ）对Dump出来的堆转储快照进行分析。第一步首先应确认内存中导致OOM的对象是否是必要的，也就是要先分清楚到底是出现了**内存泄漏**（Memory Leak）还是**内存溢出**（Memory Overflow）。
@@ -71,7 +71,7 @@ Exception in thread "main" java.lang.OutOfMemoryError: Cannot reserve 1048576 by
 	at java.base/java.nio.Bits.reserveMemory(Bits.java:178)
 	at java.base/java.nio.DirectByteBuffer.<init>(DirectByteBuffer.java:108)
 	at java.base/java.nio.ByteBuffer.allocateDirect(ByteBuffer.java:367)
-	at com.gtja.gjyw.DirectMemoryOOM.main(App.java:35)
+	at com.demo.demo.DirectMemoryOOM.main(App.java:35)
 ```
 
 由直接内存导致的内存溢出，一个明显的特征是在Heap Dump文件中不会看见有什么明显的异常情况，如果读者发现内存溢出之后产生的Dump文件很小，而程序中又直接或间接使用了 `DirectMemory`（典型的间接使用就是NIO），那就可以考虑重点检查一下直接内存方面的原因了。

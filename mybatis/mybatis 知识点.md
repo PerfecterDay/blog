@@ -20,7 +20,7 @@
 
 首先，如果你的数据库支持自动生成主键的字段（比如 MySQL 和 SQL Server），那么你可以设置 useGeneratedKeys=”true”，然后再把 keyProperty 设置为目标属性就 OK 了。
 ```
- <insert id="save" parameterType="com.demo.gjyw.repo.dao.entity.SmsEntity"
+ <insert id="save" parameterType="com.demo.demo.repo.dao.entity.SmsEntity"
 	useGeneratedKeys="true" keyProperty="id,create_time,update_time">
 	INSERT INTO sms(mobile,sms_code,purpose) VALUES ('${mobile}','${smsCode}','${purpose}')
 </insert>

@@ -73,7 +73,7 @@ route: { cluster: financial-management-cluster, timeout: { seconds: 10 } , regex
     safe_regex: { google_re2: {}, regex: "^/[service|yichat].*" }
 route: { cluster: kefu-cluster, timeout: { seconds: 10 } }
 - match:
-    safe_regex: { google_re2: {}, regex: "^/gtjaiback.*" }
+    safe_regex: { google_re2: {}, regex: "^/demoiback.*" }
   route: { cluster: bpm-cluster, timeout: { seconds: 10 } }
   request_headers_to_add: 
   - header:

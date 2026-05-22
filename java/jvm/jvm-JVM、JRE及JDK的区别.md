@@ -170,7 +170,7 @@ JDK 带来了 `javaws` 。我们可以将其与 Java Web Start 结合使用。
 
 
 ## java 版本的关系
-当我们使用：`javap -verbose -classpath cap-api-1.0.0.jar com.demo.gjyw.ErrorCode | grep major` 可以查看一个 class 文件的版本信息，比如：
+当我们使用：`javap -verbose -classpath cap-api-1.0.0.jar com.demo.demo.ErrorCode | grep major` 可以查看一个 class 文件的版本信息，比如：
 ```
 javap -verbose ErrorCode.class | grep version
 minor version: 0
