@@ -137,7 +137,7 @@ protected void prepareBeanFactory(ConfigurableListableBeanFactory beanFactory) {
     }
 }
 ```
-主要是为 `BeanFactory` 配置一系列需要用到的组件，并且注册一些 `BeanPostProcessor` 实例，并且手动注册了一些 bean .
+主要是为 `BeanFactory` 配置一系列需要用到的组件，然后注册了一些 `BeanPostProcessor` 实例，并且通过 `registerSingleton` 手动注册了一些 bean .
 
 + `registerSingleton(name, instance)`：注册一个真正的 bean（有名字，受 `BeanPostProcessor` 、生命周期、`getBean(name)` 等管理）。
 + `registerResolvableDependency(type, value)`：不是 bean，没有名字，不走生命周期，仅在按类型解析时作为额外候选可见；`getBean(...)`、`getBeansOfType(...)` 看不到它。
@@ -297,8 +297,8 @@ protected void finishRefresh() {
 }
 ```
 1. 清理缓存
-2. 初始化 `LifecycleProcessor`
-3. 调用 `LifecycleProcessor` 的 `onRefresh` 方法来处理 `Lifecycle` 回调
+2. 初始化 `LifecycleProcessor` : 如果容器中注册了 `lifecycleProcessor` 名字的 `LifecycleProcessor` 类型 bean ，就是用这个 bean ；否则 `registerSingleton(...)` 方法直接注册使用 `DefaultLifecycleProcessor` .
+3. 调用 `LifecycleProcessor` 的 `onRefresh` 方法来处理 `Lifecycle` 回调 : `DefaultLifecycleProcessor` 会获取 `Lifecycle` 类型的 bean， 并视情况调用 `Lifecycle.start(...)`
 4. 发布 `ContextRefreshedEvent` 事件
 
 关于 `Lifecycle` 请参考 [LifeCycle](/spring/core/core-ioc/spring-lifecycle.md)

@@ -102,8 +102,8 @@ public static Set<BeanDefinitionHolder> registerAnnotationConfigProcessors(
 }
 ```
 总结下来， `AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry)` 方法会视情况向 `BeanDefinitionRegistry` 中注册以下 `BeanDefinition` ：
-1. `org.springframework.context.annotation.internalConfigurationAnnotationProcessor` -> `ConfigurationClassPostProcessor` : 处理 `@Configuration` 、`@Bean` 、`@Import` 、`@ImportResource` 、`@ComponentScan` 等注解
-2. `org.springframework.context.annotation.internalAutowiredAnnotationProcessor` -> `AutowiredAnnotationBeanPostProcessor` : 处理 `@Autowired` 、`@Value` 等注解
+1. `org.springframework.context.annotation.internalConfigurationAnnotationProcessor` -> `ConfigurationClassPostProcessor` : 处理 `@Configuration` 、`@Bean` 、`@Import` 、`@ImportResource` 、`@ComponentScan` 等注解，另外会将 `@PropertySource` 注解的属性文件加载到 `Environment` 中。
+2. `org.springframework.context.annotation.internalAutowiredAnnotationProcessor` -> `AutowiredAnnotationBeanPostProcessor` : 处理 `@Autowired` 、`@Value` 、 `@Injec` 等注解
 3. `org.springframework.context.annotation.internalCommonAnnotationProcessor` -> `CommonAnnotationBeanPostProcessor` : 处理 `@Resource` 、`@PostConstruct` 、`@PreDestroy` 等注解
 4. `org.springframework.context.annotation.internalPersistenceAnnotationProcessor` -> `PersistenceAnnotationBeanPostProcessor` : 处理 JPA 相关注解，如果添加了 JPA 依赖
 5. `org.springframework.context.event.internalEventListenerProcessor` -> `EventListenerMethodProcessor` : 处理 `@EventListener` 注解
@@ -236,6 +236,8 @@ protected final @Nullable SourceClass doProcessConfigurationClass(
 1. 处理 `@PropertySource` 注解
 2. 处理 `@ComponentScan` 注解
 3. `processImports(...)` 处理 `@Import` 注解
+4. 处理 `@ImportResource` 注解
+5. 处理 `@Bean` 注解
 
 
 ### @Import 注解

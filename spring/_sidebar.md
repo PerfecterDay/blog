@@ -9,6 +9,7 @@
     * [Spring 一文精通BeanFactory](/spring/core/core-ioc/spring-精通BeanFactory.md)
     * [Spring 一文精通ApplicationContext](/spring/core/core-ioc/spring-精通ApplicationContext.md)
     * [Spring 一文精通BeanDefinition注册](/spring/core/core-ioc/spring-精通BeanDefinition注册.md)
+    * [Spring 一文精通Springboot 配置属性](/spring/core/core-ioc/spring-精通属性与环境配置.md)
     * [Spring 容器与Bean概览](/spring/core/core-ioc/spring-容器与Bean概览.md)
     * [Spring IOC-核心原理](/spring/core/core-ioc/spring-ioc-核心原理.md)
     * [Dependencies](#)

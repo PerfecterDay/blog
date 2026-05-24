@@ -674,7 +674,7 @@ private void invokeAwareInterfaces(Object bean) {
 
 ## 总结
 Spring 的 `BeanFactory` 中获取 bean 时，有几个扩展点：
-1. 如果自己在 `BeanFactory` 中注册了 bean，直接返回这个 bean，通过 `SingletonBeanRegistry.registerSingleton(String beanName, Object singletonObject)` 方法能注册
+1. 如果自己在 `BeanFactory` 中注册了 bean，直接返回这个 bean，不走整个 spring 的生命周期管理和 `BeanPostProcessor` 处理机制，通过 `SingletonBeanRegistry.registerSingleton(String beanName, Object singletonObject)` 方法能注册
 2. 如果自定义了 `InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation(...)` 方法，并且返回了 bean 实例，则直接返回这个 bean 实例。这种情况下，如果成功获取到实例对象后，也会 `BeanPostProcessor.postProcessAfterInitialization(...)` 方法处理这个实例对象。
 3. 如果注册 bean 时提供了 `Supplier` ，则会使用 `Supplier` 生成实例
 4. 使用 `InstantiationStrategy` 实例化策略实例化 bean
