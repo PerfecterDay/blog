@@ -18,6 +18,22 @@ public class AnnotatedGenericBeanDefinition extends GenericBeanDefinition implem
 public class ScannedGenericBeanDefinition extends GenericBeanDefinition implements AnnotatedBeanDefinition {...}
 ```
 
+## BeanDefinitionBuilder
+Programmatic means of constructing BeanDefinitions using the builder pattern. Intended primarily for use when implementing Spring 2.0 NamespaceHandlers.
+
+## ClassPathScanningCandidateComponentProvider
+```
+LinkedHashSet<BeanDefinition> candidateComponents = new LinkedHashSet<>();
+ClassPathScanningCandidateComponentProvider scanner = getScanner();
+scanner.setResourceLoader(this.resourceLoader);
+scanner.addIncludeFilter(new AnnotationTypeFilter(FeignClient.class));
+Set<String> basePackages = getBasePackages(metadata);
+Set<String> basePackages = getBasePackages(metadata);
+for (String basePackage : basePackages) {
+    candidateComponents.addAll(scanner.findCandidateComponents(basePackage));
+}
+```
+
 ## BeanDefinitionRegistry
 保存、注册、获取等管理 `BeanDefinition` 元信息的接口：
 ```
