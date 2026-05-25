@@ -1,33 +1,6 @@
 # 一文精通 Spring BeanFactory
 {docsify-updated}
 
-## BeanDefinition
-描述一个 bean 的元数据信息，比如 `class` 类型 , `scope` , `name` , `isLazyInit` 等信息。
-```
-public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {...}
-
-public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccessor
-		implements BeanDefinition, Cloneable {...}
-
-public class RootBeanDefinition extends AbstractBeanDefinition {...}
-
-public class AnnotatedGenericBeanDefinition extends GenericBeanDefinition implements AnnotatedBeanDefinition {...}
-
-public class ScannedGenericBeanDefinition extends GenericBeanDefinition implements AnnotatedBeanDefinition {...}
-```
-
-## BeanDefinitionRegistry
-注册 `BeanDefinition` 元信息的接口：
-```
-public interface BeanDefinitionRegistry extends AliasRegistry {
-    void registerBeanDefinition(String beanName, BeanDefinition beanDefinition)
-			throws BeanDefinitionStoreException;
-    void removeBeanDefinition(String beanName) throws NoSuchBeanDefinitionException;
-    BeanDefinition getBeanDefinition(String beanName) throws NoSuchBeanDefinitionException;
-    ...
-}
-```
-
 ## BeanFactory
 提供了获取 bean 的接口：
 ```
@@ -43,22 +16,22 @@ BeanFactory (顶层接口)
 
 <center><img src="pics/beanfactory.png" alt=""></center>
 
-### AbstractBeanFactory.doGetBean
+### doGetBean-AbstractBeanFactory
 ```
 public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport implements ConfigurableBeanFactory {
     ...
     private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256); //保存创建好的 singleton bean 
-    private final Set<String> singletonsCurrentlyInCreation = ConcurrentHashMap.newKeySet(16);
+    private final Set<String> singletonsCurrentlyInCreation = ConcurrentHashMap.newKeySet(16); //记录正在创建的 bean
     private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(16); //Cache of early singleton objects: bean name to bean instance.
+	private final Map<String, ObjectFactory<?>> singletonFactories = new ConcurrentHashMap<>(16);
 	private final Set<String> alreadyCreated = ConcurrentHashMap.newKeySet(256);
 
     private final List<BeanPostProcessor> beanPostProcessors = new BeanPostProcessorCacheAwareList();
     private final Map<String, Scope> scopes = new LinkedHashMap<>(8);
     private ApplicationStartup applicationStartup = ApplicationStartup.DEFAULT;
     private final Map<String, RootBeanDefinition> mergedBeanDefinitions = new ConcurrentHashMap<>(256); //最终存放 BeanDefinition 元信息
-    private final Set<String> alreadyCreated = ConcurrentHashMap.newKeySet(256);
+	private final Map<String, DisposableBean> disposableBeans = new LinkedHashMap<>();
     ...
-
 }
 ```
 
@@ -72,11 +45,11 @@ protected <T> T doGetBean(
 		Object beanInstance;
 ----------
 		// Eagerly check singleton cache for manually registered singletons.
-        // 可以手动在 BeanFactory 中注册一个bean，这种情况就走下边这个分支
-		Object sharedInstance = getSingleton(beanName);
+        // 尝试从缓存中获取 bean，如果缓存中有，就返回这个 bean
+		Object sharedInstance = getSingleton(beanName); //缓存逻辑
 		if (sharedInstance != null && args == null) {
 			...
-			beanInstance = getObjectForBeanInstance(sharedInstance, name, beanName, null);
+			beanInstance = getObjectForBeanInstance(sharedInstance, name, beanName, null); //看看是否需要调用工厂方法生成 bean
 		}
 -----------
 // 如果在父 BeanFactory 中有这个 bean，就递归调用父 BeanFactory 的 getBean 方法并返回
@@ -108,6 +81,7 @@ protected <T> T doGetBean(
 				}
 			}
 ----------
+			// 前置处理
 			if (!typeCheckOnly) {
 				markBeanAsCreated(beanName); // this.alreadyCreated.add(beanName); 标记为创建的 bean
 			}
@@ -194,8 +168,8 @@ protected <T> T doGetBean(
 		return adaptBeanInstance(name, beanInstance, requiredType);
 	}
 ```
-1. 尝试从手动注册的 bean 中获取，手动注册是指通过如 `SingletonBeanRegistry.registerSingleton(String beanName, Object singletonObject)` 等方法注册到 `BeanFactory` 中的 bean ，如果有就直接返回
-2. 如果当前 `BeanFactory` 没有 bean 的定义，尝试从父 `BeanFactory` 中获取，如果获取到则返回
+1. 尝试从缓存的 bean 中获取，手动注册bena可以通过如 `SingletonBeanRegistry.registerSingleton(String beanName, Object singletonObject)` 等方法注册到 `BeanFactory` 中的 bean ，如果缓存中有就直接返回
+2. 如果当前 `BeanFactory` 没有 bean ，尝试从父 `BeanFactory` 中获取，如果获取到则返回
 3. 如果有依赖的 bean 就先依次创建好 `depends-on` 的 bean
 4. 如果是 `singleton` 类型的 bean 则进入创建 `singleton` 流程
 5. 如果是 `prototype` 类型的 bean 则进入创建 `prototype` 流程
@@ -203,7 +177,7 @@ protected <T> T doGetBean(
 
 4,5,6 步骤最终都会调用到 `createBean(...)` 方法。
 
-### AbstractAutowireCapableBeanFactory.createBean
+### createBean-AbstractAutowireCapableBeanFactory
 以下就是 `AbstractAutowireCapableBeanFactory.createBean(...)` 的核心代码:
 
 ```
@@ -333,7 +307,7 @@ OK，回到 `createBean(...)` ，这个方法的核心逻辑就是
 1. 尝试 `Object bean = resolveBeforeInstantiation(beanName, mbdToUse)` 获取 bean，如果有定义的 `InstantiationAwareBeanPostProcessor` 返回了 bean 实例，则使用 `BeanPostProcessor`处理完bean后直接返回该 bean 实例
 2. 否则继续执行 `doCreateBean(...)` 方法生成 bean
 
-### AbstractAutowireCapableBeanFactory.doCreateBean
+### doCreateBean-AbstractAutowireCapableBeanFactory
 ```
 protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable Object @Nullable [] args)
 			throws BeanCreationException {
@@ -374,6 +348,12 @@ protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable
 	if (earlySingletonExposure) {
 		...
 		addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
+		                             |
+		                             |
+		                             ▼
+		//this.singletonFactories.put(beanName, singletonFactory);
+		//this.earlySingletonObjects.remove(beanName);
+		//this.registeredSingletons.add(beanName);
 	}
 -----------
 	// 属性填充和初始化，依赖项的注入就发生在这里
@@ -408,7 +388,8 @@ protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable
 	}
 
 -----------
-	// 处理 DisposableBean 生命周期回调功能
+	// 处理 DisposableBean 生命周期回调功能，会把bean 包装成 DisposableBean 并放到 disposableBeans Map 中。
+	// ConfigurableBeanFactory.destroySingletons 的方法会在容器关闭的时候被调用，shutdown hook 时也会调用到
 	// Register bean as disposable.
 	try {
 		registerDisposableBeanIfNecessary(beanName, bean, mbd);
@@ -431,7 +412,7 @@ exposedObject = initializeBean(beanName, exposedObject, mbd);
 //其他循环引用问题处理及回调
 ```
 
-#### AbstractAutowireCapableBeanFactory.createBeanInstance
+#### createBeanInstance-AbstractAutowireCapableBeanFactory
 ```
 protected BeanWrapper createBeanInstance(String beanName, RootBeanDefinition mbd, @Nullable Object @Nullable [] args) {
 	// Make sure bean class is actually resolved at this point.
@@ -491,7 +472,7 @@ protected BeanWrapper createBeanInstance(String beanName, RootBeanDefinition mbd
 }
 ```
 
-#### AbstractAutowireCapableBeanFactory.instantiateBean
+#### instantiateBean-AbstractAutowireCapableBeanFactory
 ```
 protected BeanWrapper instantiateBean(String beanName, RootBeanDefinition mbd) {
 	try {
@@ -520,7 +501,7 @@ public AbstractAutowireCapableBeanFactory() {
 }
 ```
 
-#### AbstractAutowireCapableBeanFactory.populateBean
+#### populateBean-AbstractAutowireCapableBeanFactory
 ```
 protected void populateBean(String beanName, RootBeanDefinition mbd, @Nullable BeanWrapper bw) {
 	...
@@ -596,7 +577,7 @@ protected void populateBean(String beanName, RootBeanDefinition mbd, @Nullable B
 	}
 ```
 
-#### AbstractAutowireCapableBeanFactory.initializeBean
+#### initializeBean-AbstractAutowireCapableBeanFactory
 ```
 protected Object initializeBean(String beanName, Object bean, @Nullable RootBeanDefinition mbd) {
 	...
@@ -671,6 +652,82 @@ private void invokeAwareInterfaces(Object bean) {
 	}
 }
 ```
+
+## 循环依赖与三级缓存分析
++ `singletonObjects` : 保存已经创建好的 bean
++ `earlySingletonObjects` : 保存 early singleton 的 bean，early singleton 是指那些已经实例化，但是还没有完成属性填充和初始化的 bean
++ `singletonFactories` : 保存 bean 的 `ObjectFactory` ，用于创建 bean 实例
+
+1. 当获取一个 bean 时，首先尝试从缓存 `singletonObjects` 中获取，如果获取不到，进入第2步
+2. 尝试从 `earlySingletonObjects` 缓存中获取，如果获取不到，进入第3步
+3. 从 `singletonFactories` 中获取，并将其放入 `earlySingletonObjects` 缓存中，然后从 `singletonFactories` 中移除
+```
+protected @Nullable Object getSingleton(String beanName, boolean allowEarlyReference) {
+	// Quick check for existing instance without full singleton lock.
+	Object singletonObject = this.singletonObjects.get(beanName);
+	if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+		singletonObject = this.earlySingletonObjects.get(beanName);
+		if (singletonObject == null && allowEarlyReference) {
+			if (!this.singletonLock.tryLock()) {
+				// Avoid early singleton inference outside of original creation thread.
+				return null;
+			}
+			try {
+				// Consistent creation of early reference within full singleton lock.
+				singletonObject = this.singletonObjects.get(beanName);
+				if (singletonObject == null) {
+					singletonObject = this.earlySingletonObjects.get(beanName);
+					if (singletonObject == null) {
+						ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+						if (singletonFactory != null) {
+							singletonObject = singletonFactory.getObject();
+							// Singleton could have been added or removed in the meantime.
+							if (this.singletonFactories.remove(beanName) != null) {
+								this.earlySingletonObjects.put(beanName, singletonObject);
+							}
+							else {
+								// singletonObject 已经被创建完成，从 singletonObjects 中获取
+								singletonObject = this.singletonObjects.get(beanName);
+							}
+						}
+					}
+				}
+			}
+			finally {
+				this.singletonLock.unlock();
+			}
+		}
+	}
+	return singletonObject;
+}
+```
+
+
+而在 `AbstractAutowireCapableBeanFactory.doCreateBean(...)` 方法中， bean 实例创建好之后，进行属性依赖注入和初始化回调之前，如果允许循环依赖，则会将 bean 提前放入 `singletonFactories` 缓存中，为了解决循环依赖问题：
+
+```
+-----------
+// 提前将 bean 放入缓存，为了解决循环依赖
+// Eagerly cache singletons to be able to resolve circular references
+// even when triggered by lifecycle interfaces like BeanFactoryAware.
+boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences &&
+		isSingletonCurrentlyInCreation(beanName));
+if (earlySingletonExposure) {
+	...
+	addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
+									|
+									|
+									▼
+	//this.singletonFactories.put(beanName, singletonFactory);
+	//this.earlySingletonObjects.remove(beanName);
+	//this.registeredSingletons.add(beanName);
+}
+-----------
+```
+
+如果是构造函数循环依赖的情况，在实例化阶段就会去解析依赖，此时当前 bean 实例还未创建完成，也就无法将 bean 提前放入 `singletonFactories` 缓存中，所以构造函数循环依赖无法解决。
+
+`A <--> B` ，A首先实例化好后，放进 `singletonFactories` 缓存，然后在 `populateBean` 方法时发现依赖 `B`，于是就创建 `B` 的 bean； `B` 实例化好之后，也放入到 `singletonFactories`，然后在 `populateBean` 方法时发现依赖 `A`，于是就尝试获取 `A` 的 bean，然后在 上述的 `getSingleton(...)` 方法中尝试从 `singletonFactories` 缓存中获取 `A` 的 bean，此时能够获取到 `A` 的 bean，然后 `B` 创建完成；最后 `A` 创建完成。
 
 ## 总结
 Spring 的 `BeanFactory` 中获取 bean 时，有几个扩展点：

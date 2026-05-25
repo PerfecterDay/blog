@@ -3,8 +3,36 @@
 
 前边两篇文章我们详细介绍了 `BeanFactory` 与 `ApplicationContext` 的实现，本篇文章我们来详细介绍一下 Spring 扫描注册 `BeanDefinition` 的过程。
 
-Springboot 默认创建的 ApplicationContext 是 `AnnotationConfigServletWebServerApplicationContext` .
-`AnnotationConfigApplicationContext`/`AnnotationConfigServletWebServerApplicationContext` 中都会创建 `AnnotatedBeanDefinitionReader/ClassPathBeanDefinitionScanner` 来读取 `BeanDefinition` 。并且都会在构造函数中直接 `new` 这些对象：
+## BeanDefinition
+描述一个 bean 的元数据信息，比如 `class` 类型 , `scope` , `name` , `isLazyInit` 等信息。
+```
+public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {...}
+
+public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccessor
+		implements BeanDefinition, Cloneable {...}
+
+public class RootBeanDefinition extends AbstractBeanDefinition {...}
+
+public class AnnotatedGenericBeanDefinition extends GenericBeanDefinition implements AnnotatedBeanDefinition {...}
+
+public class ScannedGenericBeanDefinition extends GenericBeanDefinition implements AnnotatedBeanDefinition {...}
+```
+
+## BeanDefinitionRegistry
+保存、注册、获取等管理 `BeanDefinition` 元信息的接口：
+```
+public interface BeanDefinitionRegistry extends AliasRegistry {
+    void registerBeanDefinition(String beanName, BeanDefinition beanDefinition)
+			throws BeanDefinitionStoreException;
+    void removeBeanDefinition(String beanName) throws NoSuchBeanDefinitionException;
+    BeanDefinition getBeanDefinition(String beanName) throws NoSuchBeanDefinitionException;
+    ...
+}
+```
+
+## ApplicationContext 的构造
+Springboot 默认创建的 `ApplicationContext` 是 `AnnotationConfigServletWebServerApplicationContext` .
+`AnnotationConfigApplicationContext`/`AnnotationConfigServletWebServerApplicationContext` 的构造函数中都会创建 `AnnotatedBeanDefinitionReader/ClassPathBeanDefinitionScanner` 来读取 `BeanDefinition` 。并且都会在构造函数中直接 `new` 这些对象：
 ```
 AnnotationConfigApplicationContext
 public AnnotationConfigApplicationContext() {
@@ -113,7 +141,11 @@ public static Set<BeanDefinitionHolder> registerAnnotationConfigProcessors(
 
 <center><img src="pics/annotationConfigUtils.png" width="80%"></center>
 
-这里边有一个 `ConfigurationClassPostProcessor` ，是一个 用于处理 `@Configuration` 注解类的 `BeanFactoryPostProcessor` 。
++ `ConfigurationClassPostProcessor` ，是一个 用于处理 `@Configuration` 注解类的 `BeanFactoryPostProcessor` 。
++ `AutowiredAnnotationBeanPostProcessor` ，是一个 `BeanPostProcessor` ，用于处理 `@Autowired` 、`@Value` 、 `@Injec` 等注解
++ `CommonAnnotationBeanPostProcessor` ，是一个 `BeanPostProcessor` ，用于处理 `@Resource` 、`@PostConstruct` 、`@PreDestroy` 等注解
++ `PersistenceAnnotationBeanPostProcessor` ，是一个 `BeanPostProcessor` ，用于处理 JPA 相关注解，如果添加了 JPA 依赖
+
 
 ## ConfigurationClassPostProcessor
 
@@ -328,7 +360,7 @@ private void processImports(ConfigurationClass configClass, SourceClass currentS
 
 以上代码可以看出，分别处理了 `ImportSelector` 、`BeanRegistrar` 、`ImportBeanDefinitionRegistrar` 、`@Configuration` 配置类。
 
-
+### ImportBeanDefinitionRegistrar 的实例
 ```
 @EnableAspectJAutoProxy → AspectJAutoProxyRegistrar
 @EnableTransactionManagement → TransactionManagementConfigurationSelector（用 ImportSelector，但底层结合 Registrar）
@@ -337,15 +369,77 @@ private void processImports(ConfigurationClass configClass, SourceClass currentS
 Spring Data 的 @Enable*Repositories → *RepositoriesRegistrar
 ```
 
-1. 它是单例 + 无状态的临时对象：Registrar 由 new 实例化，不进入 Spring 容器，用完就丢。所以不要在 Registrar 字段里存运行期状态。
+1. 它是单例 + 无状态的临时对象： `Registrar` 由 `new` 实例化，不进入 Spring 容器，用完就丢。所以不要在 `Registrar` 字段里存运行期状态。
 2. 它能拿到 4 种"基础设施"，但拿不到完整 IoC
     通过两种方式注入：
-
-    构造器注入：`public MyRegistrar(Environment env, BeanFactory bf, ClassLoader cl, ResourceLoader rl)` 任意组合
-    `Aware` 接口： `EnvironmentAware / BeanFactoryAware / BeanClassLoaderAware / ResourceLoaderAware`
+    + 构造器注入：`public MyRegistrar(Environment env, BeanFactory bf, ClassLoader cl, ResourceLoader rl)` 任意组合
+    + `Aware` 接口： `EnvironmentAware / BeanFactoryAware / BeanClassLoaderAware / ResourceLoaderAware`
     但拿不到其他 Bean 的实例（因为此时 Bean 都还没实例化）。
 3. 不能在里面注册 `BeanDefinitionRegistryPostProcessor`
 4. `Registrar` 的执行时机: 它在 `BeanFactoryPostProcessor` 阶段（具体说在 `BeanDefinitionRegistryPostProcessor` 阶段）执行，早于任何 Bean 的实例化。它注册的 `BeanDefinition` 也会被后续的 `BeanFactoryPostProcessor` （比如属性占位符解析）正常处理。
 
 
-## ClassPathBeanDefinitionScanner
+### ConfigurationClassParser 总结
+`ConfigurationClassParser` 只是解析 `@Configuration` 标注的配置类，将其解析成 `ConfigurationClass` 中各个字段的配置：
+```
+final class ConfigurationClass {
+
+	private final AnnotationMetadata metadata;
+
+	private final Resource resource;
+
+	@Nullable
+	private String beanName;
+
+	private boolean scanned = false;
+
+	private final Set<ConfigurationClass> importedBy = new LinkedHashSet<>(1);
+
+	private final Set<BeanMethod> beanMethods = new LinkedHashSet<>(); // @Bean 标注的方法
+
+	private final Map<String, Class<? extends BeanDefinitionReader>> importedResources =
+			new LinkedHashMap<>();
+
+	private final Map<ImportBeanDefinitionRegistrar, AnnotationMetadata> importBeanDefinitionRegistrars =
+			new LinkedHashMap<>(); // @Import 导入的 ImportBeanDefinitionRegistrar
+
+	final Set<String> skippedBeanMethods = new HashSet<>();
+    ....
+}
+```
+真正从配置类中加载 `BeanDefinition` 到 `BeanFactory` 中的是 `ConfigurationClassBeanDefinitionReader` 。
+
+### ConfigurationClassBeanDefinitionReader
+`ConfigurationClassBeanDefinitionReader` 负责根据 `ConfigurationClass` 中的配置，加载 `BeanDefinition` 到 `BeanFactory` 中。
+
+```
+public void loadBeanDefinitions(Set<ConfigurationClass> configurationModel) {
+    TrackedConditionEvaluator trackedConditionEvaluator = new TrackedConditionEvaluator();
+    for (ConfigurationClass configClass : configurationModel) {
+        loadBeanDefinitionsForConfigurationClass(configClass, trackedConditionEvaluator);
+    }
+}
+
+private void loadBeanDefinitionsForConfigurationClass(
+        ConfigurationClass configClass, TrackedConditionEvaluator trackedConditionEvaluator) {
+
+    if (trackedConditionEvaluator.shouldSkip(configClass)) {
+        String beanName = configClass.getBeanName();
+        if (StringUtils.hasLength(beanName) && this.registry.containsBeanDefinition(beanName)) {
+            this.registry.removeBeanDefinition(beanName);
+        }
+        this.importRegistry.removeImportingClass(configClass.getMetadata().getClassName());
+        return;
+    }
+
+    if (configClass.isImported()) {
+        registerBeanDefinitionForImportedConfigurationClass(configClass);
+    }
+    for (BeanMethod beanMethod : configClass.getBeanMethods()) {
+        loadBeanDefinitionsForBeanMethod(beanMethod);
+    }
+
+    loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
+    loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
+}
+```

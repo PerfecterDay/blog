@@ -251,8 +251,29 @@ ConfigurationClassPostProcessor
 
 ### @ConfigurationProperties
 ```
-@EnableConfigurationProperties
-ConfigurationPropertiesBindingPostProcessor
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Import(EnableConfigurationPropertiesRegistrar.class)
+public @interface EnableConfigurationProperties {
+
+	/**
+	 * The bean name of the configuration properties validator.
+	 * @since 2.2.0
+	 */
+	String VALIDATOR_BEAN_NAME = "configurationPropertiesValidator";
+
+	/**
+	 * Convenient way to quickly register
+	 * {@link ConfigurationProperties @ConfigurationProperties} annotated beans with
+	 * Spring. Standard Spring Beans will also be scanned regardless of this value.
+	 * @return {@code @ConfigurationProperties} annotated beans to register
+	 */
+	Class<?>[] value() default {};
+
+}
+
+EnableConfigurationPropertiesRegistrar -> ConfigurationPropertiesBindingPostProcessor
 ```
 
 如果使用了 `@EnableConfigurationProperties` 注解，该注解会提前将标注了 `@ConfigurationProperties` 的类解析为 `BeanDefinition` 并注入 Spring 容器，随后同样由上述的处理器负责在 Bean 初始化时完成属性绑定
