@@ -18,22 +18,6 @@ public class AnnotatedGenericBeanDefinition extends GenericBeanDefinition implem
 public class ScannedGenericBeanDefinition extends GenericBeanDefinition implements AnnotatedBeanDefinition {...}
 ```
 
-## BeanDefinitionBuilder
-Programmatic means of constructing BeanDefinitions using the builder pattern. Intended primarily for use when implementing Spring 2.0 NamespaceHandlers.
-
-## ClassPathScanningCandidateComponentProvider
-```
-LinkedHashSet<BeanDefinition> candidateComponents = new LinkedHashSet<>();
-ClassPathScanningCandidateComponentProvider scanner = getScanner();
-scanner.setResourceLoader(this.resourceLoader);
-scanner.addIncludeFilter(new AnnotationTypeFilter(FeignClient.class));
-Set<String> basePackages = getBasePackages(metadata);
-Set<String> basePackages = getBasePackages(metadata);
-for (String basePackage : basePackages) {
-    candidateComponents.addAll(scanner.findCandidateComponents(basePackage));
-}
-```
-
 ## BeanDefinitionRegistry
 保存、注册、获取等管理 `BeanDefinition` 元信息的接口：
 ```
@@ -288,7 +272,7 @@ protected final @Nullable SourceClass doProcessConfigurationClass(
 5. 处理 `@Bean` 注解
 
 
-### @Import 注解
+#### @Import 注解
 ```
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -376,26 +360,8 @@ private void processImports(ConfigurationClass configClass, SourceClass currentS
 
 以上代码可以看出，分别处理了 `ImportSelector` 、`BeanRegistrar` 、`ImportBeanDefinitionRegistrar` 、`@Configuration` 配置类。
 
-### ImportBeanDefinitionRegistrar 的实例
-```
-@EnableAspectJAutoProxy → AspectJAutoProxyRegistrar
-@EnableTransactionManagement → TransactionManagementConfigurationSelector（用 ImportSelector，但底层结合 Registrar）
-@EnableFeignClients → FeignClientsRegistrar
-@EnableConfigurationProperties → EnableConfigurationPropertiesRegistrar
-Spring Data 的 @Enable*Repositories → *RepositoriesRegistrar
-```
 
-1. 它是单例 + 无状态的临时对象： `Registrar` 由 `new` 实例化，不进入 Spring 容器，用完就丢。所以不要在 `Registrar` 字段里存运行期状态。
-2. 它能拿到 4 种"基础设施"，但拿不到完整 IoC
-    通过两种方式注入：
-    + 构造器注入：`public MyRegistrar(Environment env, BeanFactory bf, ClassLoader cl, ResourceLoader rl)` 任意组合
-    + `Aware` 接口： `EnvironmentAware / BeanFactoryAware / BeanClassLoaderAware / ResourceLoaderAware`
-    但拿不到其他 Bean 的实例（因为此时 Bean 都还没实例化）。
-3. 不能在里面注册 `BeanDefinitionRegistryPostProcessor`
-4. `Registrar` 的执行时机: 它在 `BeanFactoryPostProcessor` 阶段（具体说在 `BeanDefinitionRegistryPostProcessor` 阶段）执行，早于任何 Bean 的实例化。它注册的 `BeanDefinition` 也会被后续的 `BeanFactoryPostProcessor` （比如属性占位符解析）正常处理。
-
-
-### ConfigurationClassParser 总结
+#### ConfigurationClassParser 总结
 `ConfigurationClassParser` 只是解析 `@Configuration` 标注的配置类，将其解析成 `ConfigurationClass` 中各个字段的配置：
 ```
 final class ConfigurationClass {
@@ -459,3 +425,213 @@ private void loadBeanDefinitionsForConfigurationClass(
     loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
 }
 ```
+
+## Spring提供的实用工具类
++ `BeanDefinitionBuilder` ：Programmatic means of constructing BeanDefinitions using the builder pattern. Intended primarily for use when implementing Spring 2.0 NamespaceHandlers.
++ `ClassPathScanningCandidateComponentProvider` :
+    ```
+    LinkedHashSet<BeanDefinition> candidateComponents = new LinkedHashSet<>();
+    ClassPathScanningCandidateComponentProvider scanner = getScanner();
+    scanner.setResourceLoader(this.resourceLoader);
+    scanner.addIncludeFilter(new AnnotationTypeFilter(FeignClient.class));
+    Set<String> basePackages = getBasePackages(metadata);
+    Set<String> basePackages = getBasePackages(metadata);
+    for (String basePackage : basePackages) {
+        candidateComponents.addAll(scanner.findCandidateComponents(basePackage));
+    }
+    ```
++ `AnnotationConfigUtils` : 
++ `ClassPathBeanDefinitionScanner` :一个 Bean 定义扫描器，用于在类路径（classpath）上检测候选 Bean，并将对应的 BeanDefinition 注册到指定的注册表中（如 BeanFactory 或 ApplicationContext）。
+    候选类通过可配置的类型过滤器（type filters）进行检测。默认情况下，过滤器会包含那些被 Spring stereotype 注解标记的类，例如：
+    ```
+    @Component
+    @Repository
+    @Service
+    @Controller
+    ```
+    也就是说，默认会自动扫描并注册这些注解标识的类为 Spring Bean。 使用这个工具类能方便的扫描出 classpath 下指定条件的 bean 。
+
+## 实例分析
+### ImportBeanDefinitionRegistrar 的实例
+```
+@EnableAspectJAutoProxy → AspectJAutoProxyRegistrar
+@EnableTransactionManagement → TransactionManagementConfigurationSelector（用 ImportSelector，但底层结合 Registrar）
+@EnableFeignClients → FeignClientsRegistrar
+@EnableConfigurationProperties → EnableConfigurationPropertiesRegistrar
+@MapperScan → MapperScannerRegistrar (注册 MapperScannerConfigurer )
+Spring Data 的 @Enable*Repositories → *RepositoriesRegistrar
+```
+
+1. 它是单例 + 无状态的临时对象： `Registrar` 由 `new` 实例化，不进入 Spring 容器，用完就丢。所以不要在 `Registrar` 字段里存运行期状态。
+2. 它能拿到 4 种"基础设施"，但拿不到完整 IoC
+    通过两种方式注入：
+    + 构造器注入：`public MyRegistrar(Environment env, BeanFactory bf, ClassLoader cl, ResourceLoader rl)` 任意组合
+    + `Aware` 接口： `EnvironmentAware / BeanFactoryAware / BeanClassLoaderAware / ResourceLoaderAware`
+    但拿不到其他 Bean 的实例（因为此时 Bean 都还没实例化）。
+3. 不能在里面注册 `BeanDefinitionRegistryPostProcessor`
+4. `Registrar` 的执行时机: 它在 `BeanFactoryPostProcessor` 阶段（具体说在 `BeanDefinitionRegistryPostProcessor` 阶段）执行，早于任何 Bean 的实例化。它注册的 `BeanDefinition` 也会被后续的 `BeanFactoryPostProcessor` （比如属性占位符解析）正常处理。
+
+### @EnableFeignClients → FeignClientsRegistrar 分析
+```
+public void registerFeignClients(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
+    LinkedHashSet<BeanDefinition> candidateComponents = new LinkedHashSet<>();
+    Map<String, Object> attrs = metadata.getAnnotationAttributes(EnableFeignClients.class.getName());
+    final Class<?>[] clients = attrs == null ? null : (Class<?>[]) attrs.get("clients");
+    if (clients == null || clients.length == 0) {
+        ClassPathScanningCandidateComponentProvider scanner = getScanner();
+        scanner.setResourceLoader(this.resourceLoader);
+        scanner.addIncludeFilter(new AnnotationTypeFilter(FeignClient.class));
+        Set<String> basePackages = getBasePackages(metadata);
+        for (String basePackage : basePackages) {
+            candidateComponents.addAll(scanner.findCandidateComponents(basePackage));
+        }
+    }
+    else {
+        for (Class<?> clazz : clients) {
+            candidateComponents.add(new AnnotatedGenericBeanDefinition(clazz));
+        }
+    }
+
+    for (BeanDefinition candidateComponent : candidateComponents) {
+        if (candidateComponent instanceof AnnotatedBeanDefinition) {
+            // verify annotated class is an interface
+            AnnotatedBeanDefinition beanDefinition = (AnnotatedBeanDefinition) candidateComponent;
+            AnnotationMetadata annotationMetadata = beanDefinition.getMetadata();
+            Assert.isTrue(annotationMetadata.isInterface(), "@FeignClient can only be specified on an interface");
+
+            Map<String, Object> attributes = annotationMetadata
+                    .getAnnotationAttributes(FeignClient.class.getCanonicalName());
+
+            String name = getClientName(attributes);
+            registerClientConfiguration(registry, name, attributes.get("configuration"));
+
+            registerFeignClient(registry, annotationMetadata, attributes);
+        }
+    }
+}
+
+private void registerFeignClient(BeanDefinitionRegistry registry, AnnotationMetadata annotationMetadata,
+        Map<String, Object> attributes) {
+    String className = annotationMetadata.getClassName();
+    Class clazz = ClassUtils.resolveClassName(className, null);
+    ConfigurableBeanFactory beanFactory = registry instanceof ConfigurableBeanFactory
+            ? (ConfigurableBeanFactory) registry : null;
+    String contextId = getContextId(beanFactory, attributes);
+    String name = getName(attributes);
+    FeignClientFactoryBean factoryBean = new FeignClientFactoryBean();
+    factoryBean.setBeanFactory(beanFactory);
+    factoryBean.setName(name);
+    factoryBean.setContextId(contextId);
+    factoryBean.setType(clazz);
+    factoryBean.setRefreshableClient(isClientRefreshEnabled());
+    BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(clazz, () -> {
+        factoryBean.setUrl(getUrl(beanFactory, attributes));
+        factoryBean.setPath(getPath(beanFactory, attributes));
+        factoryBean.setDecode404(Boolean.parseBoolean(String.valueOf(attributes.get("decode404"))));
+        Object fallback = attributes.get("fallback");
+        if (fallback != null) {
+            factoryBean.setFallback(fallback instanceof Class ? (Class<?>) fallback
+                    : ClassUtils.resolveClassName(fallback.toString(), null));
+        }
+        Object fallbackFactory = attributes.get("fallbackFactory");
+        if (fallbackFactory != null) {
+            factoryBean.setFallbackFactory(fallbackFactory instanceof Class ? (Class<?>) fallbackFactory
+                    : ClassUtils.resolveClassName(fallbackFactory.toString(), null));
+        }
+        return factoryBean.getObject();
+    });
+    definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
+    definition.setLazyInit(true);
+    validate(attributes);
+
+    AbstractBeanDefinition beanDefinition = definition.getBeanDefinition();
+    beanDefinition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, className);
+    beanDefinition.setAttribute("feignClientsRegistrarFactoryBean", factoryBean);
+
+    // has a default, won't be null
+    boolean primary = (Boolean) attributes.get("primary");
+
+    beanDefinition.setPrimary(primary);
+
+    String[] qualifiers = getQualifiers(attributes);
+    if (ObjectUtils.isEmpty(qualifiers)) {
+        qualifiers = new String[] { contextId + "FeignClient" };
+    }
+
+    BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className, qualifiers);
+    BeanDefinitionReaderUtils.registerBeanDefinition(holder, registry);
+
+    registerOptionsBeanDefinition(registry, contextId);
+}
+```
+
+大致过程就是扫描 `@FeignClient` 注解的类，然后根据注解的信息配置 `FeignClientFactoryBean`，然后生成一个 `BeanDefinition` ，为这个 `BeanDefinition` 设置 `instanceSupplier` 属性。 `Supplier` 就是使用 `FeignClientFactoryBean` 工厂来生成对象。
+
+<center><img src="/pics/feignClient.png" alt=""></center>
+
+### @MapperScan → MapperScannerRegistrar 分析
+`MapperScannerRegistrar` 的 `registerBeanDefinitions` 方法：
+```
+void registerBeanDefinitions(AnnotationMetadata annoMeta, AnnotationAttributes annoAttrs,
+    BeanDefinitionRegistry registry, String beanName) {
+
+    BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(MapperScannerConfigurer.class);
+    builder.addPropertyValue("processPropertyPlaceHolders", true);
+    ....
+    registry.registerBeanDefinition(beanName, builder.getBeanDefinition());
+}
+```
+这个方法的主要作用就是注册一个 `MapperScannerConfigurer` 的 `BeanDefinition` 到 `BeanFactory` 中。 `MapperScannerConfigurer` 是一个 `BeanDefinitionRegistryPostProcessor`，它会扫描指定包下的所有 `@Mapper` 注解的接口，然后为每个接口生成一个 `BeanDefinition`，并注册到 `BeanFactory` 中。其中，主要是用了 `ClassPathMapperScanner` 来扫描的。以下是 `MapperScannerConfigurer` 的 `postProcessBeanDefinitionRegistry` 方法：
+```
+@Override
+public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
+    if (this.processPropertyPlaceHolders) {
+        processPropertyPlaceHolders();
+    }
+
+    ClassPathMapperScanner scanner = new ClassPathMapperScanner(registry);
+    scanner.setAddToConfig(this.addToConfig);
+    scanner.setAnnotationClass(this.annotationClass);
+    scanner.setMarkerInterface(this.markerInterface);
+    scanner.setSqlSessionFactory(this.sqlSessionFactory);
+    scanner.setSqlSessionTemplate(this.sqlSessionTemplate);
+    scanner.setSqlSessionFactoryBeanName(this.sqlSessionFactoryBeanName);
+    scanner.setSqlSessionTemplateBeanName(this.sqlSessionTemplateBeanName);
+    scanner.setResourceLoader(this.applicationContext);
+    scanner.setBeanNameGenerator(this.nameGenerator);
+    scanner.setMapperFactoryBeanClass(this.mapperFactoryBeanClass);
+    if (StringUtils.hasText(lazyInitialization)) {
+        scanner.setLazyInitialization(Boolean.valueOf(lazyInitialization));
+    }
+    if (StringUtils.hasText(defaultScope)) {
+        scanner.setDefaultScope(defaultScope);
+    }
+    scanner.registerFilters();
+    scanner.scan(
+        StringUtils.tokenizeToStringArray(this.basePackage, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS));
+}
+```
+
+最终， `ClassPathMapperScanner.doScan()` 方法会把所有 `@Mapper` 注解的接口都注册为 `BeanDefinition` ，但是注册的类型是 `MapperFactoryBean` ：
+```
+@Override
+public Set<BeanDefinitionHolder> doScan(String... basePackages) {
+    Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
+
+    if (beanDefinitions.isEmpty()) {
+        LOGGER.warn(() -> "No MyBatis mapper was found in '" + Arrays.toString(basePackages)
+            + "' package. Please check your configuration.");
+    } else {
+        processBeanDefinitions(beanDefinitions);
+    }
+
+    return beanDefinitions;
+}
+```
+
+### 总结
+通过以上两个实例，我们发现 `Feign` 和 `Mybatis` 都使用了 `ImportBeanDefinitionRegistrar` 来注册 `BeanDefinition` 到 `BeanFactory` 中。但是有一些小小的差异就是 `Feign` 在 `ImportBeanDefinitionRegistrar` 中直接扫描 `@FeignClient` 注解的类，然后生成 `BeanDefinition` 注册到 `BeanFactory` 中。  
+
+而 `Mybatis` 则是注册了一个 `MapperScannerConfigurer` 的 `BeanDefinitionRegistryPostProcessor` 类型到 `BeanFactory` 中，然后由 `MapperScannerConfigurer` 来扫描 `@Mapper` 注解的类，然后生成 `BeanDefinition` 注册到 `BeanFactory` 中。  
+
+类似地，两者都使用了工厂来创建 bean 实例，分别是用了 `FeignClientFactoryBean` 和 `MapperFactoryBean` 。
