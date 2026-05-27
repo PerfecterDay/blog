@@ -10,7 +10,8 @@
 4. UDP 检查: 尝试发送 UDP 包到指定的 IP/主机名和端口，并等待指定的时间。
 5. Time-to-live (TTL) 检查：被动等待服务主动发起检查。如果在指定时间内没有收到服务的状态更新，就会进入 `critical` 状态。
 6. Docker 检查：Docker 检查依赖于与 Docker 容器打包在一起的外部应用程序，这些应用程序通过 Docker `exec` API 端点触发运行。
-7. H2ping 检查：向 http2 的端点发送一个 ping 帧。
+7. gRPC 检查: 会检测支持标准 gRPC 健康检查协议的应用程序。
+8. H2ping 检查：向 http2 的端点发送一个 ping 帧。
 
 ## HTTP
 HTTP 检查向指定 URL 发送 HTTP 请求，并根据 HTTP 响应代码报告服务健康状况。建议使用 HTTP 检查，而不是使用 cURL 或其他外部进程来检查 HTTP 操作的脚本检查。

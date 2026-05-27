@@ -27,10 +27,8 @@ gRPC Client
 ```
 
 ## 服务端
-1. 服务端配置
-	参照 `grpc-server-spring-boot-autoconfigure` jar 包中的 `net.devh.boot.grpc.server.config.GrpcServerProperties` 类
-2. `@GrpcClient("myService")` 注解为每一个 RPC 服务调用者注册一个名字，可以在配置文件中为各个调用者定义不同的配置。 `GLOBAL` 代表全局配置。
-3. `@GrpcService` 就可以注册一个 gRpc 服务
+1. 服务端配置:参照 `grpc-server-spring-boot-autoconfigure` jar 包中的 `net.devh.boot.grpc.server.config.GrpcServerProperties` 类
+2. `@GrpcService` 就可以注册一个 gRpc 服务
 4. `AnnotationGrpcServiceDiscoverer` 这个类处理了 `@GrpcService` 注解的自动注入
 
 
@@ -66,7 +64,8 @@ public GrpcServerConfigurer keepAliveServerConfigurer() {
 ```
 ## 客户端
 1. 客户端配置参照 `grpc-client-spring-boot-autoconfigure` jar 包中的 `net.devh.boot.grpc.client.config.GrpcChannelsProperties` 类
-2. `GrpcClientBeanPostProcessor` 这个类处理使用了 `@GrpcClient` 注解的自动注入
+2. `@GrpcClient("myService")` 注解为每一个 RPC 服务调用者注册一个名字，可以在配置文件中为各个调用者定义不同的配置。 `GLOBAL` 代表全局配置。
+3. `GrpcClientBeanPostProcessor` 这个类处理使用了 `@GrpcClient` 注解的自动注入
 
 
 ### 服务发现-DiscoveryClientResolverFactory

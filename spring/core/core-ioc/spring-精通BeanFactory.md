@@ -1,6 +1,29 @@
 # 一文精通 Spring BeanFactory
 {docsify-updated}
 
+## TL;DR
+Spring 的 `BeanFactory` 中获取 bean 时，有几个扩展点：
+```
+doGetBean : 首先尝试从三级缓存中获取，获取到直接返回；没有则视情况去父 BeanFactory 尝试获取，如果没有，就根据 bean 的 Scope 类型去创建 bean
+    createBean : 调用 InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation(beanClass, beanName) 方法获取 bean，如果有一个 InstantiationAwareBeanPostProcessor 返回非 null 的实例，就返回这个实例， 后续的 InstantiationAwareBeanPostProcessor 不会再调用。 然后再调用 BeanPostProcessor.postProcessAfterInitialization(...) 处理这个实例后返回。如果没有一个 InstantiationAwareBeanPostProcessor 返回实例，则调用 doCreateBean(...) 创建 bean
+        doCreateBean : 
+            createBeanInstance(beanName, mbd, args) : 1. 如果 RootBeanDefinition 定义了 instanceSupplier ，就调用该 Supplier 生成实例并返回;
+                                                      2. 如果 RootBeanDefinition 定义了 FactoryMethodName 工厂方法，就是用工厂方法生成实例并返回
+                                                      3. 调用适当的构造函数，配合 InstantiationStrategy 生成实例
+            applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName): 调用 MergedBeanDefinitionPostProcessor.postProcessMergedBeanDefinition(...) 方法
+            populateBean(beanName, mbd, instanceWrapper): 1.在依赖注入之前调用 InstantiationAwareBeanPostProcessor.postProcessAfterInstantiation(...) 方法处理bean；
+                                                          2. 执行依赖注入
+                                                          3. 调用 InstantiationAwareBeanPostProcessor.postProcessProperties(....) 处理属性值
+                                                          4. 属性绑定
+            exposedObject = initializeBean(beanName, exposedObject, mbd)：
+                invokeAwareMethods(beanName, bean)：执行 Aware 相关的接口回调
+                applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName)：调用 BeanPostProcessor.postProcessBeforeInitialization(...)
+                invokeInitMethods(beanName, wrappedBean, mbd): 调用 InitializingBean.afterPropertiesSet()/init-method 方法
+                applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName)：调用 BeanPostProcessor.postProcessAfterInitialization(...) 方法
+```
+
+另外，还有一点需要强调的是，如果直接使用 `BeanFactory` ，要想使用 `BeanPostProcessor` ,  `InstantiationAwareBeanPostProcessor` 这些扩展点，必须手动实例化这些组件实例并且注册到 `BeanFactory` 中才能生效。 `BeanFactoryPostProcessor` 则必须实例化后手动调用处理 `BeanFactory` 才能生效。
+
 ## BeanFactory
 提供了获取 bean 的接口：
 ```
@@ -583,7 +606,6 @@ protected Object initializeBean(String beanName, Object bean, @Nullable RootBean
 	...
 	invokeAwareMethods(beanName, bean); // 调用 Aware 相关的方法
 
-
 	// 调用 BeanPostProcessor.postProcessBeforeInitialization(...) 方法
 	Object wrappedBean = bean;
 	if (mbd == null || !mbd.isSynthetic()) {
@@ -603,10 +625,10 @@ protected Object initializeBean(String beanName, Object bean, @Nullable RootBean
 }
 ```
 这里主要处理了3个接口相关的回调：
-1. `Aware` 相关的回调
-2. `BeanPostProcessor.postProcessBeforeInitialization(...)` 方法
-3. `InitializingBean.afterPropertiesSet()` 方法和自定义的初始化方法
-4. `BeanPostProcessor.postProcessAfterInitialization(...)` 方法
+1. 实现 `Aware` 相关的回调
+2. 调用 `BeanPostProcessor.postProcessBeforeInitialization(...)` 方法
+3. 调用 `InitializingBean.afterPropertiesSet()` 方法和自定义的初始化方法
+4. 调用 `BeanPostProcessor.postProcessAfterInitialization(...)` 方法
 
 有一点需要注意的是 `ApplicationContextAwareProcessor` 是以 `BeanPostProcessor` 的形式来处理一些 `Aware` 相关的回调的。而 `invokeAwareMethods(...)` 则是固定地直接调用几个 `Aware` 相关的方法的。
 ```
@@ -628,6 +650,28 @@ private void invokeAwareMethods(String beanName, Object bean) {
 }
 
 ApplicationContextAwareProcessor
+
+public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+	...
+	AccessControlContext acc = null;
+
+	if (System.getSecurityManager() != null) {
+		acc = this.applicationContext.getBeanFactory().getAccessControlContext();
+	}
+
+	if (acc != null) {
+		AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+			invokeAwareInterfaces(bean);
+			return null;
+		}, acc);
+	}
+	else {
+		invokeAwareInterfaces(bean);
+	}
+
+	return bean;
+}
+
 private void invokeAwareInterfaces(Object bean) {
 	if (bean instanceof EnvironmentAware environmentAware) {
 		environmentAware.setEnvironment(this.applicationContext.getEnvironment());
@@ -728,18 +772,3 @@ if (earlySingletonExposure) {
 如果是构造函数循环依赖的情况，在实例化阶段就会去解析依赖，此时当前 bean 实例还未创建完成，也就无法将 bean 提前放入 `singletonFactories` 缓存中，所以构造函数循环依赖无法解决。
 
 `A <--> B` ，A首先实例化好后，放进 `singletonFactories` 缓存，然后在 `populateBean` 方法时发现依赖 `B`，于是就创建 `B` 的 bean； `B` 实例化好之后，也放入到 `singletonFactories`，然后在 `populateBean` 方法时发现依赖 `A`，于是就尝试获取 `A` 的 bean，然后在 上述的 `getSingleton(...)` 方法中尝试从 `singletonFactories` 缓存中获取 `A` 的 bean，此时能够获取到 `A` 的 bean，然后 `B` 创建完成；最后 `A` 创建完成。
-
-## 总结
-Spring 的 `BeanFactory` 中获取 bean 时，有几个扩展点：
-1. 如果自己在 `BeanFactory` 中注册了 bean，直接返回这个 bean，不走整个 spring 的生命周期管理和 `BeanPostProcessor` 处理机制，通过 `SingletonBeanRegistry.registerSingleton(String beanName, Object singletonObject)` 方法能注册
-2. 如果自定义了 `InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation(...)` 方法，并且返回了 bean 实例，则直接返回这个 bean 实例。这种情况下，如果成功获取到实例对象后，也会 `BeanPostProcessor.postProcessAfterInitialization(...)` 方法处理这个实例对象。
-3. 如果注册 bean 时提供了 `Supplier` ，则会使用 `Supplier` 生成实例
-4. 使用 `InstantiationStrategy` 实例化策略实例化 bean
-5. `InstantiationAwareBeanPostProcessor.postProcessAfterInstantiation(...)` 方法处理实例化后的 bean，这时候 bean 中的依赖、初始化回调、 `Aware` 相关的回调都还没有执行。
-6. `InstantiationAwareBeanPostProcessor.postProcessProperties(...)` 方法处理 bean 的属性，可以注入、修改、添加、删除 bean 的属性值。
-7. 当 bean 实例化并且完成属性的注入后，在`InitializingBean.afterPropertiesSet()`/自定义初始化方法执行之前会调用 `BeanPostProcessor.postProcessBeforeInitialization(...)` 方法处理 bean。
-8. 执行完初始化方法之后会执行 `BeanPostProcessor.postProcessAfterInitialization(...)` 方法处理 bean。
-
-1，2，3，4 处理的都是对象的实例化过程，5，6 处理的都是对象实例化后，属性注入前的处理，7，8 处理的都是对象实例化并且属性注入后，初始化前后的处理。
-
-另外，还有一点需要强调的是，如果直接使用 `BeanFactory` ，要想使用 `BeanPostProcessor` ,  `InstantiationAwareBeanPostProcessor` 这些扩展点，必须手动实例化这些组件实例并且注册到 `BeanFactory` 中才能生效。 `BeanFactoryPostProcessor` 则必须实例化后手动调用处理 `BeanFactory` 才能生效。

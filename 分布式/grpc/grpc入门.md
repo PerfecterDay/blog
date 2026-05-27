@@ -69,6 +69,7 @@ gRPC 使用带有特殊 gRPC 插件的 protoc 从 proto 文件中生成代码：
 1. 服务实现
    ```
 	服务端：
+	@GrpcService
     public class TradeService extends GreeterGrpc.GreeterImplBase {
 		public void handle(Request request, StreamObserver<Response> responseObserver) {}
 	}
