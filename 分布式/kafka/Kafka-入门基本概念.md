@@ -1,21 +1,16 @@
 #  Kafka入门
 {docsify-updated}
 
-- [Kafka入门](#kafka入门)
-	- [消息系统的模型](#消息系统的模型)
-	- [Kafka 概要设计](#kafka-概要设计)
-	- [Kafka基本概念与术语](#kafka基本概念与术语)
-	- [Kafka使用场景](#kafka使用场景)
+零拷贝技术 : https://developer.ibm.com/articles/j-zerocopy/
 
-
-### 消息系统的模型
+## 消息系统的模型
 最常见的两种消息泛型：
 1. 消息队列模型  
     基于消息队列提供的消息服务，用于进程间通信以及线程间通信。该模型定义了消息队列、发送者和接收者，提供了一种点对点的消息传递方式，发送者发送每条消息到队列的指定位置，接收者从指定位置获取消息。**每条消息由一个发送者发送出来，且只会被一个消费者消费：发送者和消费者是一对一的关系**。
 2. 发布/订阅模型  
     有一个主题概念的，主题可以理解为逻辑语义相近的消息的容器。这种模型一般将发送者称为**发布者**，将消费者称为**订阅者**。发布者将消息发布到指定的主题 topic 中，所有订阅了该 topic 的订阅者都可以收到该 topic 下的所有消息。**发送者与消费者是一对多的关系**。
 
-### Kafka 概要设计
+## Kafka 概要设计
 1. 高吞吐量/低时延  
     Kafka 虽然会持久化所有数据到磁盘，但本质上每次写入操作其实都只是把数据写入到操作系统的页缓存中，然后由操作系统自行决定什么时候把也缓存中的数据写回磁盘。这样有三个优势：
     1. 操作系统页缓存是在内存中分配的，所以消息写入的速度非常快
@@ -49,11 +44,14 @@
     阻碍线性扩容的一个很常见的因素就是状态的保存。无论哪类分布式系统，集群中的每台服务器一定会维护很多内部状态。如果服务器自身来保存这些状态信息，则必须要处理一致性问题。相反，如果服务器是无状态的，状态的保存和管理交于专门的协调服务来做，那么整个集群的服务器之间就无需繁重的状态共享，极大地降低了维护复杂度。
     Kafka使用 Zookeeper 来管理服务器状态，Kafka 服务器只保存很轻量级的内部状态。
 
-### Kafka基本概念与术语
+## Kafka基本概念与术语
 1. 消息  
-2. topic 和 partition  
-    topic是一个逻辑概念，代表了一类消息，也可以理解为**一类消息的容器**。topic 通常会被多个消费者订阅，因此出于性能的考虑，Kafka并不是 topic-message 的两级结构，而是采用了 **topic-partition-message** 的三级结构来分散负载。本质上说每个 topic 都由若干个 partition组成，每个partition是不可修改的有序消息队列（消息日志）。每个partition都有自己的专属partition编号，通常从0开始。用户能对partition唯一能做的就是在序列尾部追加写入消息。每个消息都有一个序号，该序号被称为位移（offset）。**\<topic,partition,offset\>** 能唯一确认一条消息。
-    <center><img src="pics/topic-partition.png" alt="" width="40%"></center>
+2. `topic` 和 `partition`  
+    `topic` 是一个逻辑概念，代表了一类消息，也可以理解为**一类消息的容器**。 `topic` 通常会被多个消费者订阅，因此出于性能的考虑，Kafka并不是 `topic-message` 的两级结构，而是采用了 **topic-partition-message** 的三级结构来分散负载。本质上说每个 topic 都由若干个 partition组成，每个partition是不可修改的有序消息队列（消息日志）。每个partition都有自己的专属partition编号，通常从0开始。用户能对partition唯一能做的就是在序列尾部追加写入消息。每个消息都有一个序号，该序号被称为位移（offset）。**\<topic,partition,offset\>** 能唯一确认一条消息。
+    <center>
+    <img src="pics/kafka-topic-partion.jpg" alt="" width="60%">
+    <img src="pics/topic-partition.png" alt="" width="40%">
+    </center>
 
 3. offset  
    topic下的partition中每个消息都有一个序号，该序号称为 offset。另外，消费端在消费消息时也有一个 offset 的概念，指向了当前消费到第几个消息了，通常该位移会随着消费进度不断往前移动。
@@ -68,7 +66,7 @@
 6. ISR  
    ISR 的全称是 **in-sync replica，就是与 leader replica保持同步的 replica 的集合，包括 leader replica**。Kafka 为 partition 动态维护一个 replica 集合。集合中所有 replica 保存的消息都与 leader replica 保持同步状态，**只有这个集合中的 replica 才能被选举为 leader，也只有该集合中的所有 replica 都接收到了同一条消息， Kafka 才会将该消息置为已提交状态，即认为该消息发送成功**。不过这点可以通过配置修改。
    
-### Kafka使用场景
+## Kafka使用场景
 1. 消息传输
 2. 网站行为日志追踪
 3. 设计数据收集
