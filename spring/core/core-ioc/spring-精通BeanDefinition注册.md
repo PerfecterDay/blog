@@ -266,7 +266,7 @@ protected final @Nullable SourceClass doProcessConfigurationClass(
 ```
 
 1. 处理 `@PropertySource` 注解
-2. 处理 `@ComponentScan` 注解
+2. 处理 `@ComponentScan` 注解，使用 `ComponentScanAnnotationParser -> ClassPathBeanDefinitionScanner` 扫描组件，注册 `BeanDefinition`.默认扫描标注了 `@ComponentScan` 注解类所在的包
 3. `processImports(...)` 处理 `@Import` 注解
 4. 处理 `@ImportResource` 注解
 5. 处理 `@Bean` 注解

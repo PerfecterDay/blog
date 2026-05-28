@@ -1,7 +1,8 @@
 # envoy 上游集群配置
 {docsify-updated}
 
-> https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/service_discovery#arch-overview-service-discovery-types-static
+> https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/service_discovery#arch-overview-service-discovery-types-static.  
+> https://www.envoyproxy.io/docs/envoy/latest/configuration/upstream/cluster_manager/cluster_manager#config-cluster-manager
 
 
 ## 服务发现
