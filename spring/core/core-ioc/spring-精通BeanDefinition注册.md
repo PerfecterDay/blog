@@ -150,6 +150,10 @@ public static Set<BeanDefinitionHolder> registerAnnotationConfigProcessors(
 ## ConfigurationClassPostProcessor
 
 ```
+public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPostProcessor,
+		BeanRegistrationAotProcessor, BeanFactoryInitializationAotProcessor, PriorityOrdered,
+		ResourceLoaderAware, ApplicationStartupAware, BeanClassLoaderAware, EnvironmentAware {...}
+
 ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry()
     └─ processConfigBeanDefinitions()
         ├─ ConfigurationClassParser.parse()             ← 解析阶段
@@ -358,7 +362,7 @@ private void processImports(ConfigurationClass configClass, SourceClass currentS
 }
 ```
 
-以上代码可以看出，分别处理了 `ImportSelector` 、`BeanRegistrar` 、`ImportBeanDefinitionRegistrar` 、`@Configuration` 配置类。
+以上代码可以看出，分别处理了 `@Import` 导入的 `ImportSelector` 、`BeanRegistrar` 、`ImportBeanDefinitionRegistrar` 、其它 `@Configuration` 配置类的场景。
 
 
 #### ConfigurationClassParser 总结
@@ -389,10 +393,10 @@ final class ConfigurationClass {
     ....
 }
 ```
-真正从配置类中加载 `BeanDefinition` 到 `BeanFactory` 中的是 `ConfigurationClassBeanDefinitionReader` 。
+真正从配置类 `ConfigurationClass` 对象中加载 `BeanDefinition` 到 `BeanFactory` 中的是 `ConfigurationClassBeanDefinitionReader` 。
 
 ### ConfigurationClassBeanDefinitionReader
-`ConfigurationClassBeanDefinitionReader` 负责根据 `ConfigurationClass` 中的配置，加载 `BeanDefinition` 到 `BeanFactory` 中。
+`ConfigurationClassBeanDefinitionReader` 负责根据 `ConfigurationClass` 对象中的属性值，加载 `BeanDefinition` 到 `BeanFactory` 中。
 
 ```
 public void loadBeanDefinitions(Set<ConfigurationClass> configurationModel) {
@@ -428,7 +432,7 @@ private void loadBeanDefinitionsForConfigurationClass(
 
 ## Spring提供的实用工具类
 + `BeanDefinitionBuilder` ：Programmatic means of constructing BeanDefinitions using the builder pattern. Intended primarily for use when implementing Spring 2.0 NamespaceHandlers.
-+ `ClassPathScanningCandidateComponentProvider` :
++ `ClassPathScanningCandidateComponentProvider` : 自定义的 bean 扫描器，比如 `Feign` 就是用它扫描 bean
     ```
     LinkedHashSet<BeanDefinition> candidateComponents = new LinkedHashSet<>();
     ClassPathScanningCandidateComponentProvider scanner = getScanner();
@@ -441,7 +445,7 @@ private void loadBeanDefinitionsForConfigurationClass(
     }
     ```
 + `AnnotationConfigUtils` : 
-+ `ClassPathBeanDefinitionScanner` :一个 Bean 定义扫描器，用于在类路径（classpath）上检测候选 Bean，并将对应的 BeanDefinition 注册到指定的注册表中（如 BeanFactory 或 ApplicationContext）。
++ `ClassPathBeanDefinitionScanner` :继承自 `ClassPathScanningCandidateComponentProvider`, 一个 Bean 定义扫描器，用于在类路径（classpath）上检测候选 Bean，并将对应的 `BeanDefinition` 注册到指定的注册表中（如 `BeanFactory` 或 `ApplicationContext` ）。
     候选类通过可配置的类型过滤器（type filters）进行检测。默认情况下，过滤器会包含那些被 Spring stereotype 注解标记的类，例如：
     ```
     @Component
