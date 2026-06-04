@@ -1,11 +1,9 @@
 # docker 容器
 {docsify-updated}
 
-- [docker 容器](#docker-容器)
-		- [容器操作的命令](#容器操作的命令)
-		- [实现容器的底层技术](#实现容器的底层技术)
+> https://medium.com/@furkan.turkal/how-does-docker-actually-work-the-hard-way-a-technical-deep-diving-c5b8ea2f0422
 
-### 容器操作的命令
+## 容器操作的命令
 
 <center>
 	<img src="/pics/container-state.jpg">
@@ -67,7 +65,7 @@
 7. `docker run -it -p 8999:8999 --name user-center -v /Users/coder_wang/Workspace/com_gmas:/usr/local/demo/com_gmas  docker.io/library/golang:1.17.7`
 8. `docker update --restart=always --cpus=2 --memory=1g my-container`: 用于动态修改一个或多个已运行容器的资源限制或重启策略，而不会中断容器运行。
 
-### 实现容器的底层技术
+## 实现容器的底层技术
 cgroup 和 namespace 是最重要的两种技术
 + cgroup 实现资源限额，
 + namespace 实现资源隔离。
@@ -97,3 +95,9 @@ cgroup 和 namespace 是最重要的两种技术
 		Network namespace 让容器拥有自己独立的网卡、IP、路由等资源。我们会在后面网络章节详细讨论。
 	6. User namespace  
 		User namespace 让容器能够管理自己的用户，host 不能看到容器中创建的用户。
+
+## 查看容器对应的宿主机进程
+```
+docker run -it --rm --privileged --pid=host --net=host --ipc=host \
+  justincormack/nsenter1
+```
