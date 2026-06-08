@@ -88,3 +88,12 @@ spec:
       failureThreshold: 30
       periodSeconds: 10
 ```
+
+## 测试
+iptables -A INPUT -p tcp --dport 50053 -j DROP
+
+      securityContext:
+        capabilities:
+          add:
+            - NET_ADMIN
+            - NET_RAW   # 可选
