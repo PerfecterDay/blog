@@ -1,9 +1,6 @@
 # envoy 日志
 {docsify-updated}
 
-
-
-
 ## Access Log
 > https://cloudnative.to/envoy/configuration/observability/access_log/usage.html#config-access-log-format-dictionaries
 
@@ -35,4 +32,7 @@ HTTP 独有
 + UMSDR: 上游请求达到最大流持续时长
 
 ### 配置输出日志
-envoy -c envoy-demo.yaml --log-path logs/custom.log
+```
+envoy -c envoy-demo.yaml --log-path logs/custom.log //设置日志输出文件
+envoy -c envoy-demo.yaml -l debug --log-path logs/custom.log //设置日志级别
+```
