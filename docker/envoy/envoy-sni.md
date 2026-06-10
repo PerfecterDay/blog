@@ -160,7 +160,7 @@ transport_socket:
 
 # SNI 是什么
 
-**SNI = Server Name Indication（服务器名称指示）**，TLS 协议的一个扩展（RFC 6066），作用是：在 TLS 握手的第一步 `ClientHello` 里，**客户端明文告诉服务器"我要访问的域名是什么"**，这样服务器才能挑出对应的证书返回。
+**SNI = Server Name Indication（服务器名称指示）**，TLS 协议的一个扩展（RFC 6066），作用是：在 TLS 握手的第一步 `ClientHello` 里，**客户端明文告诉服务器"我要访问的域名是什么**，这样服务器才能挑出对应的证书返回。
 
 ## 为什么需要 SNI
 
