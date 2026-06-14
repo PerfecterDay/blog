@@ -37,5 +37,7 @@
   * [双写问题及解决方案](/架构/双写问题/dual-writes.md)
   * [Outbox 模式](/架构/双写问题/outbox.md)
   * [DB 与 Redis 一致性](/架构/双写问题/db-redis一致性.md)
+* [弹性设计](#)
+  * [Spring Boot 弹性设计](/架构/弹性设计/springboot-resilience.md)
 * [高可用](#)
   * [负载均衡的高可用](/架构/高可用/负载均衡的高可用.md)
