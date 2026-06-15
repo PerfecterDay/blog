@@ -28,6 +28,7 @@
   * [grpc入门](/分布式/grpc/grpc入门.md)
   * [Protobuf集成](/分布式/grpc/protobuf.md)
   * [grpc 核心原理](/分布式/grpc/grpc-核心原理.md)
+  * [grpc 负载均衡](/分布式/grpc/grpc-负载均衡.md)
   * [Springboot集成 grpc](/分布式/grpc/springboot集成grpc.md)
   * [go-grpc](/分布式/grpc/go-grpc.md)
 * [Nacos](#)
