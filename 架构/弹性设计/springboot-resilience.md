@@ -33,12 +33,20 @@
 ```java
 @Bean
 RestClient restClient() {
-    var factory = new JdkClientHttpRequestFactory();
-    factory.setReadTimeout(Duration.ofSeconds(2));
-    return RestClient.builder()
-        .requestFactory(factory)
-        .baseUrl("https://upstream")
-        .build();
+    HttpClient httpClient = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(2)) //建连超时
+                    .sslContext(sslContext)
+                    .build();
+
+            JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
+            requestFactory.setReadTimeout(Duration.ofSeconds(8)); //请求超时
+
+            return RestClient.builder()
+                    .configureMessageConverters(builder -> {
+                        builder.addCustomConverter(new TextHtmlJacksonConverter(new JsonMapper()));
+                    })
+                    .requestFactory(requestFactory)
+                    .baseUrl(clientAuthProperties.getUrl()).build();
 }
 ```
 
