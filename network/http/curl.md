@@ -75,6 +75,19 @@
 	}'
 	```
 
+### 双向 https 认证
+```
+curl -v --cacert ca.crt \
+     --cert client.crt --key client.key \
+     --pass your_password \
+     https://example.com
+```
++ `--cacert ca.crt`：指定受信任的 CA 根证书，用于验证服务端的身份（单向验证）。
++ `--cert client.crt`：发送您的客户端公钥证书，证明您的客户端身份（双向认证的关键）。
++ `--key client.key`：指定客户端私钥，必须与证书匹配。
++ `-v（或 --verbose）`：打印详细的 SSL/TLS 握手日志，方便排查证书不匹配等错误。
++ `--pass your_password`：如果客户端私钥设置了密码保护，需要提供此参数。
+
 ### 检查Http服务是否支持gzip
 ```
 curl https://www.baidu.com/ --silent --write-out "%{size_download}\n" --output /dev/null

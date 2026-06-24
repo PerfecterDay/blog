@@ -26,7 +26,7 @@ Sa-token 登录成功后，会在 Redis 生成三个 key：
 这三个 key 的有效期与 sa-token 设置的有效期时间是一致的
 
 + 长token： "demo-international-app-token:login:token:d663bd6c-0717-4485-ad6f-4a63032de2fb"，保存的是登录的 loginId(uid)
-+ session: demo-international-app-token:login:session:74627", 保存对应的 token（长 token）和 device：
++ 用户级session: demo-international-app-token:login:session:74627", 保存对应的 token（长 token）和 device：
   ```
   {
     "@class": "cn.dev33.satoken.dao.SaSessionForJacksonCustomized",
