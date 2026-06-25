@@ -4,7 +4,6 @@
 
 Java Secure Socket Extension（JSSE）实现了安全的互联网通信。 它为 TLS 和 DTLS 协议的 Java 版本提供了一个框架和实现方法，包括数据加密、服务器验证、信息完整性和可选客户端验证功能。
 
-
 与浏览器和操作系统类似，JRE的安装目录下也保存了一份默认可信的CA证书列表，一般在 jre/lib/security/cacerts文件中，使用JDK自带的 keytool 工具可以查看其中的内容，默认密码为： changeit.
 + `keytool -import -alias ca_wang -keystore cacerts -file ca_wang.crt`:从ca_wang.crt的文件中导入证书到cacerts的 TrustStore ，别名为 ca_wang
 + `keytool -list -cacerts -alias ca_wang`:显示指定别名为 ca_wang 的 TrustStore 证书信息
@@ -13,12 +12,25 @@ Java Secure Socket Extension（JSSE）实现了安全的互联网通信。 它�
 
 Java 平台下，证书尝尝被存储为 keystore 文件中，上面的 cacerts 就是一个 keystore 文件， keystore 文件不仅可以存储数字证书，还可以存储秘钥，存储在 keystore 文件中的对象有三种： Certificate（证书）、PrivateKey（私钥）和 SecretKey（对称加密秘钥）。
 
-keystore 只是一种文件格式而已，实际上在 Java 的世界里 KeyStore 文件分为两种： keystore 和 truststore， keystore 保存公私钥，用来解密或者签名； truststore 保存信任的证书列表，访问 https 时，对被访问者进行认证，确定它是可信任的。
+keystore 只是一种文件格式而已，实际上在 Java 的世界里 `KeyStore` 文件分为两种： `keystore` 和 `truststore` ， `keystore` 保存公私钥，用来解密或者签名； `truststore` 保存信任的证书列表，访问 https 时，对被访问者进行认证，确定它是可信任的。
+
+### KeyStore vs. TrustStore
+混淆这两个概念是学习 `javax.net.ssl` 时最常见的误区：
+
+* `KeyStore` （密钥库）：包含你自己的私钥和公钥证书。当你需要向其他人证明自己的身份时，使用它。
+* `TrustStore` （信任库）：包含你信任的第三方证书颁发机构 (CA) 的证书。当你需要验证你所连接的网站或服务是否合法时，使用它。
 
 Java 使用以下主要类和接口来支持安全传输：
 <center><img src="pics/jsse.jpg" width="40%"/></center>
 
 `SSLSocket` 由 `SSLSocketFactory` 创建，或由接受传入连接的 `SSLServerSocket` 创建。而 `SSLServerSocket` 则由 `SSLServerSocketFactory` 创建。 `SSLSocketFactory` 和 `SSLServerSocketFactory` 对象均由 `SSLContext` 创建。 `SSLEngine` 由 `SSLContext` 直接创建，并依赖应用程序来处理所有 I/O 操作。
+
+### 核心组件拆解
+* `SSLContext` ：核心引擎和大脑。作为一个工厂类，你需要在其中初始化协议版本（如 TLSv1.3）、身份凭证和信任规则。
+* `TrustManager` ：入站安全把关者。它负责将对方的证书与你的 `TrustStore` （通常是 Java 默认的 cacerts 文件）进行比对，从而判断远程服务器是否安全可信。
+* `KeyManager` ：出站安全管理者。它利用你的 `KeyStore` 提供你自己的私钥和证书。当远程服务器要求客户端认证（Client Authentication）时，它会出示这些凭证。
+* `SSLSocket / SSLServerSocket` ：对标准 Java 网络套接字（Socket）的高级封装。它们会自动执行 TLS 握手，并对流经标准输入/输出流的数据进行自动加密。
+* `SSLEngine` ：一个高级的、与传输协议解耦的类。用于复杂的非阻塞 I/O 操作（如 Java NIO 或 Netty）。它需要手动处理原始数据块，而不是依赖活跃的网络套接字连接。
 
 ### 获取 SSLSocketFactory 实例
 可以通过以下方式获取 `SSLSocketFactory`：
@@ -48,16 +60,16 @@ HTTPS（基于 TLS 的 HTTP）等协议确实需要进行主机名验证。自 J
 ### SSLContext
 
 ### KeyManager
-`KeyManager` 的主要职责是选择最终将被发送到远程主机的认证凭证。为了向远程对等体认证自己（本地安全套接字对等体），你必须用一个或多个KeyManager对象初始化一个SSLContext对象。你必须为每个将被支持的不同认证机制传递一个KeyManager。如果在SSLContext的初始化中传递了null，那么将创建一个空的KeyManager。如果使用内部默认上下文（例如，由SSLSocketFactory.getDefault()或SSLServerSocketFactory.getDefault()创建的SSLContext），那么将会创建一个默认的KeyManager
+`KeyManager` 的主要职责是选择最终将被发送到远程主机的认证凭证。为了向远程对等体认证自己（本地安全套接字对等体），你必须用一个或多个KeyManager对象初始化一个 `SSLContext` 对象。你必须为每个将被支持的不同认证机制传递一个 `KeyManager` 。如果在 `SSLContext` 的初始化中传递了 `null` ，那么将创建一个空的 `KeyManager` 。如果使用内部默认上下文（例如，由 `SSLSocketFactory.getDefault()` 或 `SSLServerSocketFactory.getDefault()` 创建的 `SSLContext` ），那么将会创建一个默认的 `KeyManager`
 
 ### TrustManager
-TrustManager 的主要责任是确定所提交的认证凭证是否应该被信任。如果凭证不被信任，那么连接将被终止。为了验证安全套接字对等体的远程身份，你必须用一个或多个TrustManager对象初始化一个SSLContext对象。你必须为每个支持的认证机制传递一个TrustManager。如果在SSLContext的初始化中传递了null，那么将为你创建一个信任管理器。通常，一个信任管理器支持基于X.509公钥证书的认证（例如，X509TrustManager）。一些安全套接字的实现也可能支持基于共享秘钥、Kerberos或其他机制的认证。
+`TrustManager` 的主要责任是确定所提交的认证凭证是否应该被信任。如果凭证不被信任，那么连接将被终止。为了验证安全套接字对等体的远程身份，你必须用一个或多个 `TrustManager` 对象初始化一个 `SSLContext` 对象。你必须为每个支持的认证机制传递一个 `TrustManager` `。如果在SSLContext` 的初始化中传递了 `null` ，那么将为你创建一个信任管理器。通常，一个信任管理器支持基于X.509公钥证书的认证（例如， `X509TrustManager` ）。一些安全套接字的实现也可能支持基于共享秘钥、 `Kerberos` 或其他机制的认证。
 
-TrustManager对象可以由TrustManagerFactory创建，或者通过提供接口的具体实现来创建。
+`TrustManager` 对象可以由 `TrustManagerFactory` 创建，或者通过提供接口的具体实现来创建。
 
-TrustManager 和 KeyManager 之间的关系
-+ TrustManager决定远程认证凭证（以及连接）是否应该被信任(通常是认证通信的对方)。
-+ KeyManager决定向远程主机发送哪些认证凭证（通常是提供让对方认证的凭证）。
+`TrustManager` 和 KeyManager 之间的关系
++ `TrustManager` 决定远程认证凭证（以及连接）是否应该被信任(通常是认证通信的对方)。
++ `KeyManager` 决定向远程主机发送哪些认证凭证（通常是提供让对方认证的凭证）。
 
 ### 启用 Java SSL 调试日志
 + 命令行参数：`java -Djavax.net.debug=ssl:handshake -jar MyApp.jar`
