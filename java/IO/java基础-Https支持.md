@@ -58,6 +58,30 @@ HTTPS（基于 TLS 的 HTTP）等协议确实需要进行主机名验证。自 J
 在某些情况下，握手过程中协商的参数在后续握手阶段需要被引用，以便做出信任决策。例如，有效的签名算法列表可能会限制可用于身份验证的证书类型。在握手过程中，可以通过在 `SSLSocket` 或 `SSLEngine` 上调用 `getHandshakeSession()` 方法来获取 `SSLSession` 。 `TrustManager` 或 `KeyManager` 的实现可以利用 `getHandshakeSession()` 方法获取有关会话参数的信息，以辅助决策。
 
 ### SSLContext
+本节中的类和接口旨在支持 `SSLContext` 对象的创建和初始化， `SSLContext` 对象用于创建 `SSLSocketFactory` 、 `SSLServerSocketFactory` 和 `SSLEngine` 对象。这些辅助类和接口属于 `javax.net.ssl` 包。
+
+`javax.net.ssl.SSLContext` 类是安全套接字协议实现的引擎类。该类的实例充当 `SSLSocket` 、 `SSLServerSocket` 和 `SSLEngine` 的工厂。一个 `SSLContext` 对象保存了在该上下文中创建的所有对象共用的所有状态信息。例如，当由该上下文提供的套接字工厂创建的套接字通过握手协议协商会话状态时，该会话状态便与 `SSLContext` 相关联。这些缓存的会话可被同一上下文中创建的其他套接字重用和共享。
+
+每个 `SSLContext` 实例都通过其 `init` 方法，使用其执行身份验证所需的密钥、证书链和受信任的根 CA 证书进行配置。该配置以密钥管理器和信任管理器的形式提供。这些管理器为上下文所支持的密码套件中的身份验证和密钥协商方面提供支持。
+
+获取并初始化 `SSLContext` 有多种方法：
+1. 最简单的方法是在 `SSLSocketFactory` 或 `SSLServerSocketFactory` 类上调用静态方法 `SSLContext.getDefault`。该方法会创建一个默认的 `SSLContext` ，其中包含默认的 `KeyManager` 、 `TrustManager` 和 `SecureRandom` （一个安全的随机数生成器）。分别使用默认的 `KeyManagerFactory` 和 `TrustManagerFactory` 来创建 `KeyManager` 和 `TrustManager` 。所使用的密钥材料位于默认密钥库和信任库中，具体由“自定义默认密钥库和信任库、存储类型及存储密码”一节中描述的系统属性决定。调用 `SSLSocketFactory.getDefault()` 方法时，系统会自动创建、初始化一个 `SSLContext` 对象，并将其静态赋值给 `SSLSocketFactory` 类。因此，无需直接创建和初始化 `SSLContext` 对象（除非想覆盖默认行为）。
+2. 让调用者对所创建上下文的行为拥有最大控制权的方法是：调用 `SSLContext` 类的静态方法 `SSLContext.getDefault` ，然后通过调用该实例的相应 `init()` 方法来初始化上下文。 `init()` 方法的一种变体接受三个参数：一个 `KeyManager` 对象数组、一个 `TrustManager` 对象数组以及一个 `SecureRandom` 对象。 `KeyManager` 和 `TrustManager` 对象可通过实现相应的接口，或使用 `KeyManagerFactory` 和 `TrustManagerFactory` 类生成实现来创建。随后，可以利用作为参数传递给 `TrustManagerFactory` 或 `KeyManagerFactory` 类 `init()` 方法的 `KeyStore` 中包含的密钥素材，分别初始化 `KeyManagerFactory` 和 `TrustManagerFactory` 。最后，可以调用 `getTrustManagers()` 方法（位于 `TrustManagerFactory` 中）和 `getKeyManagers()` 方法（位于 `KeyManagerFactory` 中），以获取信任管理器或密钥管理器的数组，每种类型的信任或密钥材料对应一个管理器。
+3. 若要通过调用 `SSLContext.getInstance()` 工厂方法来创建 `SSLContext` 对象，必须指定协议名称。您还可以指定希望由哪个提供程序来提供所请求协议的实现:
+   ```
+   	public static SSLContext getInstance(String protocol);
+	public static SSLContext getInstance(String protocol, String provider);
+	public static SSLContext getInstance(String protocol, Provider provider);
+   ```
+所有的协议/算法名字参考：https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#sslcontext-algorithms
+
+获取到 `SSLContext` 对象后必须使用 `init(...)` 方法初始化：
+```
+	public void init(KeyManager[] km, TrustManager[] tm, SecureRandom random);
+```
+如果 `KeyManager[]` 参数为 `null` ，则将为该上下文定义一个空的 `KeyManager` 。如果 `TrustManager[]` 参数为 `null` ，则将在已安装的安全提供程序中搜索 `TrustManagerFactory` 类的最高优先级实现（参见 `TrustManagerFactory` 类），并从中获取相应的 `TrustManager` 。同样， `SecureRandom` 参数可以为 `null` ，在这种情况下将使用默认实现。
+
+如果使用内部默认 `SSLContext`（例如，通过 `SSLSocketFactory.getDefault()` 或 `SSLServerSocketFactory.getDefault()` 创建 `SSLContext` ），则会创建默认的 `KeyManager` 和 `TrustManager` 。同时还会选择默认的 `SecureRandom` 实现。
 
 ### KeyManager
 `KeyManager` 的主要职责是选择最终将被发送到远程主机的认证凭证。为了向远程对等体认证自己（本地安全套接字对等体），你必须用一个或多个KeyManager对象初始化一个 `SSLContext` 对象。你必须为每个将被支持的不同认证机制传递一个 `KeyManager` 。如果在 `SSLContext` 的初始化中传递了 `null` ，那么将创建一个空的 `KeyManager` 。如果使用内部默认上下文（例如，由 `SSLSocketFactory.getDefault()` 或 `SSLServerSocketFactory.getDefault()` 创建的 `SSLContext` ），那么将会创建一个默认的 `KeyManager`
