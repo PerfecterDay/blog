@@ -14,12 +14,6 @@ Java 平台下，证书尝尝被存储为 keystore 文件中，上面的 cacerts
 
 keystore 只是一种文件格式而已，实际上在 Java 的世界里 `KeyStore` 文件分为两种： `keystore` 和 `truststore` ， `keystore` 保存公私钥，用来解密或者签名； `truststore` 保存信任的证书列表，访问 https 时，对被访问者进行认证，确定它是可信任的。
 
-### KeyStore vs. TrustStore
-混淆这两个概念是学习 `javax.net.ssl` 时最常见的误区：
-
-* `KeyStore` （密钥库）：包含你自己的私钥和公钥证书。当你需要向其他人证明自己的身份时，使用它。
-* `TrustStore` （信任库）：包含你信任的第三方证书颁发机构 (CA) 的证书。当你需要验证你所连接的网站或服务是否合法时，使用它。
-
 Java 使用以下主要类和接口来支持安全传输：
 <center><img src="pics/jsse.jpg" width="40%"/></center>
 
@@ -83,15 +77,16 @@ HTTPS（基于 TLS 的 HTTP）等协议确实需要进行主机名验证。自 J
 
 如果使用内部默认 `SSLContext`（例如，通过 `SSLSocketFactory.getDefault()` 或 `SSLServerSocketFactory.getDefault()` 创建 `SSLContext` ），则会创建默认的 `KeyManager` 和 `TrustManager` 。同时还会选择默认的 `SecureRandom` 实现。
 
-### KeyManager
-`KeyManager` 的主要职责是选择最终将被发送到远程主机的认证凭证。为了向远程对等体认证自己（本地安全套接字对等体），你必须用一个或多个KeyManager对象初始化一个 `SSLContext` 对象。你必须为每个将被支持的不同认证机制传递一个 `KeyManager` 。如果在 `SSLContext` 的初始化中传递了 `null` ，那么将创建一个空的 `KeyManager` 。如果使用内部默认上下文（例如，由 `SSLSocketFactory.getDefault()` 或 `SSLServerSocketFactory.getDefault()` 创建的 `SSLContext` ），那么将会创建一个默认的 `KeyManager`
-
 ### TrustManager
 `TrustManager` 的主要责任是确定所提交的认证凭证是否应该被信任。如果凭证不被信任，那么连接将被终止。为了验证安全套接字对等体的远程身份，你必须用一个或多个 `TrustManager` 对象初始化一个 `SSLContext` 对象。你必须为每个支持的认证机制传递一个 `TrustManager` `。如果在SSLContext` 的初始化中传递了 `null` ，那么将为你创建一个信任管理器。通常，一个信任管理器支持基于X.509公钥证书的认证（例如， `X509TrustManager` ）。一些安全套接字的实现也可能支持基于共享秘钥、 `Kerberos` 或其他机制的认证。
 
 `TrustManager` 对象可以由 `TrustManagerFactory` 创建，或者通过提供接口的具体实现来创建。
 
-`TrustManager` 和 KeyManager 之间的关系
+### KeyManager
+`KeyManager` 的主要职责是选择最终将被发送到远程主机的认证凭证。为了向远程对等体认证自己（本地安全套接字对等体），你必须用一个或多个KeyManager对象初始化一个 `SSLContext` 对象。你必须为每个将被支持的不同认证机制传递一个 `KeyManager` 。如果在 `SSLContext` 的初始化中传递了 `null` ，那么将创建一个空的 `KeyManager` 。如果使用内部默认上下文（例如，由 `SSLSocketFactory.getDefault()` 或 `SSLServerSocketFactory.getDefault()` 创建的 `SSLContext` ），那么将会创建一个默认的 `KeyManager`
+
+
+`TrustManager` 和 `KeyManager` 之间的关系
 + `TrustManager` 决定远程认证凭证（以及连接）是否应该被信任(通常是认证通信的对方)。
 + `KeyManager` 决定向远程主机发送哪些认证凭证（通常是提供让对方认证的凭证）。
 
@@ -99,6 +94,88 @@ HTTPS（基于 TLS 的 HTTP）等协议确实需要进行主机名验证。自 J
 + 命令行参数：`java -Djavax.net.debug=ssl:handshake -jar MyApp.jar`
 + 使用系统参数：`System.setProperty("javax.net.debug", "ssl:handshake");`
 + 打开网络调试: `-Djavax.net.debug=all` 
+
+## 实战
+假如已经有了下面的证书文件：
+```
+.
+├── ca.pem
+├── demo.net.key
+├── demo.net.pem
+```
+
++ `ca.pem` : 公司的 CA 证书
++ `demo.net.key` : 客户端请求的私钥
++ `demo.net.pem` : 客户端请求的证书
+
+java 无法单独将一对公私钥对（demo.net.key + demo.net.pem）加载到 keystore 中，必须将他们转换为 p12 文件：
+```
+openssl pkcs12 -export -out keystore.p12 -inkey demo.net.key -in demo.net.pem
+openssl pkcs12 -export -in demo.net.pem -inkey demo.net.key -certfile ca.pem -out keystore.p12
+
+keytool -list -v -keystore 1.p12 -storetype PKCS12 -storepass "" > 1_struct.txt
+```
+1. 不带 `-certfile`：生成的 `keystore.p12` 里面只含有 2 个元素：你的私钥 `a.key` 和你的用户证书 `a.pem` 。
+2. 带有 `-certfile ca.pem`：生成的 `keystore.p12` 里面含有 3 个元素：你的私钥 `a.key` 、你的用户证书 `a.pem` ，以及上级颁发机构的 CA 证书 `ca.pem` 。它们在内部会按照“用户证书 -> CA证书”的顺序自动组装成一条证书链（Certificate Chain）。
+
+如果对方服务器要求你的 Java 客户端提供证书验证身份：使用命令一：Java 发送证书时只发送 a.pem。如果服务器的 TrustStore（信任库）里没有提前导入 ca.pem，服务器就无法验证你的 a.pem 是谁签发的，从而直接中断连接，抛出 `SSLHandshakeException` 。
+使用命令二：Java 会把 a.pem 和 ca.pem 打包成一条完整的链条一起发送给服务器。即使服务器不认识你的 a.pem，但只要它信任 ca.pem（根证书），就能通过这条链条顺藤摸瓜信任你的客户端，握手成功。
+
+如果黑客自己生成一套 bad.key、bad.pem，然后企图把 Google 的上级 CA 证书（比如 GTS Root R1）通过 `-certfile` 参数打包在一起，企图以此“沾光”骗过验证，这也是行不通的。证书链的验证是逐级校验签名的：客户端在拿到这条证书链后，并不是只要看到链上有知名 CA 就会信任。它会做出如下严苛的数学检查：提取 bad.pem。检查 bad.pem 的“颁发者（Issuer）”是谁。找到链上的 CA 证书，用 CA 证书的公钥去解密 bad.pem 尾部的数字签名。结果：因为 bad.pem 是黑客自己签发的，不是知名 CA 用它们的私钥签发的。知名 CA 的公钥根本无法解开这个签名。客户端会立刻判定“证书链断裂 / 签名无效”，直接抛出 `SSLHandshakeException` 或浏览器红色警告。
+
+```
+@Bean
+@Profile("staging")
+public ISprintClient stagingSprintService(@Value("${isprint.url}") String baseUrl) {
+
+	try {
+		KeyStore keyStore = KeyStore.getInstance("JKS");
+		keyStore.load(ResourceUtils.getURL("classpath:certs/keystore.p12").openStream(), null);
+
+		KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
+		keyManagerFactory.init(keyStore, null);
+
+		CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+		InputStream inputStream = ResourceUtils.getURL("classpath:certs/ca.pem").openStream();
+		Certificate certificate = certFactory.generateCertificate(inputStream);
+
+		// 2. 创建一个空的、内存中的 KeyStore
+		// 信任库推荐使用 "PKCS12" 类型
+		KeyStore trustStore = KeyStore.getInstance("PKCS12");
+		trustStore.load(null, null); // 传入 null 代表在内存中初始化，不加载磁盘文件
+
+		// 3. 将 CA 证书放入 KeyStore 中
+		// 信任证书不需要私钥，直接使用 setCertificateEntry
+		trustStore.setCertificateEntry("my-custom-ca", certificate);
+
+		TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+		trustManagerFactory.init(trustStore);
+
+		SSLContext sslContext = SSLContext.getInstance("TLS");
+		sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
+
+		HttpClient httpClient = HttpClient.newBuilder()
+				.connectTimeout(Duration.ofSeconds(1)) //建连超时
+				.sslContext(sslContext)
+				.build();
+
+		JdkClientHttpRequestFactory jdkClientHttpRequestFactory = new JdkClientHttpRequestFactory(httpClient);
+		jdkClientHttpRequestFactory.setReadTimeout(Duration.ofSeconds(5));
+
+		RestClient restClient = RestClient.builder()
+				.requestFactory(jdkClientHttpRequestFactory)
+				.baseUrl(baseUrl)
+				.build();
+
+		HttpServiceProxyFactory factory =
+				HttpServiceProxyFactory
+						.builderFor(RestClientAdapter.create(restClient))
+						.build();
+
+		return factory.createClient(ISprintClient.class);
+	}
+}
+```
 
 ## 问题总结
 当遇到 https 证书验证失败时，你需要选择下面三种方法中的一个来解决：

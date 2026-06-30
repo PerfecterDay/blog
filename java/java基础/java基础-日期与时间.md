@@ -108,6 +108,52 @@ Java 使用 `ZonedDateTime` 来代表时区时间。`ZoneId` 代表不同的时�
 格式定义如下，注意严格区分大小写：
 <center><img src="pics/formater.jpg" width="70%"></center>
 
+一些常见的格式如下，
+
+年：
++ `yy`: Two-digit year (e.g., 24 for the year 2024).
++ `yyyy`: Four-digit year (e.g., 2024).
++ `yyyyy`: Five-digit year (e.g., 02024).
+
+月：
++ `M`: Month of the year without leading zero (1–9).
++ `MM`: Month of the year with leading zero (01–12).
++ `MMM`: Abbreviated month name (e.g., Jan, Feb, Mar).
++ `MMMM`: Full month name (e.g., January, February, March).
++ `MMMMM`: First letter of the month (e.g., J for January).
+
+日：
++ `d`: Day of the month without leading zero (1–9).
++ `dd`: Day of the month with leading zero (01–31).
++ `D`: Day of the year (1–365 or 366).
++ `E`: Abbreviated day of the week (e.g., Mon, Tue, Wed).
++ `EEEE`: Full day of the week (e.g., Monday, Tuesday).
+
+小时：
++ `h`: Hour of the day (1–12).
++ `hh`: Hour of the day with leading zero (01–12).
++ `H`: Hour of the day (0–23).
++ `HH`: Hour of the day with leading zero (00–23).
++ `k`: Hour of the day (1–24).
++ `kk`: Hour of the day with leading zero (01–24).
+
+分钟：
++ `m`: Minute of the hour (0–59).
++ `mm`: Minute of the hour with leading zero (00–59).
+
+秒/毫秒：
++ `s`: Second of the minute (0–59).
++ `ss`: Second of the minute with leading zero (00–59).
++ `S`: Millisecond (0–999).
++ `SS`: Millisecond with two digits (00–99).
++ `SSS`: Millisecond with three digits (000–999).
++ `n`: Nanosecond (0–999,999,999).
+
+AM/PM格式:
++ `a`: AM/PM marker (e.g., AM, PM).
+
+> https://medium.com/@medcherrou/a-comprehensive-guide-to-date-and-time-formatting-in-java-with-datetimeformatter-fefb8e48ce9f
+
 #### 字符串转时间
 为了解析字符串中的日期／时间值，可以使用众多的静态 `parse` 方法之一:
 ```

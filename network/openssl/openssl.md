@@ -228,4 +228,10 @@ openssl s_client -crlf -connect ttl-api-uat.demo.net:443 -msg
 
 openssl s_client -crlf -connect 172.80.231.216:44500 -debug
 openssl s_client -crlf -connect 172.80.231.216:44500 -msg
+
+openssl s_client -crlf -connect localhost:8443 -CAfile /path_to_custom_ca/ca.pem -debug
+
+快速启动一个 https 服务验证：
+openssl s_server -tls1_3 -cert test.crt -key test_unencrypted.pem -4 -accept 127.0.0.1:8443 -state -debug -Verify 1
+
 ```

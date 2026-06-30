@@ -375,7 +375,7 @@ public <T> T newInstance(Target<T> target, C requestContext) {
 Response<Object> agreement(GenericRequest request, @PathVariable String apiNo);
 ```
 
-2. `Interceptor` 拦截请求统一处理：
+2. `Interceptor` 拦截请求统一处理,传递动态请求头或做其他操作：
 ```
 @Bean
 public RequestInterceptor interceptor() {
@@ -388,5 +388,24 @@ public RequestInterceptor interceptor() {
 		requestTemplate.header("version", header.getVersion());
 		requestTemplate.header("accept-language", header.getLang());
 	};
+}
+```
+
+3. 添加请求头：
+```
+@FeignClient(name = "user-service", url = "${user.service.url}")
+public interface UserFeignClient {
+    // 单个请求头
+    @GetMapping("/info")
+    String getUserInfo(@RequestHeader("Authorization") String token);
+
+    // 多个固定请求头
+    @GetMapping(value = "/profile", 
+        headers = {"X-Custom-Header=custom-value", "Accept=application/json"})
+    String getUserProfile();
+
+    // 动态多请求头
+    @GetMapping("/details")
+    String getUserDetails(@RequestHeader Map<String, String> headers);
 }
 ```

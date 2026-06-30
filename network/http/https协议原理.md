@@ -2,8 +2,8 @@
 {docsify-updated}
 > https://help.aliyun.com/document_detail/160093.html  
 > https://stackoverflow.com/questions/27388583/relationship-between-key-store-trust-store-and-certificate  
-> https://howhttps.works/certificate-authorities/
-
+> https://howhttps.works/certificate-authorities/  
+> https://tls13.xargs.org/
 ## HTTPS协议原理
 
 思考一下通信过程应该要处理的问题：
