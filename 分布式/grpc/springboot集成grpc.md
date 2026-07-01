@@ -1,7 +1,8 @@
 # Springboot 集成 grpc
 {docsify-updated}
 
-> https://github.com/grpc-ecosystem/grpc-spring
+> https://github.com/grpc-ecosystem/grpc-spring  
+> https://grpc-ecosystem.github.io/grpc-spring/
 
 ## grpc-spring-boot-starter 依赖
 上述配置过程非常复杂，可以使用开源工具类帮助我们简化这些步骤。
@@ -62,6 +63,10 @@ public GrpcServerConfigurer keepAliveServerConfigurer() {
     };
 }
 ```
+
+### 服务端安全TLS认证
+> https://grpc-ecosystem.github.io/grpc-spring/zh-CN/server/security.html
+
 ## 客户端
 1. 客户端配置参照 `grpc-client-spring-boot-autoconfigure` jar 包中的 `net.devh.boot.grpc.client.config.GrpcChannelsProperties` 类
 2. `@GrpcClient("myService")` 注解为每一个 RPC 服务调用者注册一个名字，可以在配置文件中为各个调用者定义不同的配置。 `GLOBAL` 代表全局配置。
