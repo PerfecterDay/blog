@@ -261,10 +261,10 @@ upstream_http_protocol_options:
 ```yaml
 filter_chains:
 - filter_chain_match:
-    server_names: ["api.gtja.com"]      # ← 按 SNI 匹配
+    server_names: ["api.x.com"]      # ← 按 SNI 匹配
   transport_socket: { ... 证书 A ... }
 - filter_chain_match:
-    server_names: ["trade.gtja.com"]
+    server_names: ["trade.x.com"]
   transport_socket: { ... 证书 B ... }
 ```
 

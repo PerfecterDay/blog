@@ -89,7 +89,7 @@ curl -v --cacert ca.crt \
 + `--pass your_password`：如果客户端私钥设置了密码保护，需要提供此参数。
 
 ```
-curl --cacert ca.pem --cert gtjaidemo.net.pem --key gtjaidemo.net.key --location 'https://10.5.160.72:8443/am5/rest/query/user/findById' --header 'Content-Type: application/json' --data '{
+curl --cacert ca.pem --cert xidemo.net.pem --key xidemo.net.key --location 'https://10.5.160.72:8443/am5/rest/query/user/findById' --header 'Content-Type: application/json' --data '{
     "dynamicAgentSession": "true",
     "sessionToken": "",
     "userId": "350171",
