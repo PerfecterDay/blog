@@ -10,7 +10,7 @@ Java Secure Socket Extension（JSSE）实现了安全的互联网通信。 它�
 + `keytool -delete -cacerts -alias ca_wang`:删除指定别名的的 keystore 条目
 + `keytool -import -alias ca_wang -file C:\Users\BaIcy\Documents\xca\ca_wang.crt -keypass "" -keystore C:\Users\BaIcy\Documents\xca\ca_wang.jks -storepass test123`:将 crt 证书文件转换为 jks 的 keystore 文件
 
-Java 平台下，证书尝尝被存储为 keystore 文件中，上面的 cacerts 就是一个 keystore 文件， keystore 文件不仅可以存储数字证书，还可以存储秘钥，存储在 keystore 文件中的对象有三种： Certificate（证书）、PrivateKey（私钥）和 SecretKey（对称加密秘钥）。
+Java 平台下，证书常常被存储为 keystore 文件中，上面的 cacerts 就是一个 keystore 文件， keystore 文件不仅可以存储数字证书，还可以存储秘钥，存储在 keystore 文件中的对象有三种： Certificate（证书）、PrivateKey（私钥）和 SecretKey（对称加密秘钥）。
 
 keystore 只是一种文件格式而已，实际上在 Java 的世界里 `KeyStore` 文件分为两种： `keystore` 和 `truststore` ， `keystore` 保存公私钥，用来解密或者签名； `truststore` 保存信任的证书列表，访问 https 时，对被访问者进行认证，确定它是可信任的。
 

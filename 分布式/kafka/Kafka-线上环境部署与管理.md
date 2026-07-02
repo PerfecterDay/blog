@@ -1,13 +1,6 @@
 #  Kafka线上环境部署管理及监控
 {docsify-updated}
 
-- [Kafka线上环境部署管理及监控](#kafka线上环境部署管理及监控)
-    - [Kafka 参数配置](#kafka-参数配置)
-    - [Zookeeper 配置文件](#zookeeper-配置文件)
-    - [Kafka的启动与管理](#kafka的启动与管理)
-    - [Kafka 集群监控](#kafka-集群监控)
-
-
 ### Kafka 参数配置
 1. broker 端参数  
    + `broker.id` : Kafka 使用唯一的整数标识来标识集群中的每个 broker。
@@ -66,7 +59,15 @@ server.3=zk3:2888:3888
    6. kafka-topics 脚本命令行参数：
    <center><img src="pics/kafka-topics.png" alt="" width="60%"></center>
 3. 写消息到 topic  
-    `kafka-console-producer.sh --topic quick-start --bootstrap-server localhost:9092`
+    ```
+    kafka-console-producer.sh --topic quick-start --bootstrap-server localhost:9092
+    
+    //发送消息时指定 key
+    kafka-console-producer --topic cms.cap.sync --bootstrap-server localhost:9092 --property "parse.key=true" --property "key.separator=:"
+
+    > mykey:{"auditId":601339,"tableName":"ClntAccSecMain","operation":"UPDATE","recordId":"800888","timestamp":"2026-07-02T15:53:19.067","values":{"AccountCode":"800888","StatusIndex_N":"Closed","AccountType":"CASH","InterenetTrade":"Yes"}}
+    ```
+
 4. 从指定topic读取消息  
    `kafka-console-consumer.sh --topic quick-start --from-beginning --bootstrap-server localhost:9092`  
    `kafka-console-consumer --topic topic2 --from-beginning --group=test --bootstrap-server localhost:9092`
