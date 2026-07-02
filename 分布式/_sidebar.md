@@ -24,6 +24,7 @@
   * [Kafka-位移](/分布式/kafka/kafka-consumer-offset.md)
   * [Kafka-设计原理](/分布式/kafka/Kafka-设计原理.md)
   * [Spring Kafka集成](/分布式/kafka/spring-kafka集成.md)
+  * [Kafka 消费常见问题](/分布式/kafka/消费问题.md)
 * [grpc](#)
   * [grpc入门](/分布式/grpc/grpc入门.md)
   * [Protobuf集成](/分布式/grpc/protobuf.md)
