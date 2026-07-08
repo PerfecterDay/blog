@@ -1,21 +1,9 @@
 # 线程池与Fork-Join
 {docsify-updated}
 
-- [线程池与Fork-Join](#线程池与fork-join)
-  - [线程池的好处](#线程池的好处)
-  - [线程池类图结构](#线程池类图结构)
-  - [内置线程池](#内置线程池)
-  - [自定义线程池](#自定义线程池)
-    - [向线程池提交任务](#向线程池提交任务)
-    - [线程池的关闭](#线程池的关闭)
-    - [线程池使用总结](#线程池使用总结)
-  - [线程池的分析](#线程池的分析)
-    - [源码分析](#源码分析)
-  - [合理配置线程池](#合理配置线程池)
-  - [线程池的监控](#线程池的监控)
-  - [Fork-Join 框架](#fork-join-框架)
-    - [ForkJoinPool](#forkjoinpool)
-    - [RecursiveAction](#recursiveaction)
+## 开源的动态线程池实现
++ hippo4j -> https://github.com/opengoofy/hippo4j
++ dynamic-tp -> https://github.com/dromara/dynamic-tp
 
 
 ## 线程池的好处

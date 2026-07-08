@@ -80,7 +80,21 @@ HTTPS（基于 TLS 的 HTTP）等协议确实需要进行主机名验证。自 J
 ### TrustManager
 `TrustManager` 的主要责任是确定所提交的认证凭证是否应该被信任。如果凭证不被信任，那么连接将被终止。为了验证安全套接字对等体的远程身份，你必须用一个或多个 `TrustManager` 对象初始化一个 `SSLContext` 对象。你必须为每个支持的认证机制传递一个 `TrustManager` `。如果在SSLContext` 的初始化中传递了 `null` ，那么将为你创建一个信任管理器。通常，一个信任管理器支持基于X.509公钥证书的认证（例如， `X509TrustManager` ）。一些安全套接字的实现也可能支持基于共享秘钥、 `Kerberos` 或其他机制的认证。
 
-`TrustManager` 对象可以由 `TrustManagerFactory` 创建，或者通过提供接口的具体实现来创建。
+`TrustManager` 对象可以由 `TrustManagerFactory` 创建，或者通过提供接口的具体实现来创建:
+```
+CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+InputStream inputStream = ResourceUtils.getURL("classpath:certs/ca.pem").openStream();
+Certificate certificate = certFactory.generateCertificate(inputStream);
+
+KeyStore trustStore = KeyStore.getInstance("PKCS12");
+trustStore.load(null, null); // 传入 null 代表在内存中初始化，不加载磁盘文件
+
+// 3. 将 CA 证书放入 KeyStore 中
+// 信任证书不需要私钥，直接使用 setCertificateEntry
+trustStore.setCertificateEntry("my-custom-ca", certificate);
+TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+trustManagerFactory.init(trustStore);
+```
 
 ### KeyManager
 `KeyManager` 的主要职责是选择最终将被发送到远程主机的认证凭证。为了向远程对等体认证自己（本地安全套接字对等体），你必须用一个或多个KeyManager对象初始化一个 `SSLContext` 对象。你必须为每个将被支持的不同认证机制传递一个 `KeyManager` 。如果在 `SSLContext` 的初始化中传递了 `null` ，那么将创建一个空的 `KeyManager` 。如果使用内部默认上下文（例如，由 `SSLSocketFactory.getDefault()` 或 `SSLServerSocketFactory.getDefault()` 创建的 `SSLContext` ），那么将会创建一个默认的 `KeyManager`
