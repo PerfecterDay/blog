@@ -19,12 +19,36 @@ Java 使用以下主要类和接口来支持安全传输：
 
 `SSLSocket` 由 `SSLSocketFactory` 创建，或由接受传入连接的 `SSLServerSocket` 创建。而 `SSLServerSocket` 则由 `SSLServerSocketFactory` 创建。 `SSLSocketFactory` 和 `SSLServerSocketFactory` 对象均由 `SSLContext` 创建。 `SSLEngine` 由 `SSLContext` 直接创建，并依赖应用程序来处理所有 I/O 操作。
 
-### 核心组件拆解
+## 核心组件拆解
+* `KeyStore` : 证书和私钥的存储容器，
 * `SSLContext` ：核心引擎和大脑。作为一个工厂类，你需要在其中初始化协议版本（如 TLSv1.3）、身份凭证和信任规则。
 * `TrustManager` ：入站安全把关者。它负责将对方的证书与你的 `TrustStore` （通常是 Java 默认的 cacerts 文件）进行比对，从而判断远程服务器是否安全可信。
 * `KeyManager` ：出站安全管理者。它利用你的 `KeyStore` 提供你自己的私钥和证书。当远程服务器要求客户端认证（Client Authentication）时，它会出示这些凭证。
 * `SSLSocket / SSLServerSocket` ：对标准 Java 网络套接字（Socket）的高级封装。它们会自动执行 TLS 握手，并对流经标准输入/输出流的数据进行自动加密。
 * `SSLEngine` ：一个高级的、与传输协议解耦的类。用于复杂的非阻塞 I/O 操作（如 Java NIO 或 Netty）。它需要手动处理原始数据块，而不是依赖活跃的网络套接字连接。
+
+### KeyStore
++ `getInstance(String type)`: Creates a new KeyStore instance of the specified type (e.g., JKS, PKCS12, JCEKS)
++ `load(InputStream stream, char[] password)`: Loads the keystore from the specified input stream. If null is passed, it initializes an empty keystore
++ `store(OutputStream stream, char[] password)`: Saves the keystore to the specified output stream, protected by the given password
++ `setEntry(String alias, KeyStore.Entry entry, KeyStore.ProtectionParameter protParam)`: Adds or updates an entry (e.g., key or certificate) in the keystore under the specified alias
++ `getEntry(String alias, KeyStore.ProtectionParameter protParam)`: Retrieves an entry from the keystore using the specified alias and protection parameters
++ `getCertificate(String alias)`: Retrieves a certificate from the keystore using the specified alias
++ `setCertificateEntry(String alias, Certificate cert)`: Adds or updates a certificate entry in the keystore under the specified alias
++ `containsAlias(String alias)`: Checks if the keystore contains an entry with the specified alias
++ `aliases()`: Returns an enumeration of all aliases in the keystore
+
+```
+KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+KeyStore ks2 = KeyStore.getInstance("pkcs12");
+
+char[] pwdArray = "password".toCharArray();
+ks.load(new FileInputStream("newKeyStoreFileName.jks"), pwdArray); //必须使用 load 初始化
+
+try (FileOutputStream fos = new FileOutputStream("newKeyStoreFileName.jks")) {
+    ks.store(fos, pwdArray);
+}
+```
 
 ### 获取 SSLSocketFactory 实例
 可以通过以下方式获取 `SSLSocketFactory`：
@@ -32,26 +56,26 @@ Java 使用以下主要类和接口来支持安全传输：
 + 将工厂作为 API 参数接收。也就是说，需要创建套接字但无需关心套接字配置细节的代码，可以包含一个带有 `SSLSocketFactory` 参数的方法，客户端可以通过调用该方法来指定创建套接字时应使用的 `SSLSocketFactory` （例如， `javax.net.ssl.HttpsURLConnection`）。
 + 构建一个具有特定配置行为的新工厂。可以通过实现自己的套接字工厂子类，或者使用另一个充当套接字工厂工厂的类，来创建新的套接字工厂实例。此类的一个示例是 `SSLContext` ，它作为基于提供者的配置类随 JSSE 实现一同提供。
 
-### 获取 SSLSocket 实例
+## 获取 SSLSocket 实例
 `javax.net.ssl.SSLSocket` 类是标准 Java `java.net.Socket` 类的子类。它支持所有标准套接字方法，并增加了安全套接字特有的方法。该类的实例封装了其创建时所基于的 `SSLContext` 。虽然提供了用于控制套接字实例安全套接字会话创建的 API，但信任和密钥管理并未直接对外暴露。
 
 可以通过以下任一方式获取 `SSLSocket` 实例：
 + 可以通过 `SSLSocketFactory` 的实例，利用该类提供的多个 `createSocket` 方法之一来创建 `SSLSocket` 。
 + 可以通过 `SSLServerSocket` 类的 `accept` 方法来创建 `SSLSocket` 。
 
-### 远端验证
+## 远端验证
 在使用原始的 `SSLSocket` 和 `SSLEngine` 类时，在发送任何数据之前，应始终检查对端凭据。 `SSLSocket` 和 `SSLEngine` 类不会自动验证 URL 中的主机名是否与对端凭据中的主机名一致。如果未验证主机名，应用程序可能会因 URL 欺骗而遭到攻击。自 JDK 7 起，端点识别/验证流程可在 SSL/TLS 握手过程中处理。请参阅 `SSLParameters.getEndpointIdentificationAlgorithm` 方法。
 
 HTTPS（基于 TLS 的 HTTP）等协议确实需要进行主机名验证。自 JDK 7 起， `HttpsURLConnection` 在握手过程中默认强制执行 HTTPS 端点识别。此外，应用程序还可以使用 `HostnameVerifier` 接口来覆盖默认的 HTTPS 主机名规则。
 
-### SSLEngine
+## SSLEngine
 
-### SSLSession
+## SSLSession
 `javax.net.ssl.SSLSession` 接口表示 `SSLSocket` 或 `SSLEngine` 连接中两个对等方之间协商的安全上下文。会话建立后，同一对等方之间后续连接的 `SSLSocket` 或 `SSLEngine` 对象可以共享该会话。
 
 在某些情况下，握手过程中协商的参数在后续握手阶段需要被引用，以便做出信任决策。例如，有效的签名算法列表可能会限制可用于身份验证的证书类型。在握手过程中，可以通过在 `SSLSocket` 或 `SSLEngine` 上调用 `getHandshakeSession()` 方法来获取 `SSLSession` 。 `TrustManager` 或 `KeyManager` 的实现可以利用 `getHandshakeSession()` 方法获取有关会话参数的信息，以辅助决策。
 
-### SSLContext
+## SSLContext
 本节中的类和接口旨在支持 `SSLContext` 对象的创建和初始化， `SSLContext` 对象用于创建 `SSLSocketFactory` 、 `SSLServerSocketFactory` 和 `SSLEngine` 对象。这些辅助类和接口属于 `javax.net.ssl` 包。
 
 `javax.net.ssl.SSLContext` 类是安全套接字协议实现的引擎类。该类的实例充当 `SSLSocket` 、 `SSLServerSocket` 和 `SSLEngine` 的工厂。一个 `SSLContext` 对象保存了在该上下文中创建的所有对象共用的所有状态信息。例如，当由该上下文提供的套接字工厂创建的套接字通过握手协议协商会话状态时，该会话状态便与 `SSLContext` 相关联。这些缓存的会话可被同一上下文中创建的其他套接字重用和共享。
@@ -77,7 +101,7 @@ HTTPS（基于 TLS 的 HTTP）等协议确实需要进行主机名验证。自 J
 
 如果使用内部默认 `SSLContext`（例如，通过 `SSLSocketFactory.getDefault()` 或 `SSLServerSocketFactory.getDefault()` 创建 `SSLContext` ），则会创建默认的 `KeyManager` 和 `TrustManager` 。同时还会选择默认的 `SecureRandom` 实现。
 
-### TrustManager
+## TrustManager
 `TrustManager` 的主要责任是确定所提交的认证凭证是否应该被信任。如果凭证不被信任，那么连接将被终止。为了验证安全套接字对等体的远程身份，你必须用一个或多个 `TrustManager` 对象初始化一个 `SSLContext` 对象。你必须为每个支持的认证机制传递一个 `TrustManager` `。如果在SSLContext` 的初始化中传递了 `null` ，那么将为你创建一个信任管理器。通常，一个信任管理器支持基于X.509公钥证书的认证（例如， `X509TrustManager` ）。一些安全套接字的实现也可能支持基于共享秘钥、 `Kerberos` 或其他机制的认证。
 
 `TrustManager` 对象可以由 `TrustManagerFactory` 创建，或者通过提供接口的具体实现来创建:
@@ -96,7 +120,7 @@ TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustM
 trustManagerFactory.init(trustStore);
 ```
 
-### KeyManager
+## KeyManager
 `KeyManager` 的主要职责是选择最终将被发送到远程主机的认证凭证。为了向远程对等体认证自己（本地安全套接字对等体），你必须用一个或多个KeyManager对象初始化一个 `SSLContext` 对象。你必须为每个将被支持的不同认证机制传递一个 `KeyManager` 。如果在 `SSLContext` 的初始化中传递了 `null` ，那么将创建一个空的 `KeyManager` 。如果使用内部默认上下文（例如，由 `SSLSocketFactory.getDefault()` 或 `SSLServerSocketFactory.getDefault()` 创建的 `SSLContext` ），那么将会创建一个默认的 `KeyManager`
 
 
@@ -104,7 +128,7 @@ trustManagerFactory.init(trustStore);
 + `TrustManager` 决定远程认证凭证（以及连接）是否应该被信任(通常是认证通信的对方)。
 + `KeyManager` 决定向远程主机发送哪些认证凭证（通常是提供让对方认证的凭证）。
 
-### 启用 Java SSL 调试日志
+## 启用 Java SSL 调试日志
 + 命令行参数：`java -Djavax.net.debug=ssl:handshake -jar MyApp.jar`
 + 使用系统参数：`System.setProperty("javax.net.debug", "ssl:handshake");`
 + 打开网络调试: `-Djavax.net.debug=all` 
