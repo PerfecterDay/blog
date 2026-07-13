@@ -4,7 +4,7 @@
 <center><img src="pics/tcp_open_close.png" alt="" width=40%></center>
 
 
-### 三次握手建立连接
+## 三次握手建立连接
 
 <center><img src="pics/three-handshake.png" alt="" width=40%></center>
 
@@ -12,7 +12,7 @@
 2. 服务器发回包含服务器的初始序号的 SYN报文段（报文段2）作为应答。同时，将确认序号设置为客户的ISN加1以对客户的SYN报文段进行确认。**一个SYN将占用一个序号。**
 3. 客户必须将确认序号设置为服务器的 ISN加1以对服务器的SYN报文段进行确认（报文段3）。
 
-### 四次挥手断开连接
+## 四次挥手断开连接
 
 <center><img src="pics/four-close.png" alt="" width=40%></center>
 
@@ -22,7 +22,7 @@
 
 发送FIN将导致应用程序关闭它们的连接，这些FIN的ACK是由TCP软件自动产生的。
 
-### TCP半关闭
+## TCP半关闭
 TCP提供了连接的一端在结束它的发送后还能接收来自另一端数据的能力，这就是所谓的半关闭。
 <center><img src="pics/half-close.jpg" alt="" width=40%></center>
 
@@ -30,10 +30,10 @@ TCP提供了连接的一端在结束它的发送后还能接收来自另一端�
 
 没有半关闭，需要其他的一些技术让客户通知服务器,客户端已经完成了它的数据传送，但仍要接收来自服务器的数据。使用两个TCP连接也可作为一个选择，但使用半关闭的单连接更好。
 
-### TCP状态变迁
+## TCP状态变迁
 <center><img src="pics/tcp-status.png" alt="" width=45%></center>
 
-### 2MSL（TIME_WAIT）等待状态
+## 2MSL（TIME_WAIT）等待状态
 `TIME_WAIT` 状态也称为 2MSL 等待状态。每个具体 TCP实现必须选择一个报文段最大生存时间MSL(Maximum Segment Lifetime) 。它是任何报文段被丢弃前在网络内的最长时间。我们知道这个时间是有限的，因为 TCP 报文段以IP数据报在网络内传输，而IP数据报则有限制其生存时间的 TTL字段。RFC 793 指出MSL为2分钟。然而，实现中的常用值是30秒，1分钟，或2分钟。
 
 为什么需要 2MSL ?  
@@ -74,7 +74,7 @@ connected on 140.252.13.35.1098 to 140.252.13.33.6666
 
 对于同一连接的前一个替身，这个具体实现中的特性让客户程序和服务器程序能连续地重用每一端的相同端口号，但这只有在服务器执行主动关闭才有效。
 
-#### 平静时间的概念
+### 平静时间的概念
 对于来自某个连接的较早替身的迟到报文段，2MSL等待可防止将它解释成使用相同插口对的新连接的一部分。但这只有在处于2MSL等待连接中的主机处于正常工作状态时才有效。
 如果使用处于2MSL等待端口的主机出现故障，它会在MSL秒内重新启动，并立即使用故障前仍处于2MSL的插口对来建立一个新的连接吗？如果是这样，在故障前从这个连接发出而迟到的报文段会被错误地当作属于重启后新连接的报文段。无论如何选择重启后新连接的初始序号，都会发生这种情况。
 
@@ -82,17 +82,17 @@ connected on 140.252.13.35.1098 to 140.252.13.33.6666
 
 只有极少的实现版遵守这一原则，因为大多数主机重启动的时间都比MSL秒要长
 
-#### FIN_WAIT_2 状态
+### FIN_WAIT_2 状态
 在 `FIN_WAIT_2` 状态我们已经发出了 `FIN` ，并且另一端也已对它进行确认。除非我们在实行半关闭，否则将等待另一端的应用层意识到它已收到一个文件结束符说明，并向我们发一个`FIN`来关闭另一方向的连接。只有当另一端的进程完成这个关闭，我们这端才会从 `FIN_WAIT_2` 状态进入 `TIME_WAIT` 状态。
 
 这意味着我们这端可能永远保持这个状态。另一端也将处于 `CLOSE_WAIT` 状态，并一直保持这个状态直到应用层决定进行关闭。
 
 许多伯克利实现采用如下方式来防止这种在 `FIN_WAIT_2` 状态的无限等待。如果执行主动关闭的应用层将进行全关闭，而不是半关闭来说明它还想接收数据，就设置一个定时器。如果这个连接空闲10分钟75秒，TCP将进入 `CLOSED` 状态。在实现代码的注释中确认这个实现代码违背协议的规范。
 
-### 复位报文段
+## 复位报文段
 TCP首部中的RST比特是用于“复位”的。一般说来，无论何时一个报文段发往基准的连接（referenced connection）出现错误，TCP都会发出一个复位报文段（这里提到的“基准的连接”是指由目的IP地址和目的端口号以及源IP地址和源端口号指明的连接。这就是为什么RFC793称之为插口）。
 
-#### 到不存在的端口的连接请求
+### 到不存在的端口的连接请求
 产生复位的一种常见情况是当连接请求到达时，目的端口没有进程正在听。对于 U D P，当一个数据报到达目的端口时，该端口没在使用，它将产生一个I C M P端口不可达的信息。而T C P则使用复位。
 
 实验, telnet 到一个没有在监听的端口： `telnet localhost 10000`，抓包结果如下：
@@ -116,7 +116,7 @@ listening on lo0, link-type NULL (BSD loopback), snapshot length 262144 bytes
 08:54:31.241731 IP 127.0.0.1 > 127.0.0.1: ICMP 127.0.0.1 udp port 10000 unreachable, length 36
 ```
 
-#### 异常终止一个连接
+### 异常终止一个连接
 终止一个连接的正常方式是一方发送FIN。有时这也称为有序释放（orderly release），因为在所有排队数据都已发送之后才发送FIN，正常情况下没有任何数据丢失。但也有可能发送一个复位报文段而不是FIN来中途释放一个连接。有时称这为异常释放（abortive release）。异常终止一个连接对应用程序来说有两个优点：
 1. 丢弃任何待发数据并立即发送复位报文段；
 2. RST的接收方会区分另一端执行的是异常关闭还是正常关闭。
@@ -138,7 +138,79 @@ hello, world    这行是客户端发送的
 read error: Connection reset by peer
 ```
 
-#### 半打开连接
-如果一方已经关闭或异常终止连接而另一方却还不知道，我们将这样的 T C P连接称为半打开（H a l f - O p e n）的。任何一端的主机异常都可能导致发生这种情况。只要不打算在半打开连接上传输数据，仍处于连接状态的一方就不会检测另一方已经出现异常。半打开连接的另一个常见原因是当客户主机突然掉电而不是正常的结束客户应用程序后再关机。这可能发生在使用 P C机作为Te l n e t的客户主机上，例如，用户在一天工作结束时关闭P C机的电源。当关闭P C机电源时，如果已不再有要向服务器发送的数据，服务器将永远不知道客户程序已经消失了。当用户在第二天到来时，打开 P C机，并启动新的Te l n e t客户程序，在服务器主机上会启动一个新的服务器程序。这样会导致服务器主机中产生许多半打开的T C P连接（在第2 3章中我们将看到使用T C P的k e e p a l i v e选项能使T C P的一端发现另一端已经消失）
+### 半打开连接
+如果一方已经关闭或异常终止连接而另一方却还不知道，我们将这样的TCP连接称为半打开（Half-Open）的。任何一端的主机异常都可能导致发生这种情况。只要不打算在半打开连接上传输数据，仍处于连接状态的一方就不会检测另一方已经出现异常。半打开连接的另一个常见原因是当客户主机突然掉电而不是正常的结束客户应用程序后再关机。这可能发生在使用PC机作为Telnet的客户主机上，例如，用户在一天工作结束时关闭PC机的电源。当关闭PC机电源时，如果已不再有要向服务器发送的数据，服务器将永远不知道客户程序已经消失了。当用户在第二天到来时，打开PC机，并启动新的Telnet客户程序，在服务器主机上会启动一个新的服务器程序。这样会导致服务器主机中产生许多半打开的TCP连接（在第23章中我们将看到使用TCP的keepalive选项能使TCP的一端发现另一端已经消失）。
+
+请注意：半关闭（Half-Close） 指一个方向已经发送FIN，另一个方向仍可继续发送数据；半开连接（Half-Open Connection） 通常指一端崩溃、重启或状态丢失后，另一端仍以为连接存在。
 
 ## 服务器设计
+大多数的TCP服务器进程是并发的。当一个新的连接请求到达服务器时，服务器接受这个请求，并调用一个新进程来处理这个新的客户请求。不同的操作系统使用不同的技术来调用新的服务器进程。在Unix系统下，常用的技术是使用fork函数来创建新的进程。如果系统支持，也可使用轻型进程，即线程（thread）。
+
+我们感兴趣的是TCP与若干并发服务器的交互作用。需要回答下面的问题：当一个服务器进程接受一来自客户进程的服务请求时是如何处理端口的？如果多个连接请求几乎同时到达会发生什么情况？
+
+初始 Listen 状态：
+<center><img src="pics/tcp-listen.jpg" width="60%"></center>
+接收到若干请求后：
+<center><img src="pics/tcp_listen_est.jpg" width="60%"></center>
+
+TCP使用由本地地址和远端地址组成的4元组:**目的IP地址、目的端口号、源IP地址和源端口号来处理传入的多个请求。TCP仅通过目的端口号无法确定哪个进程应该处理一个TCP请求。**另外，在三个使用端口23的进程中，只有处于LISTEN的进程能够接收新的连接请求（SYN）。处于ESTABLISHED的进程将不能接收SYN报文段，而处于LISTEN的进程将不能接收数据报文段。
+
+### 连接队列 （https://www.alibabacloud.com/blog/tcp-syn-queue-and-accept-queue-overflow-explained_599203）
+当服务器正处于忙时，TCP是如何处理这些呼入的连接请求?
+<center><img src="pics/tcp-queue.png" width="50%"></center>
+
++ 半连接队列，也称 SYN 队列: /proc/sys/net/ipv4/tcp_max_syn_backlog(linux)
++ 全连接队列，也称 accepet 队列:  /proc/sys/net/core/somaxconn(linux)
+
+1. 正等待连接请求的一端有一个固定长度的**全连接队列**，该队列中的连接已被TCP接受(即三次握手已经完成)，但还没有被应用层所接受。注意区分TCP接受一个连接是将其放入这个队列，而应用层接受连接是将其从该队列中移出。
+2. 应用层将指明该队列的最大长度，这个值通常称为 **积压值(backlog)** 。它的取值范围是0~5之间的整数，包括0和5(大多数的应用程序都将这个值说明为5)
+3. 当一个连接请求(即SYN)到达时，TCP使用一个算法，根据当前连接队列中的连接数来确定是否接收这个连接。我们期望应用层说明的积压值为这一端点所能允许接受连接的最大数目，但情况不是那么简单。注意，**积压值说明的是TCP监听的端点已被TCP接受而等待应用层接受的最大连接数。这个积压值对系统所允许的最大连接数，或者并发服务器所能并发处理的客户数，并无影响。**
+4. 如果对于新的连接请求，该TCP监听的端点的连接队列中还有空间，TCP模块将对SYN进行确认并完成连接的建立。但应用层只有在三次握手中的第三个报文段收到后才会知道这个新连接。另外，当客户进程的主动打开成功但服务器的应用层还不知道这个新的连接时，它可能会认为服务器进程已经准备好接收数据了(如果发生这种情况，服务器的TCP仅将接收的数据放入缓冲队列)。
+5. 如果对于新的连接请求，连接队列中已没有空间，**TCP将不理会收到的SYN。也不发回任何报文段**(即不发回RST)。如果应用层不能及时接受已被TCP接受的连接，这些连接可能占满整个连接队列，客户的主动打开最终将超时。
+
+### 实验验证全连接队列
+实验代码：
+```
+public class NetDemo {
+    public static void main(String[] args) throws IOException, InterruptedException {
+        ServerSocket serverSocket = new ServerSocket(10000, 2);
+        while (true) {
+            Socket clientSocket = serverSocket.accept();
+            if (clientSocket.isConnected()) {
+                System.out.println(clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort());
+            }
+            clientSocket.getOutputStream().write("hello".getBytes());
+            Thread.sleep(1000000);
+        }
+    }
+}
+```
+
+<center><img src="pics/backlog_exp.png" alt=""></center>
+
+使用 lsof 观察状态的话会看到第四个连接有个短暂的 SYN_SENT 状态：
+```
+lsof -i :10000
+COMMAND   PID USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+java    29099 demo    7u  IPv6 0xb801639153ee02d4      0t0  TCP *:ndmp (LISTEN)
+java    29099 demo    8u  IPv6 0x75e6fa6faa349ae9      0t0  TCP localhost:ndmp->localhost:65274 (ESTABLISHED)
+netcat  29207 demo    3u  IPv4 0x6e8271651ac6f5f9      0t0  TCP localhost:65274->localhost:ndmp (ESTABLISHED)
+netcat  29292 demo    3u  IPv4 0x779ff09e5c83e011      0t0  TCP localhost:65292->localhost:ndmp (ESTABLISHED)
+netcat  29917 demo    3u  IPv4 0x4a810dec1fddc647      0t0  TCP localhost:65414->localhost:ndmp (ESTABLISHED)
+netcat  13274 demo    3u  IPv4 0x5d048ad334188048      0t0  TCP localhost:65473->localhost:ndmp (SYN_SENT)
+```
+
+超时失败后，套接字关闭：
+```
+lsof -i :10000
+COMMAND   PID USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+java    29099 demo    7u  IPv6 0xb801639153ee02d4      0t0  TCP *:ndmp (LISTEN)
+java    29099 demo    8u  IPv6 0x75e6fa6faa349ae9      0t0  TCP localhost:ndmp->localhost:65274 (ESTABLISHED)
+netcat  29207 demo    3u  IPv4 0x6e8271651ac6f5f9      0t0  TCP localhost:65274->localhost:ndmp (ESTABLISHED)
+netcat  29292 demo    3u  IPv4 0x779ff09e5c83e011      0t0  TCP localhost:65292->localhost:ndmp (ESTABLISHED)
+netcat  29917 demo    3u  IPv4 0x4a810dec1fddc647      0t0  TCP localhost:65414->localhost:ndmp (ESTABLISHED)
+```
+
+当队列已满时，TCP将不理会传入的SYN，也不发回RST作为应答，因为这是一个软错误，而不是一个硬错误。通常队列已满是由于应用程序或操作系统忙造成的，这样可防止应用程序对传入的连接进行服务。这个条件在一个很短的时间内可以改变。但如果服务器的TCP以系统复位作为响应，客户进程的主动打开将被废弃（如果服务器程序没有启动我们就会遇到）。由于不应答SYN，服务器程序迫使客户TCP随后重传SYN，以等待连接队列有空间接受新的连接。
+
+这个例子中有一个巧妙之处，这在大多TCP/IP的具体实现中都能见到，就是如果服务器的连接队列未满时，TCP将接受传入的连接请求（即SYN），但并不让应用层了解该连接源于何处（即不告知源IP地址和源端口）。这不是TCP所要求的，而只是共同的实现技术（如伯克利源代码通常都这么做）。如果一个API如TLI（见1.15节）向应用程序提供了解连接请求的到来的方法，并允许应用程序选择是否接受连接。当应用程序假定被告知连接请求已经到来时，TCP的三次握手已经结束！其他运输层的实现可能将连接请求的到达与接受分开（如OSI的运输层），但TCP不是这样。
