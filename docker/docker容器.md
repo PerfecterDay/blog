@@ -1,7 +1,8 @@
 # docker 容器
 {docsify-updated}
 
-> https://medium.com/@furkan.turkal/how-does-docker-actually-work-the-hard-way-a-technical-deep-diving-c5b8ea2f0422
+> https://medium.com/@furkan.turkal/how-does-docker-actually-work-the-hard-way-a-technical-deep-diving-c5b8ea2f0422  
+> https://blog.lizzie.io/linux-containers-in-500-loc.html
 
 ## 容器操作的命令
 
