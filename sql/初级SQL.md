@@ -73,6 +73,12 @@ alter table table-name add (
 
 ALTER TABLE group_msg ADD effect_start_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP comment '开始生效时间' after state;
 ALTER TABLE group_msg ADD expire_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP comment '失效时间' after effect_start_time;
+
+ALTER TABLE investment_questionnaire_info
+    ADD COLUMN employer_country_code BIGINT DEFAULT NULL COMMENT '雇主所在国家code',
+    ADD COLUMN employer_country_name VARCHAR(70) DEFAULT NULL COMMENT '雇主所在国家名称',
+    ADD COLUMN employer_province_code BIGINT DEFAULT NULL COMMENT '雇主所在省code',
+    ADD COLUMN employer_province_name VARCHAR(70) DEFAULT NULL COMMENT '雇主所在省名称';
 ```
 实际上，如果表中已经有了数据，除非给新增字段指定默认值，否则新增字段不可以指定非空约束，因为新增字段肯定是空的。
 
@@ -89,8 +95,11 @@ first或 after column 代表将目标列修改到指定位置（column-name2 之
 
 3. 删除列
 ```
-alter table table-name drop column-name
+alter table table-name drop column-name1
+alter table table-name drop column-name2
+alter table table-name drop column-name3
 ```
+无法一次性删除多列，只能用多条语句删除。  
 删除列总是可以成功的，且会从每行中删除该列的数据，并释放该列所占的空间。所以删除列一般时间比较长，因为还要回收空间。
 
 ### 删除表
