@@ -2,22 +2,6 @@
 {docsify-updated}
 > https://www.baeldung.com/java-optional
 
-- [Optional](#optional)
-    - [Optional 创建](#optional-创建)
-    - [常用方法](#常用方法)
-      - [检查值是否存在：`isPresent()` 和 `isEmpty()`](#检查值是否存在ispresent-和-isempty)
-      - [`ifPresent()`](#ifpresent)
-      - [`orElse()` 返回默认值](#orelse-返回默认值)
-      - [`orElseGet()` 返回默认值](#orelseget-返回默认值)
-      - [`orElse()` 和 `orElseGet()` 的区别](#orelse-和-orelseget-的区别)
-      - [检索封装值的最终方法是 `get()` 方法。](#检索封装值的最终方法是-get-方法)
-      - [用map()转换值](#用map转换值)
-      - [用flatMap()转换值](#用flatmap转换值)
-      - [map 与 flatmap 区别](#map-与-flatmap-区别)
-    - [序列化问题](#序列化问题)
-    - [判空示例](#判空示例)
-
-
 `Optional` 类的目的是提供一个类型级别的解决方案，用于表示可以为`null`的可选的值 。  
 为了更深入地了解我们为什么要关心 `Optional` 类，请看一下[Oracle的官方文章](https://www.oracle.com/technical-resources/articles/java/java8-optional.html)。
 
