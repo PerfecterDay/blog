@@ -82,6 +82,22 @@ switch(expression){
 ```
 switch 语句会先计算出表达式的值，然后拿着个表达式的值和 case 标签后的值比较，一旦遇到相等的值，程序就开始执行这个 case 标签后的代码，不再判断后边的 case 、 default 标签的条件是否匹配，除非遇到 break ，如果所有的 case 标签都不匹配，则执行 default 标签后的语句。**和 if 语句中的 else 类似， default 看似没有条件，其实是有条件的，条件就是 expression 不能与 case 标签后的值相等。**
 
+从Java 12 开始，switch 语句有了新的变化：
++ 箭头语法 (->)：无需写 break，不会发生 case 穿透。
++ 多值合并：多个相同逻辑的 case 可以写在同一行（如 case 1, 2, 3 ->）。
++ 返回值 (yield)：switch 可以直接作为表达式赋值，代码块中用 yield 返回结果。 
+```
+// 新版 switch 表达式与返回值
+int num = 2;
+String result = switch (num) {
+    case 1, 3, 5 -> "奇数";
+    case 2, 4, 6 -> "偶数";
+    default -> {
+        yield "未知";
+    }
+};
+```
+
 ## 循环结构
 循环结构用于当满足条件的时候重复执行一段语句。一般循环语句包含四个部分：
 1. 初始化语句：用于一些初始化操作，在循环开始之前执行

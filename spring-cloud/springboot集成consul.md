@@ -57,6 +57,46 @@ consul提供的各种语言的SDK/开发库： https://developer.hashicorp.com/c
 
 ### 自动配置类
 ```java
+public class ConsulServiceRegistryAutoConfiguration {
+
+	@Bean
+	@ConditionalOnMissingBean
+	public ConsulServiceRegistry consulServiceRegistry(ConsulClient consulClient, ConsulDiscoveryProperties properties,
+			HeartbeatProperties heartbeatProperties, @Autowired(required = false) TtlScheduler ttlScheduler) {
+		return new ConsulServiceRegistry(consulClient, properties, ttlScheduler, heartbeatProperties);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public HeartbeatProperties heartbeatProperties() {
+		return new HeartbeatProperties();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	// TODO: Split appropriate values to service-registry for Edgware
+	public ConsulDiscoveryProperties consulDiscoveryProperties(InetUtils inetUtils) {
+		return new ConsulDiscoveryProperties(inetUtils);
+	}
+
+	protected static class OnConsulRegistrationEnabledCondition extends AllNestedConditions {
+
+		OnConsulRegistrationEnabledCondition() {
+			super(ConfigurationPhase.REGISTER_BEAN);
+		}
+
+		@ConditionalOnProperty(value = "spring.cloud.service-registry.enabled", matchIfMissing = true)
+		static class ServiceRegistryEnabledClass {
+
+		}
+
+		@ConditionalOnProperty(value = "spring.cloud.consul.service-registry.enabled", matchIfMissing = true)
+		static class ConsulServiceRegistryEnabledClass {
+
+		}
+	}
+}
+
 public class ConsulAutoServiceRegistrationAutoConfiguration {
 
     @Autowired

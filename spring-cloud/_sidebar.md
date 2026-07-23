@@ -4,6 +4,7 @@
 * [Spring Cloud](#)
   * [Spring cloud common](./spring-cloud.md)
   * [Spring cloud 动态刷新 bean 魔法- RefreshScope](/spring-cloud/spring-cloud动态刷新bean.md)
+  * [Spring cloud 服务注册与发现](/spring-cloud/spring-cloud服务注册与发现.md)
   * [Spring cloud consul 服务注册与发现](./springboot集成consul.md)
   * [Spring cloud consul 配置中心](/分布式/consul/consul-config.md)
   * [Spring cloud open feign](./spring-cloud-openfeign.md)
