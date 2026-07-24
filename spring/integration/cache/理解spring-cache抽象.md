@@ -80,6 +80,110 @@ public class UserService {
 + 支持比较复杂的缓存逻辑。
 + 提供缓存编程的一致性抽象，方便代码维护
 
+## Spring cache 的缓存抽象
+`Cache` 缓存抽象：
+```
+public interface Cache {
+	
+	String getName();
+
+	Object getNativeCache();
+
+	@Nullable ValueWrapper get(Object key);
+
+	<T> @Nullable T get(Object key, @Nullable Class<T> type);
+
+	<T> @Nullable T get(Object key, Callable<T> valueLoader);
+
+	default @Nullable CompletableFuture<?> retrieve(Object key) {
+		throw new UnsupportedOperationException(
+				getClass().getName() + " does not support CompletableFuture-based retrieval");
+	}
+
+	default <T> CompletableFuture<T> retrieve(Object key, Supplier<CompletableFuture<T>> valueLoader) {
+		throw new UnsupportedOperationException(
+				getClass().getName() + " does not support CompletableFuture-based retrieval");
+	}
+
+	void put(Object key, @Nullable Object value);
+
+	default @Nullable ValueWrapper putIfAbsent(Object key, @Nullable Object value) {
+		ValueWrapper existingValue = get(key);
+		if (existingValue == null) {
+			put(key, value);
+		}
+		return existingValue;
+	}
+
+	void evict(Object key);
+
+	default boolean evictIfPresent(Object key) {
+		evict(key);
+		return false;
+	}
+
+	void clear();
+
+	default boolean invalidate() {
+		clear();
+		return false;
+	}
+
+	@FunctionalInterface
+	interface ValueWrapper {
+		@Nullable Object get();
+	}
+
+	@SuppressWarnings("serial")
+	class ValueRetrievalException extends RuntimeException {
+
+		private final @Nullable Object key;
+
+		public ValueRetrievalException(@Nullable Object key, Callable<?> loader, @Nullable Throwable ex) {
+			super(String.format("Value for key '%s' could not be loaded using '%s'", key, loader), ex);
+			this.key = key;
+		}
+
+		public @Nullable Object getKey() {
+			return this.key;
+		}
+	}
+}
+```
+Spring 为很多第三方框架提供了 `Cache` 的实现，如：`EhCacheCache` 、`CaffeineCache` 、 `RedisCache` 、 `JCacheCache` 、 `ConcurrentMapCache` 等。很多实现使用了第三方的缓存框架。
+
+`CacheManager` 用于管理 `Cache` 实例，可以用于从 `CacheManager` 中获取指定 `Cache`:
+```
+public interface CacheManager {
+
+	@Nullable Cache getCache(String name);
+
+	Collection<String> getCacheNames();
+
+	default void resetCaches() {
+		for (String cacheName : getCacheNames()) {
+			Cache cache = getCache(cacheName);
+			if (cache != null) {
+				cache.clear();
+			}
+		}
+	}
+}
+```
+同样，Sring 也提供了很多 `CacheManager` 的实现，如：`CaffeineCacheManager` 、 `RedisCacheManager` 、 `JCacheCacheManager` 、 `ConcurrentMapCacheManager` 等。  
+`CacheManager` 能同时管理多个 `Cache` 实例，每个 `Cache` 都有一个名称，用于区分不同的 `Cache` 实例。 `Cache` 中则可以存储多个键值对。
+
+```
+public class App {
+    public static void main(String[] args) {
+        CaffeineCacheManager caffeineCacheManager = new CaffeineCacheManager();
+        Cache cache = caffeineCacheManager.getCache("test");
+        cache.put("key", "value");
+        System.out.println(cache.get("key").get());
+    }
+}
+```
+
 ## spring cache 的功能
 从本质上讲， `spring-cache` 将缓存机制应用于 Java 方法，从而根据缓存中已有的信息减少方法的执行次数。也就是说，每次调用目标方法时，该抽象都会触发缓存机制，检查该方法是否已针对给定的参数被调用过。如果已被调用，则直接返回缓存结果，而无需再次调用实际方法。如果该方法尚未被调用，则会调用该方法，并将结果缓存并返回给用户，以便下次调用该方法时直接返回缓存结果。通过这种方式，对于给定的一组参数，耗时较长的方法（无论是CPU密集型还是I/O密集型）只需调用一次，其结果即可被复用，而无需再次实际调用该方法。缓存逻辑以透明的方式应用，不会对调用者造成任何干扰。
 
