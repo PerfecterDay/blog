@@ -19,3 +19,4 @@
 * [服务自启动-Systemd](/linux/systemd.md)
 * [strace-跟踪系统调用](/linux/strace.md)
 * [CPU利用率100%排查](/linux/CPU-100.md)
+* [速查文档](https://linuxtools-rst.readthedocs.io/zh-cn/latest/)

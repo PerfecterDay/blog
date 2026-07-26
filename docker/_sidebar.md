@@ -6,7 +6,7 @@
   * [doocker容器](/docker/docker容器.md)
   * [doocker网络](/docker/docker网络.md)
   * [docker-compose](/docker/docker-compose.md)
-  * [podman](/docker/podman.md)
+  * [podman 和 orbstack](/docker/podman.md)
 * [k8s](#)
   * [k8s官方文档](https://kubernetes.io/zh-cn/docs/home/)
   * [k8s集群创建及使用kubectl交互](/docker/k8s/k8s-创建k8s集群及使用kubectl.md)

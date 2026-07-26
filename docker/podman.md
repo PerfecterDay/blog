@@ -16,9 +16,22 @@ podman 安装：
 
 
 ## Orbstack
+> https://docs.orbstack.dev/
+
+<center><img src="pics/arch-orbstack.png" alt=""></center>
+
 ```
 Start: orb start k8s
 Stop: orb stop k8s
 Restart: orb restart k8s
 Delete: orb delete k8s
 ```
+
+### Machines
+
+#### 与mac宿主机以及其它machine之间的文件访问及共享
+Mac files are available in Linux machines at `/mnt/mac` , and Linux files are available from Mac at `~/OrbStack` or the OrbStack tab in Finder. See File sharing for more information.
+
+You can access files from other Linux machines at `/mnt/machines`: `ls /mnt/machines/foo`
+
+#### 执行mac 命令
