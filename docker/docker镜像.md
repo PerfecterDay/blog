@@ -7,7 +7,7 @@ Docker 容器底层使用的是 Host 主机的内核，自己**通过镜像为 k
 
 理论上， 一个容器镜像能运行在任何一个运行Docker的机器上。 但有一个小警告：一个关于运行在一台机器上的所有容器共享主机Linux内核的警告。 如果一个容器化的应用需要一个特定的内核版本， 那它可能不能在每台机器上都工作。 如果一台机器上运行了一个不匹配的Linux内核版本， 或者没有相同内核模块可用，那么此应用就不能在其上运行。虽然容器相比虚拟机轻量许多， 但也给运行于其中的应用带来了一些局限性。虚拟机没有这些局限性， 因为每个虚拟机都运行自己的内核。还不仅是内核的问题。 一个在特定硬件架构之上编译的容器化应用， 只能在有相同硬件架构的机器上运行。 不能将一个x86架构编译的应用容器化后， 又期望它能运行在ARM架构的机器上。 你仍然需要一台虚拟机来做这件事情。
 
-### 镜像的分层结构
+## 镜像的分层结构
 Docker 通过扩展现有镜像，创建新的镜像。特殊情况下，基于空白镜像 scratch 创建。
 事实上，Docker Hub 中 99% 的镜像都是通过在 base 镜像中安装和配置需要的软件构建出来的。 base 镜像通常不依赖其它镜像，从 scratch 构建出来。
 
@@ -35,7 +35,7 @@ Docker 通过扩展现有镜像，创建新的镜像。特殊情况下，基于�
 
 **只有在修改时才复制一份数据，这种特性叫做 copy-on-write 。容器层保存的是镜像变化的部分，不会对底下的镜像层进行任何修改。**
 
-### 镜像的构建
+## 镜像的构建
 1. docker commit  
 	```docker commit [OPTIONS] CONTAINER [REPOSITORY[:TAG]]```使用docker commit 创建镜像一般包含三个步骤：
     1. 运行容器
@@ -65,7 +65,7 @@ docker build --build-context modu=/Users/demo/workspace/apps/go-modu --build-arg
 
 `Dockerfile` 中使用： `COPY --from=modu . /usr/local/demo/com_gmas/go-modu/`
 
-#### Dockerfile 常用指令
+### Dockerfile 常用指令
 1. `FROM`: 指定基础镜像 ，后续指令都是基于基础镜像的
 2. `CMD` ：容器就是进程，既然是进程，那么在启动容器的时候，需要指定所运行的程序及参数。CMD 指令就是用于指定默认的容器主进程的启动命令的。如果启动容器时，添加了指令，则会覆盖CMD指令。可以有多个CMD指令，但是只有最后一个生效：`CMD ['/bin/bash','-l']`
 3. `ENTRYPOINT` ： 类似于CMD，但是启动容器时添加的指令将会作为参数传递到ENTRYPOINT指定的指令中，可以有多个，但是只有最后一个生效
@@ -85,7 +85,7 @@ docker build --build-context modu=/Users/demo/workspace/apps/go-modu --build-arg
 + `${variable:+word}`表示如果 `variable` 设置则为word结果，否则为空字符串。
 变量前加 `\` 可以转义成普通字符串：`\$foo` or `\${foo}` ，表示转换为 `$foo` 和 `${foo}` 文字
 
-##### 多阶段构建
+#### 多阶段构建
 ```
 FROM --platform=linux/amd64 golang:alpine AS builder
 
@@ -142,7 +142,7 @@ docker build --target builder -t hello .
 ```
 如果没有使用 `--target` 标志指定阶段，会以 Dockerfile 中定义的最后一个阶段将作为运行构建命令时构建的阶段。这适用于 `docker build` 和 `docker buildx build`。
 
-#### 镜像操作
+### 镜像操作
 1. 获取镜像 
    + 在 Registry 仓库中查找镜像: `docker search xxx`
    + 从 Registry 下载镜像： `docker pull [选项] [Docker Registry 地址[:端口号]/]repository[:tag]`
