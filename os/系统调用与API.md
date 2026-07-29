@@ -112,42 +112,60 @@ ABI 主要关注的问题有调用约定、字节序、寄存器使用、系统�
 ### 标准C与POSIX
 POSIX and the Standard C library (ISO C / C11/C99/etc.) are distinct but overlapping specifications for C programming APIs. Below are the key differences, how they relate, and practical implications.
 
-What each specifies
+1. What each specifies
 
 Standard C library (ISO C): defines the core language and its standard headers (stdio.h, stdlib.h, string.h, math.h, time.h, etc.). Specifies language syntax, types, standard functions for I/O, memory, strings, math, locale, and basic runtime behavior. Intended to be platform-neutral.
 POSIX (Portable Operating System Interface): a family of IEEE/ISO standards specifying OS-level APIs and utilities for Unix-like systems. Covers process control, signals, file and directory operations, pipes, sockets (in later revisions), pthreads, termios, select/poll, extended file attributes, and many command-line utilities and shell behavior.
-Scope and level of abstraction
+
+2. Scope and level of abstraction
 
 C Standard: language- and implementation-level runtime services. Focused on portable C program constructs and a minimal standard library.
 POSIX: operating-system services and conventions that go beyond the language: concurrency, process model, filesystem semantics, device I/O, user IDs, environment, and command-line tools.
-Portability and target platforms
+
+3. Portability and target platforms
 
 C Standard: designed for maximum portability across any platform with a C compiler. Implementations exist on microcontrollers, embedded systems, and exotic platforms.
 POSIX: targets Unix-like systems (Linux, BSDs, macOS partially), not universally available on all embedded or non-Unix OSes (Windows is not POSIX-compliant by default).
-Typical functions only in POSIX (not in Standard C)
+
+4. Typical functions only in POSIX (not in Standard C)
 
 fork(), execve(), waitpid(), kill(), sigaction(), pipes (pipe()), open/creat, read/write (POSIX low-level I/O), fcntl, mmap, select/poll/epoll, getpid/getuid, chdir, stat/lstat, pthread_* (POSIX threads), nanosleep (POSIX-specific variants), directory iteration with opendir/readdir, etc.
-Typical functions only in Standard C (portable across platforms)
+
+5. Typical functions only in Standard C (portable across platforms)
 
 fopen/fclose, fread/fwrite (stdio buffered I/O), malloc/free, realloc, qsort, bsearch, memcpy/memmove, printf family, fprintf/snprintf, time/gmtime/localtime (with portability caveats), getenv/putenv behavior defined by C standard.
-Overlaps and interactions
+
+6. Overlaps and interactions
 
 Many POSIX functions complement or duplicate standard C functionality at a lower level: POSIX read/write vs. stdio fread/fwrite; POSIX open vs. stdio fopen. Programs use POSIX for fine-grained control (non-blocking I/O, file descriptors, permissions).
 Standards reference each other: POSIX requires support for parts of the C standard; POSIX defines additional headers that extend C.
-Portability strategy for developers
+
+7. Portability strategy for developers
 
 Write strictly to the ISO C standard for maximum portability across diverse platforms.
 Use POSIX when you need OS services (process control, threads, advanced I/O). Guard POSIX usage with conditional compilation (#ifdef _POSIX_VERSION) or build-system checks.
 For cross-platform compatibility including Windows, use abstraction layers (libuv, Boost.Asio, APR), conditional implementations, or rely on libraries that provide uniform APIs.
-Standards timeline and variants
+
+8. Standards timeline and variants
 
 ISO C standard versions: C89/C90, C99, C11, C17, C23.
 POSIX variants: POSIX.1-1990, POSIX.1b (real-time), POSIX.1c (threads), POSIX.1-2001 (Single UNIX Specification alignment), POSIX.1-2008, POSIX.1-2017. Many systems implement subsets; macOS and Linux implement most POSIX features, Windows provides partial compatibility via POSIX subsystems or libraries (Cygwin, MSYS2, Windows Subsystem for Linux).
-Practical checklist when choosing APIs
+
+9. Practical checklist when choosing APIs
 
 Need OS-level features (processes, signals, sockets, permissions)? Use POSIX.
 Need basic portable data structures, I/O, memory, formatting? Use Standard C.
 Target non-Unix platforms? Minimize POSIX usage or provide fallbacks.
 Need threads? Prefer pthreads (POSIX) on Unix; on Windows use Win32 threads or a portability layer.
+
 Summary
 The Standard C library defines the language-level runtime and portable APIs guaranteed across all conforming C implementations. POSIX defines a broader set of operating-system services and utilities for Unix-like environments. Use Standard C for maximum portability; use POSIX for OS-specific capabilities and finer control on Unix-like systems.
+
+glibc muslc 这些库都是同时实现了Posix 和 C 标准的吗 ？按照道理来说，是不是C标准的实现依赖 Posix 库提供的功能 ？  
+问题一:glibc 和 musl 这两个具体实现,确实同时提供 ISO C 标准库和 POSIX,打包在同一个 libc 里。但"实现 C 标准"≠"实现 POSIX"——Windows 的 CRT、嵌入式的 newlib 就只(或主要)实现 C 标准而不实现完整 POSIX。glibc/musl 两者都做,是因为它们本来就是给 POSIX 系统(Linux)用的。
+
+问题二:要分两个方向看,不能简单说"C 依赖 POSIX":
+
+规范上是反的:POSIX 是 ISO C 的超集,是 POSIX 建立在 C 之上、扩展 C,而不是 C 依赖 POSIX。
+实现上部分成立但要修正:C 标准里需要操作系统的那部分函数(printf/malloc/fopen)确实建立在更底层机制上;但严格说它们依赖的是内核系统调用,而 POSIX 只是那层接口的规范名。而且 C 标准里的纯计算函数(字符串、math、qsort 等)完全不依赖任何 OS。
+一句话:不是"C 标准依赖 POSIX 库",而是"C 标准里需要 OS 的那些函数,和 POSIX 一样,都建立在内核系统调用之上;POSIX 则是在 C 标准之外又扩展了一大批面向 OS 的接口"。

@@ -1,15 +1,6 @@
 #  Shell 脚本
 {docsify-updated}
 
-- [Shell 脚本](#shell-脚本)
-	- [基础](#基础)
-		- [定义变量](#定义变量)
-		- [命令执行的结果赋值](#命令执行的结果赋值)
-		- [字符串](#字符串)
-	- [管道](#管道)
-	- [重定向](#重定向)
-	- [以后台模式运行脚本](#以后台模式运行脚本)
-
 <center><img src="pics/shell-basic.jpg" width="80%"></center>
 
 ## 基础
@@ -109,3 +100,34 @@ Linux提供了一个专门的变量`$?`来保存上个已执行命令的退出�
 ```
 exit 0
 ```
+
+## Here Document
+```
+cat > hello.c <<EOF
+#include <stdio.h>
+
+int main() {
+    printf("Hello World\n");
+    return 0;
+}
+EOF
+```
+
+注意：
+```
+cat > hello.c <<EOF
+$HOME
+EOF
+```
+以下写法Shell 会展开变量，生成如：
+```
+/home/user
+```
+
+如果不想展开：
+```
+cat > hello.c <<'EOF'
+$HOME
+EOF
+```
+单引号阻止了 Here Document 内部的变量替换，生成的内容就是 `$HOME`

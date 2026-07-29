@@ -37,6 +37,7 @@
   * [envoy文档](https://www.envoyproxy.io/docs/envoy/latest/start/start)
   * [envoy是什么](/docker/envoy/envoy-what.md)
   * [envoy简介](/docker/envoy/envoy.md)
+  * [envoy日志](/docker/envoy/envoy-日志.md)
   * [envoy配置](/docker/envoy/envoy配置.md)
   * [envoy路由](/docker/envoy/envoy-路由.md)
   * [envoy健康检查](/docker/envoy/envoy-健康检查.md)
