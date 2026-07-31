@@ -14,28 +14,30 @@
 	+ `/RELOCATIONS`：查看重定位表
 	+ `/HEADERS`：
 3. `size` -查看目标文件各个段的长度
-4. `readelf` -查看elf 文件的信息
+4. `nm`: GNU nm lists the symbols from object files objfile
+5. `strip`: GNU strip discards all symbols from object files objfile
+6. `readelf` -查看elf 文件的信息
 	+ `-h/--file-header`: Display the ELF file header  ELF文件头
 	+ `-l/--program-headers`: Display the program headers 程序头表
 	+ `-S/--section-headers`: Display the sections' header 节头表
 	+ `-s/--syms`: Display the symbol table 符号表
 	+ `-d --dynamic`: Display the dynamic section (if present) 动态信息表
 	+ `-r -r --relocs`: Display the relocations 重定位表
-5. `ar` -压缩/解压程序，通常用来将若干目标文件打包成一个库文件
+7. `ar` -压缩/解压程序，通常用来将若干目标文件打包成一个库文件
    + `-t`：查看库文件中包含哪些目标文件 `ar -t libc.a`
    + `-x`:解压打包的文件 `ar -x libc.a`
-6. `file`-查看文件的简要信息，`apt install file`
-7. `hexdump -C -n 64 a.out` -观察二进制文件的二进制内容前64字节
-8. `ldd hello` - 查看一个程序主模块或一个共享库依赖于哪些共享库，`sudo apt-get install libc-bin` 安装
-9. pax-utils-`apt install pax-utils`
+8. `file`-查看文件的简要信息，`apt install file`
+9. `hexdump -C -n 64 a.out` -观察二进制文件的二进制内容前64字节
+10. `ldd hello` - 查看一个程序主模块或一个共享库依赖于哪些共享库，`sudo apt-get install libc-bin` 安装
+11. pax-utils-`apt install pax-utils`
    + `/usr/bin/dumpelf` – dump internal ELF structure
    + `/usr/bin/lddtree` – like ldd, with levels to show dependencies
    + `/usr/bin/pspax` – list ELF/PaX information about running processes
    + `/usr/bin/scanelf` – wide range of information, including PaX details
    + `/usr/bin/scanmacho` – shows details for Mach-O binaries (Mac OS X)
    + `/usr/bin/symtree` – displays a leveled output for symbols
-10. [Radare2](https://www.radare.org/r/)
-11. elfutils -`sudo apt install elfutils -y`
+12. [Radare2](https://www.radare.org/r/)
+13. elfutils -`sudo apt install elfutils -y`
     + /usr/bin/eu-addr2line
 	+ /usr/bin/eu-ar – alternative to ar, to create, manipulate archive files
 	+ /usr/bin/eu-elfcmp
@@ -52,7 +54,7 @@
 	+ /usr/bin/eu-strings – display textual strings (similar to strings utility)
 	+ /usr/bin/eu-strip – strip ELF file from symbol tables
 	+ /usr/bin/eu-unstrip – add symbols and debug information to stripped binary
-12. elfkickers
+14. elfkickers
     + /usr/bin/ebfc – compiler for Brainfuck programming language
 	+ /usr/bin/elfls – shows program headers and section headers with flags
 	+ /usr/bin/elftoc – converts a binary into a C program
@@ -60,7 +62,7 @@
 	+ /usr/bin/objres – creates an object from ordinary or binary data
 	+ /usr/bin/rebind – changes bindings/visibility of symbols in ELF file
 	+ /usr/bin/sstrip – strips unneeded components from ELF file
-13. prelink
+15. prelink
     + /usr/bin/execstack – display or change if stack is executable
 	+ /usr/bin/prelink – remaps/relocates calls in ELF files, to speed up the process
    
