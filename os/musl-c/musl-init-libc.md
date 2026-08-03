@@ -6,11 +6,15 @@
 `__init_libc` 是 libc 在 `main` 之前完成「环境初始化」的核心函数，由 `__libc_start_main` 调用。
 
 ## 启动链中的位置
-
+启动函数 `_start` 定义在 `arch/x86_64/crt_arch.h` 中，汇编实现。
 ```
 _start (汇编) → _start_c (crt1.c) → __libc_start_main
                                         ├─ __init_libc(envp, argv[0])   ← 本函数
-                                        └─ stage2 → __libc_start_init → exit(main(...))
+                                                |- __init_tls(aux);
+                                                |- __init_ssp((void *)aux[AT_RANDOM]);
+                                        └─libc_start_main_stage2((main, argc, argv))
+												|- __libc_start_init()
+												|- exit(main(argc, argv, envp));                                         
 ```
 
 调用点被刻意做成 **外部链接 + noinline**：

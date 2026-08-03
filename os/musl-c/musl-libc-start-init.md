@@ -1,5 +1,15 @@
 # `libc_start_init` 函数详细分析
 
+```
+_start (汇编) → _start_c (crt1.c) → __libc_start_main
+                                        ├─ __init_libc(envp, argv[0])   ← 本函数
+                                                |- __init_tls(aux);
+                                                |- __init_ssp((void *)aux[AT_RANDOM]);
+                                        └─libc_start_main_stage2((main, argc, argv))
+												|- __libc_start_init()
+												|- exit(main(argc, argv, envp));                                         
+```
+
 ## 概述
 
 `libc_start_init` 位于 `src/env/__libc_start_main.c`,是 musl 在程序启动流程中负责**运行 C 运行时的初始化构造器 (constructors)** 的函数——即执行 `_init`(旧式 `.init` 段)以及 `.init_array` 中登记的所有初始化函数(包括 C++ 全局对象构造函数、`__attribute__((constructor))` 标记的函数等)。

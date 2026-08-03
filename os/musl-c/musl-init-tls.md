@@ -1,5 +1,15 @@
 # `static_init_tls` 函数详细分析
 
+```
+_start (汇编) → _start_c (crt1.c) → __libc_start_main
+                                        ├─ __init_libc(envp, argv[0])   ← 本函数
+                                                |- __init_tls(aux);
+                                                |- __init_ssp((void *)aux[AT_RANDOM]);
+                                        └─libc_start_main_stage2((main, argc, argv))
+												|- __libc_start_init()
+												|- exit(main(argc, argv, envp));                                         
+```
+
 ## 概述
 
 `static_init_tls` 位于 `src/env/__init_tls.c`,是 musl libc 在**静态链接**(以及动态链接场景的初始 fallback)启动时初始化**线程局部存储 (TLS, Thread-Local Storage)** 的核心函数。它通过 `weak_alias` 被暴露为 `__init_tls`:
@@ -30,7 +40,7 @@ for (p=(void *)aux[AT_PHDR],n=aux[AT_PHNUM]; n; n--,p+=aux[AT_PHENT]) {
     ...
 ```
 
-- 从 auxv 取得程序头表地址 `AT_PHDR`、数目 `AT_PHNUM`、每项大小 `AT_PHENT`,遍历所有 program header。
+- 从 `auxv` 取得程序头表地址 `AT_PHDR`、数目 `AT_PHNUM`、每项大小 `AT_PHENT`,遍历所有 program header。
 - **计算加载基址 `base`**(用于把 ELF 里的虚拟地址 `p_vaddr` 换算成运行时真实地址):
   - `PT_PHDR`:程序头本身的映射地址已知(`AT_PHDR`),用 `AT_PHDR - p_vaddr` 得到基址。这是位置无关可执行文件 (PIE) 的典型手段。
   - `PT_DYNAMIC` 且存在 `_DYNAMIC`:用动态段的实际地址(链接器解析的 `_DYNAMIC` 符号)减去其 `p_vaddr`。`_DYNAMIC` 是 weak 符号,静态非 PIE 程序没有,此时 `base` 保持为 0。
