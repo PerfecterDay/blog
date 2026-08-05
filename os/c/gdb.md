@@ -34,6 +34,13 @@ break __init_libc       # 初始化 TLS/SSP/auxv 等
 + `x/10i $pc`: 查看10条
 + `set disassembly-flavor intel/att`：切换反汇编风格
 
+## 进程/线程
++ `info threads` 查看所有线程
++ `thread 1` 切换到线程1
++ `info proc` 查看进程信息
++ `info proc mappings` 查看内存映射
++ `info proc all` 查看所有进程信息
+
 ## 执行调试
 + `c` continue继续执行
 + `n` next单步执行

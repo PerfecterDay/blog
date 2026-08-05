@@ -1,16 +1,6 @@
 #  mysql数据备份与还原
 {docsify-updated}
 
-- [mysql数据备份与还原](#mysql数据备份与还原)
-		- [备份概述](#备份概述)
-		- [冷备](#冷备)
-		- [逻辑备份](#逻辑备份)
-			- [mysqldump 备份](#mysqldump-备份)
-			- [mysqldump 恢复](#mysqldump-恢复)
-			- [SELECT...INTO OUTFILE 备份](#selectinto-outfile-备份)
-			- [SELECT...INTO OUTFILE 恢复](#selectinto-outfile-恢复)
-			- [二进制日志备份与恢复](#二进制日志备份与恢复)
-			- [Mysql 数据恢复](#mysql-数据恢复)
 
 ### 备份概述
 根据备份方法不同，可以分为三类：
@@ -52,6 +42,8 @@ mysqldump -uroot -p nrng < nrng.sql
 
 mysqldump -u root -p block_chain_management system_users --no-create-info --skip-triggers --skip-add-locks --skip-comments > data.sql
 mysqldump -u root -p block_chain_management system_users --no-create-info --skip-triggers --skip-add-locks --skip-comments --skip-extended-insert > data.sql
+
+mysqldump --opt -d cap -u appadmin -p > create.sql
 ```
 
 重要参数：
@@ -69,6 +61,7 @@ mysqldump -u root -p block_chain_management system_users --no-create-info --skip
 10. `--triggers`：备份触发器
 11. `--hex-blob`：将 binary、varbinary、blob、bit类型的数据备份为十六进制的格式，默认是不可读的乱码。
 12. `--where='where_condition'(-w 'where_condition')`：导出给定条件的数据。
+13. `--opt`：只导出表结构
 
 #### mysqldump 恢复
 1. `mysql -uroot -p < file_name`
