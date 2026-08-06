@@ -1,4 +1,5 @@
 # Nacos 简介
+{docsify-updated}
 
 Nacos 致力于帮助您发现、配置和管理微服务。Nacos 提供了一组简单易用的特性集，帮助您快速实现动态服务发现、服务配置、服务元数据及流量管理。
 
@@ -19,12 +20,12 @@ Nacos started successfully in stand alone mode. use embedded storage
 ```
 可以通过下列服务，快速检验Nacos的功能。
 
-## Rest API
-1. 服务注册 : `curl -X POST 'http://127.0.0.1:8848/nacos/v1/ns/instance?serviceName=nacos.naming.serviceName&ip=20.18.7.10&port=8080'`
-2. 查看服务列表： `curl -X GET 'http://localhost:8848/nacos/v1/ns/catalog/services?pageNo=1&pageSize=10&namespaceId=http-application'`
-3. 服务发现 : `curl -X GET 'http://127.0.0.1:8848/nacos/v1/ns/instance/list?serviceName=nacos.naming.serviceName'`
-4. 发布配置 : `curl -X POST "http://127.0.0.1:8848/nacos/v1/cs/configs?dataId=nacos.cfg.dataId&group=test&content=HelloWorld"`
-5. 获取配置 : `curl -X GET "http://127.0.0.1:8848/nacos/v1/cs/configs?dataId=nacos.cfg.dataId&group=test"`
+## [Rest API](https://nacos.io/docs/v3.1/manual/user/open-api/?spm=5238cd80.2ef5001f.0.0.3f613b7c3ddWqG)
+1. 服务注册 : `curl -X POST "http://127.0.0.1:8848/nacos/v3/client/ns/instance" -d "serviceName=test1&ip=127.0.0.1&port=3306"`
+2. 查看服务列表： `curl -X GET 'http://localhost:8848/nacos/v3/ns/catalog/services?pageNo=1&pageSize=10&namespaceId=http-application'`
+3. 查看指定服务的实例列表：`curl -X GET 'http://127.0.0.1:8848/nacos/v3/client/ns/instance/list?serviceName=test1'`
+4. 注销实例：`curl -X DELETE "http://127.0.0.1:8848/nacos/v3/client/ns/instance?serviceName=test1&ip=127.0.0.1&port=3306"`
+5. 获取配置 : `curl -X GET 'http://127.0.0.1:8848/nacos/v3/client/cs/config?dataId=test&groupName=test'`
 
 
 ## 开启鉴权
@@ -45,44 +46,43 @@ nacos.core.auth.server.identity.value=$custom_server_identity_value
 nacos.core.auth.server.identity.key=nacos
 nacos.core.auth.server.identity.value=nacos
 
-###
+
 nacos.core.auth.system.type=nacos
 nacos.core.auth.enabled=true
 ```
 
-
 修改完配置后，可以在admin 控制台界面修改密码（首次登陆会让你设置密码）；或者通过 API curl 设置：
 ```
-curl -X POST 'http://127.0.01:8848/nacos/v1/auth/users/admin' -d 'password=123456'
+curl -X POST 'http://127.0.01:8848/nacos/v3/auth/users/admin' -d 'password=123456'
 {"username":"nacos","password":"123456"}% 
 ```
 
 使用账号密码登录：
 ```
-curl 'http://10.5.80.113:8848/nacos/v1/auth/users/login' \
+curl 'http://10.5.80.113:8848/nacos/v3/auth/users/login' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   --data-raw 'username=nacos&password=123456'
 ```
 
 
-curl -X POST 'http://127.0.0.1:8848/nacos/v1/ns/instance?serviceName=nacos.naming.serviceName&ip=20.18.7.10&port=8080&healthy=false&namespaceId=44a78092-158a-4cf7-b772-e22c03c02109' \
+curl -X POST 'http://127.0.0.1:8848/nacos/v3/ns/instance?serviceName=nacos.naming.serviceName&ip=20.18.7.10&port=8080&healthy=false&namespaceId=44a78092-158a-4cf7-b772-e22c03c02109' \
 -H 'Accept: application/json, text/javascript, */*; q=0.01' \
 -H 'Accept-Language: zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7' \
 -H 'AccessToken: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuYWNvcyIsImV4cCI6MTczOTg3ODY3M30.bC46VFyT7OHBa5pVWKOY9dM0SwDEEeSoNRpXL0OKvE4' \
 -H 'Authorization: {"accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuYWNvcyIsImV4cCI6MTczOTg3ODY3M30.bC46VFyT7OHBa5pVWKOY9dM0SwDEEeSoNRpXL0OKvE4","tokenTtl":18000,"globalAdmin":true,"username":"nacos"}'
 
 
-curl -X GET 'http://127.0.0.1:8848/nacos/v1/ns/instance/list?serviceName=nacos.naming.serviceName' \
+curl -X GET 'http://127.0.0.1:8848/nacos/v3/ns/instance/list?serviceName=nacos.naming.serviceName' \
 -H 'Accept: application/json, text/javascript, */*; q=0.01' \
 -H 'Accept-Language: zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7' \
 -H 'AccessToken: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuYWNvcyIsImV4cCI6MTczOTg3ODY3M30.bC46VFyT7OHBa5pVWKOY9dM0SwDEEeSoNRpXL0OKvE4' \
 -H 'Authorization: {"accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuYWNvcyIsImV4cCI6MTczOTg3ODY3M30.bC46VFyT7OHBa5pVWKOY9dM0SwDEEeSoNRpXL0OKvE4","tokenTtl":18000,"globalAdmin":true,"username":"nacos"}'
 
 
-curl -X GET 'http://127.0.0.1:8848/nacos/v2/console/namespace/list?serviceName=nacos.naming.serviceName' \
--H 'Accept: application/json, text/javascript, */*; q=0.01' \
--H 'Accept-Language: zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7' \
--H 'AccessToken: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuYWNvcyIsImV4cCI6MTczOTg3ODY3M30.bC46VFyT7OHBa5pVWKOY9dM0SwDEEeSoNRpXL0OKvE4' \
--H 'Authorization: {"accessToken":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuYWNvcyIsImV4cCI6MTczOTg3ODY3M30.bC46VFyT7OHBa5pVWKOY9dM0SwDEEeSoNRpXL0OKvE4","tokenTtl":18000,"globalAdmin":true,"username":"nacos"}'
 
-curl -X POST "http://127.0.0.1:8848/nacos/v1/cs/configs?accessToken=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuYWNvcyIsImV4cCI6MTczOTg3ODY3M30.bC46VFyT7OHBa5pVWKOY9dM0SwDEEeSoNRpXL0OKvE4&dataId=TEST_CONFIG&group=TEST_GROUP&content=useLocalCache=true"
+curl -X POST "http://127.0.0.1:8848/nacos/v3/cs/configs?accessToken=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuYWNvcyIsImV4cCI6MTczOTg3ODY3M30.bC46VFyT7OHBa5pVWKOY9dM0SwDEEeSoNRpXL0OKvE4&dataId=TEST_CONFIG&group=TEST_GROUP&content=useLocalCache=true"
+
+
+查看一个配置详情
+curl -X GET '127.0.0.1:8848/nacos/v3/client/cs/config?dataId=cap-dev.yaml&groupName=DEFAULT_GROUP&namespaceId=public' \
+-H 'AccessToken: eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJuYWNvcyIsImV4cCI6MTc4NjAyMjA0MH0.ld3JtKQ1UtwR9dxhJ34vzCdfDpNVymJij36X80frEKSTPOpjVWT6FrJBglPIxOa-'

@@ -1,6 +1,8 @@
 # 启用Nacos 配置中心
 {docsify-updated}
 
+
+## 原生使用
 1. 添加依赖
    ```
    <dependency>
@@ -45,3 +47,41 @@
 
 ## 原理
 > https://zhuanlan.zhihu.com/p/618729460
+
+
+
+## 结合 Spring Cloud 使用
+1. 集成依赖
+```
+<dependency>
+   <groupId>com.alibaba.cloud</groupId>
+   <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+</dependency>
+```
+
+2. 配置
+```
+spring:
+  config:
+    import:
+      - optional:nacos:cap-dev.yaml?group=DEFAULT_GROUP
+  cloud:
+    nacos:
+      # Nacos 3.x: applications connect to Server API 8848; Console runs separately on 18080.
+      server-addr: http://localhost:8848
+      username: nacos
+      password: "123456"
+      discovery:
+        server-addr: http://localhost:8848
+        namespace: public
+        group: DEFAULT_GROUP
+        username: nacos
+        password: "123456"
+      config:
+        server-addr: http://localhost:8848
+        namespace: public
+        group: DEFAULT_GROUP
+        file-extension: yaml
+        username: nacos
+        password: "123456"
+```

@@ -34,6 +34,7 @@
   * [go-grpc](/分布式/grpc/go-grpc.md)
 * [Nacos](#)
   * [Nacos入门.md](/分布式/nacos/nacos.md)
+  * [Nacaos注册中心](/分布式/nacos/nacos注册中心.md)
   * [Nacos配置中心](/分布式/nacos/nacaos启用配置中心.md)
 * [Consul](#)
   * [Consul安装与启动](/分布式/consul/consul安装运行.md)

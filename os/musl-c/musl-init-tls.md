@@ -166,3 +166,78 @@ if (__init_tp(__copy_tls(mem)) < 0)
 3. **启动性能**:内置 `builtin_tls` 缓冲避免小 TLS 情况下的 mmap 调用。
 4. **紧凑的位运算对齐**:大量使用 `(-x) & (align-1)` 和依赖运算符优先级的对齐取整,牺牲可读性换取精简的启动代码。
 5. **fail-fast**:不检查 mmap 错误、初始化失败直接 `a_crash()`,保持早期启动代码极简。
+
+
+## 与OS内核的关系
+```
+execve()
+
+ |
+ |
+ v
+
+kernel 创建:
+
+task_struct
+ |
+ |
+ v
+
+进入:
+
+_start
+
+
+ |
+ |
+ v
+
+musl:
+
+static_init_tls()
+
+
+ |
+ |
+ v
+
+创建:
+
+struct __pthread
+```
+
+```
+用户线程
+
+pthread_t
+   |
+   |
+   v
+
+struct __pthread
++----------------+
+| tid = 1001     |
+| errno          |
+| dtv            |
+| TLS            |
++----------------+
+        |
+        |
+        | syscall clone()
+        |
+        v
+
+
+Linux kernel
+
+
+struct task_struct
+
++----------------+
+| pid=1001       |
+| mm             |
+| files          |
+| scheduler      |
+| kernel stack   |
++----------------+
+```

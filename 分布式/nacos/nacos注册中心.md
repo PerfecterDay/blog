@@ -1,4 +1,6 @@
 # nacos 注册中心API 
+{docsify-updated}
+
 
 ## 初始化SDK 
 ```
@@ -14,9 +16,6 @@ ConfigService configService = NacosFactory.createConfigService(properties);
 # 初始化服务注册中心的Nacos Java SDK
 NamingService namingService = NacosFactory.createNamingService(properties);
 ```
-
-
-
 
 
 ## 服务发现的API
