@@ -1,6 +1,14 @@
 # GCC
 {docsify-updated}
 
+## 查看gcc底层使用的工具
+```
+gcc -print-prog-name=as
+gcc -print-prog-name=ld
+gcc -print-prog-name=cc1
+gcc -print-prog-name=ccp
+gcc -print-prog-name=cc1plus
+```
 
 ## spec
 gcc spec 文件（specification file）是 GCC 内部的规则配置文件，用于告诉 GCC：**当用户执行 gcc xxx 时，应该如何组织后续的编译、链接步骤，以及传递哪些默认参数。** 它控制：

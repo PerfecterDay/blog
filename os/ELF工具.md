@@ -29,17 +29,18 @@
    + `-t`：查看库文件中包含哪些目标文件 `ar -t libc.a`
    + `-x`:解压打包的文件 `ar -x libc.a`
 9. `file`-查看文件的简要信息，`apt install file`
-10. `hexdump -C -n 64 a.out` -观察二进制文件的二进制内容前64字节
-11. `ldd hello` - 查看一个程序主模块或一个共享库依赖于哪些共享库，`sudo apt-get install libc-bin` 安装
-12. pax-utils-`apt install pax-utils`
+10. `otool -l hello` -查看 macos 下的 Mach-O 文件的信息
+11. `hexdump -C -n 64 a.out` -观察二进制文件的二进制内容前64字节
+12. `ldd hello` - 查看一个程序主模块或一个共享库依赖于哪些共享库，`sudo apt-get install libc-bin` 安装
+13. pax-utils-`apt install pax-utils`
    + `/usr/bin/dumpelf` – dump internal ELF structure
    + `/usr/bin/lddtree` – like ldd, with levels to show dependencies
    + `/usr/bin/pspax` – list ELF/PaX information about running processes
    + `/usr/bin/scanelf` – wide range of information, including PaX details
    + `/usr/bin/scanmacho` – shows details for Mach-O binaries (Mac OS X)
    + `/usr/bin/symtree` – displays a leveled output for symbols
-13. [Radare2](https://www.radare.org/r/)
-14. elfutils -`sudo apt install elfutils -y`
+14. [Radare2](https://www.radare.org/r/)
+15. elfutils -`sudo apt install elfutils -y`
     + /usr/bin/eu-addr2line
 	+ /usr/bin/eu-ar – alternative to ar, to create, manipulate archive files
 	+ /usr/bin/eu-elfcmp
@@ -56,7 +57,7 @@
 	+ /usr/bin/eu-strings – display textual strings (similar to strings utility)
 	+ /usr/bin/eu-strip – strip ELF file from symbol tables
 	+ /usr/bin/eu-unstrip – add symbols and debug information to stripped binary
-15. elfkickers
+16. elfkickers
     + /usr/bin/ebfc – compiler for Brainfuck programming language
 	+ /usr/bin/elfls – shows program headers and section headers with flags
 	+ /usr/bin/elftoc – converts a binary into a C program
@@ -64,7 +65,7 @@
 	+ /usr/bin/objres – creates an object from ordinary or binary data
 	+ /usr/bin/rebind – changes bindings/visibility of symbols in ELF file
 	+ /usr/bin/sstrip – strips unneeded components from ELF file
-16. prelink
+17. prelink
     + /usr/bin/execstack – display or change if stack is executable
 	+ /usr/bin/prelink – remaps/relocates calls in ELF files, to speed up the process
    
