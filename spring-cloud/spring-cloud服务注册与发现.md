@@ -1,6 +1,8 @@
 # Spring Cloud 服务注册与发现
 {docsify-updated}
 
+> https://docs.spring.io/spring-cloud-commons/reference/spring-cloud-commons/common-abstractions.html
+
 ## 服务信息抽象
 `ServiceInstance` 在服务发现系统里边代表了一个服务实例信息，是一个接口，主要抽象了服务实例的id、服务id、host、port、uri、metadata等信息。
 ```

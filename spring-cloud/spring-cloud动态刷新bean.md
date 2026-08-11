@@ -1,12 +1,14 @@
 # Spring cloud 动态刷新 bean 魔法- RefreshScope
 {docsify-updated}
 
+> https://docs.spring.io/spring-cloud-commons/reference/spring-cloud-commons/application-context-services.html#refresh-scope
+
 ## RefreshScope的使用
 当配置发生变更时，标记为 `@RefreshScope` 的Spring `@Bean` 会获得特殊处理。此特性解决了有状态 `Bean` 仅在初始化时才注入配置的问题。例如，当通过环境变量修改数据库URL时，若数据源存在已打开的连接，通常需要允许这些连接持有者完成当前操作。但是，下次从连接池借用连接时，即可获得使用新URL的连接。
 
 有时，对于某些只能初始化一次的Bean，甚至必须应用 `@RefreshScope` 注解。如果Bean是“不可变”的，则必须为其添加 `@RefreshScope` 注解，或在 `spring.cloud.refresh.extra-refreshable` 属性键下指定类名。
 
-**Refresh scope beans是惰性的，当你在某个服务中注入了 `@RefreshScope` 类型的 bean 时，该 bean 并不会立即被注入，注入的实际上是一个代理对象，当你在调用 bean 的某个方法时，代理对象会去尝试获取 bean，如果bean 没有初始化，那么 bean 会被初始化并且`RefreshScope` 会缓存初始化好的 bean 。当调用了 `RefreshScope` 刷新方法后，会将缓存中的 bean 删除，这样当再次调用 bean 方法时，代理对象就会重新初始化它们，这样就能使用最新的初始化值。**
+**Refresh scope beans是惰性的，当你在某个服务中注入了 `@RefreshScope` 类型的 bean 时，该 bean 并不会立即被注入，注入的实际上是一个代理对象，当你在调用 bean 的某个方法时，代理对象会去尝试获取 bean，如果bean 没有初始化，那么 bean 会被初始化并且 `RefreshScope` 会缓存初始化好的 bean 。当调用了 `RefreshScope` 类的 `refresh(...)/refreshAll()` 方法后，会将缓存中的 bean 删除，这样当再次调用 bean 方法时，代理对象就会重新初始化它们，这样就能使用最新的初始化配置值。**
 
 `RefreshScope` 是上下文中的一个 Bean，其公开的 `refreshAll()` 方法通过清除目标缓存来刷新作用域内的所有 `Bean` 。 `/refresh` 端点通过 HTTP 或 JMX 协议暴露此功能。若需按名称刷新单个 Bean，还可使用 `refresh(String)` 方法。
 
@@ -53,6 +55,9 @@ public String aa(){
 ```
 
 当你执行 `curl http://localhost:8050/user/aaa` 时，即使刷新了配置值，依旧返回的是初始化时的值。只有执行了 `curl -XPOST http://localhost:8091/actuator/refresh` 后，再次执行 `curl http://localhost:8050/user/aaa` 才会返回新值。
+
+### 重启时刷新
+在重启时无缝刷新 Bean 对于使用 JVM 检查点恢复（如 Project CRaC）运行的应用程序尤为有用。为了实现这一功能，我们现在会实例化一个 RefreshScopeLifecycle Bean，该 Bean 会在重启时触发上下文刷新，从而重新绑定配置属性并刷新所有带有 @RefreshScope 注解的 Bean。您可以通过将 spring.cloud.refresh.on-restart.enabled 设置为 false 来禁用此行为。
 
 
 ### 原理
@@ -211,6 +216,116 @@ Cache 结构如下：
 <center><img src="pics/refresh_scope.png" alt=""></center>
 
 真正实现 `@RefreshScope` bean 创建的是 `BeanLifecycleWrapper` ，其中会保存 bean 实例对象，如果实例对象已经创建就直接返回该对象，如果没有创建就会创建一个新的实例对象。
+
+
+### nacos 与 consul 的实现
+```
+SpringBoot
+   |
+   |
+NacosContextRefresher
+   |
+   |
+ConfigService.addListener()
+   |
+   |
+ClientWorker
+   |
+   |
+LongPollingRunnable
+   |
+   |
+HTTP long poll
+   |
+   |
+Nacos Server
+   |
+   |
+配置修改
+   |
+   |
+返回changed dataId
+   |
+   |
+CacheData
+   |
+   |
+Listener(NacosConfigRefreshEventListener)
+   |
+   |
+RefreshEvent(NacosConfigRefreshEvent)
+   |
+   |
+ContextRefresher
+   |
+   |
+@RefreshScope Bean重建
+```
+
+一些当配置更改时的日志：
+```
+2026-08-11 14:18:12.852 [main] INFO  c.a.n.client.config.impl.CacheData [,] - config listener notify warn timeout millis use default 60000 millis
+2026-08-11 14:18:12.852 [main] INFO  c.a.n.client.config.impl.CacheData [,] - nacos.cache.data.init.snapshot = true
+2026-08-11 14:18:12.853 [main] INFO  c.a.n.c.config.impl.ClientWorker [,] - [Config-fixed-stg-capnacos.gtjaidemo.net_8848] [subscribe] cap-stg.yaml+DEFAULT_GROUP+stg
+2026-08-11 14:18:12.860 [main] INFO  c.a.n.client.config.impl.CacheData [,] - [Config-fixed-stg-capnacos.gtjaidemo.net_8848] [add-listener] ok, tenant=stg, dataId=cap-stg.yaml, group=DEFAULT_GROUP, cnt=1
+2026-08-11 14:18:12.860 [main] INFO  c.a.c.n.r.NacosContextRefresher [,] - [Nacos Config] Listening config: dataId=cap-stg.yaml, group=DEFAULT_GROUP
+2026-08-11 14:19:41.933 [nacos-grpc-client-executor-capnacos.gtjaidemo.net-3] INFO  c.alibaba.nacos.common.remote.client [,] - [bd38cbcc-161e-4541-a630-3b30ca1861ba_config-0] Receive server push request, request = ConfigChangeNotifyRequest, reque
+stId = 12
+2026-08-11 14:19:41.933 [nacos-grpc-client-executor-capnacos.gtjaidemo.net-3] INFO  c.a.n.c.config.impl.ClientWorker [,] - [bd38cbcc-161e-4541-a630-3b30ca1861ba_config-0] [server-push] config changed. dataId=cap-stg.yaml, group=DEFAULT_GROUP,tena
+nt=stg
+2026-08-11 14:19:41.933 [nacos-grpc-client-executor-capnacos.gtjaidemo.net-3] INFO  c.alibaba.nacos.common.remote.client [,] - [bd38cbcc-161e-4541-a630-3b30ca1861ba_config-0] Ack server push request, request = ConfigChangeNotifyRequest, requestId
+ = 12
+2026-08-11 14:19:41.961 [nacos.client.config.listener.task-0] INFO  c.a.n.c.config.impl.ClientWorker [,] - [Config-fixed-stg-capnacos.gtjaidemo.net_8848] [data-received] dataId=cap-stg.yaml, group=DEFAULT_GROUP, tenant=stg, md5=df62e629d31b4a6439
+a35207e7be57a2, type=yaml
+2026-08-11 14:19:41.961 [nacos.client.config.listener.task-0] INFO  c.a.n.client.config.impl.CacheData [,] - [Config-fixed-stg-capnacos.gtjaidemo.net_8848] [notify-listener] task execute in nacos thread, dataId=cap-stg.yaml, group=DEFAULT_GROUP,t
+enant=stg, md5=df62e629d31b4a6439a35207e7be57a2, listener=com.alibaba.cloud.nacos.refresh.NacosContextRefresher$1@2ba1faa5
+2026-08-11 14:19:41.961 [nacos.client.config.listener.task-0] INFO  c.a.n.client.config.impl.CacheData [,] - [Config-fixed-stg-capnacos.gtjaidemo.net_8848] [notify-context] dataId=cap-stg.yaml, group=DEFAULT_GROUP,tenant=stg, md5=df62e629d31b4a64
+39a35207e7be57a2
+2026-08-11 14:19:41.962 [nacos.client.config.listener.task-0] INFO  c.a.c.n.r.NacosContextRefresher [,] - [Nacos Config] Receive Nacos config change: dataId=cap-stg.yaml, group=DEFAULT_GROUP
+2026-08-11 14:19:42.162 [nacos.client.config.listener.task-0] INFO  c.a.c.n.c.NacosConfigDataLoader [,] - [Nacos Config] Load config[dataId=cap-stg.yaml, group=DEFAULT_GROUP] success
+2026-08-11 14:19:42.205 [nacos.client.config.listener.task-0] INFO  o.s.c.e.event.RefreshEventListener [,] - Refresh keys changed: [iSprint.mock]
+2026-08-11 14:19:42.205 [nacos.client.config.listener.task-0] INFO  c.a.n.client.config.impl.CacheData [,] - [Config-fixed-stg-capnacos.gtjaidemo.net_8848] [notify-ok] dataId=cap-stg.yaml, group=DEFAULT_GROUP,tenant=stg, md5=df62e629d31b4a6439a35
+207e7be57a2, listener=com.alibaba.cloud.nacos.refresh.NacosContextRefresher$1@2ba1faa5 ,job run cost=244 millis.
+```
+
+consul:
+```
+SpringBoot
+
+ |
+ |
+ConsulConfigWatch
+ |
+ |
+watchConfig()
+ |
+ |
+ConsulClient
+ |
+ |
+HTTP Blocking Query
+ |
+ |
+Consul Server
+ |
+ |
+KV变化
+ |
+ |
+返回新index
+ |
+ |
+ConsulConfigWatch
+ |
+ |
+RefreshEvent
+ |
+ |
+ContextRefresher
+ |
+ |
+Bean刷新
+```
 
 ### 总结
 Spring 会为 `@RefreshScope` 标注的bean 生成一个代理对象，调用代理对象的方法时，每次会去会去 `Beanfactory` 中获取 bean 实例， `Beanfactory` 对于不同的 scope 使用不同的 `Scope` 实现类来生成 bean 实例，其中 `RefreshScope` 继承自 `GenericScope` ，`GenericScope` 的 `get` 方法会从 `GenericScope` 中获取 bean 实例，如果存在就返回该实例，如果实例不存在，就会创建一个新的实例对象并且缓存下来，下次再调用该方法时，就直接从缓存中获取。
