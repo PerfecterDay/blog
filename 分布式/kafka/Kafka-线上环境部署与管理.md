@@ -76,3 +76,14 @@ server.3=zk3:2888:3888
 1. CMAK(原名 Kafka Manager)：https://github.com/yahoo/CMAK
 2. kafka-ui: https://github.com/provectus/kafka-ui?tab=readme-ov-file  
    `docker run -it --name=kafka-ui -p 9090:8080 -e DYNAMIC_CONFIG_ENABLED=true provectuslabs/kafka-ui`
+
+
+### Kafak 负载
+1. 客户端先连 bootstrap server / F5 VIP kafka.demo.net:9094
+2. 连接成功后，broker 会返回 集群 metadata
+3. metadata 里带的是每个 broker 的 advertised.listeners 地址
+4. 客户端接下来会绕过 F5，直接去连这些 broker
+5. 所以如果这 3 个 broker 地址对客户端网络不通，最终还是不能正常收发消息
+
+Kafka 的 `bootstrap.servers` 只是入口，不是全程代理入口。它的作用只是：帮客户端先找到集群，拿到分区 leader / broker metadata。  
+后续真正的数据读写，是客户端直接和对应 broker 通信。所以 VIP 不是 HTTP 反向代理那种“只通一个入口就够了”。

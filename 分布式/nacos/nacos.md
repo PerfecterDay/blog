@@ -13,6 +13,22 @@ Nacos 帮助您更敏捷和容易地构建、交付和管理微服务平台。 N
 
 服务启动后，可以通过下边链接进入管理后台：http://127.0.0.1:8848/nacos
 
+## Docker 启动
+```
+docker run -d \
+  --name nacos311 \
+  --restart=always \
+  -e MODE=standalone \
+  -e NACOS_AUTH_ENABLE=true \
+  -e NACOS_AUTH_TOKEN="$(openssl rand -base64 48)" \
+  -e NACOS_AUTH_IDENTITY_KEY="nacos-server-identity" \
+  -e NACOS_AUTH_IDENTITY_VALUE="$(openssl rand -hex 16)" \
+  -p 8090:8080 \
+  -p 8848:8848 \
+  -p 9848:9848 \
+  nacos/nacos-server:v3.1.1
+  ```
+
 ### 验证Nacos服务是否启动成功
 进入${nacos.home}/logs/ 目录下， 使用tail -f start.out 查看日志，如果看到如下日志，说明服务启动成功。
 ```
