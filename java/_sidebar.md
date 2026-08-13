@@ -63,6 +63,7 @@
   * [正则表达式](/java/java基础/java基础-正则表达式.md)
   * [Jmx](/java/java基础/java基础-JMX.md)
   * [Apache commons 类库](/java/java基础/java基础-apach-commons类库.md)
+  * [JNI](/java/java基础/java基础-JNI.md)
 * [多线程](https://www.baeldung.com/java-concurrency)
   * [线程](/java/多线程/java基础-并发之线程.md)
   * [线程安全的实现方法](/java/多线程/java基础-线程安全的实现方法.md)

@@ -1,26 +1,6 @@
 # JavaEE基础之Servlet
 {docsify-updated}
 
-- [JavaEE基础之Servlet](#javaee基础之servlet)
-	- [init 方法](#init-方法)
-	- [destory 方法](#destory-方法)
-	- [配置可部署的 Servlet](#配置可部署的-servlet)
-		- [部署描述符](#部署描述符)
-		- [@WebServlet注解](#webservlet注解)
-		- [编程式配置](#编程式配置)
-	- [使用 HttpServletRequest](#使用-httpservletrequest)
-		- [获取请求参数](#获取请求参数)
-		- [获取与请求内容相关的信息](#获取与请求内容相关的信息)
-		- [获取请求内容（请求体中的内容，如上传的附件）](#获取请求内容请求体中的内容如上传的附件)
-		- [获取请求特有的数据，如URL、URI和请求头](#获取请求特有的数据如urluri和请求头)
-		- [会话和Cookise](#会话和cookise)
-	- [使用 HttpServletResponse](#使用-httpservletresponse)
-		- [编写响应正文](#编写响应正文)
-		- [设置响应头和其它属性](#设置响应头和其它属性)
-	- [使用初始化参数配置应用程序](#使用初始化参数配置应用程序)
-		- [上下文初始化参数](#上下文初始化参数)
-		- [Servlet初始化参数](#servlet初始化参数)
-
 
 Servlet是所有Java Web应用程序的核心类，它是唯一的既可以直接处理和相应用户请求，也可以将处理工作委托给应用中其它部分的类。除非某些过滤器提前终止了客户端的请求，否则所有的请求都将被发送到某些Servlet中。
 
@@ -128,6 +108,17 @@ public class HelloServlet extends HttpServlet{...}
 6. `Enumeration<String> getHeaderNames()`
 7. `long getDateHeader(String var1)`
 8. `int getIntHeader(String var1)`
+
+`https://demo.net:8443/am5/rest/query/user/findById`
+
+| 方法                 | 示例结果                                                 |
+| ------------------ | ---------------------------------------------------- |
+| `getRequestURI()`  | `/am5/rest/query/user/findById`                      |
+| `getRequestURL()`  | `https://demo.net:8443/am5/rest/query/user/findById` |
+| `getContextPath()` | `/am5`                                               |
+| `getServletPath()` | 取决于 Servlet Mapping                                  |
+| `getQueryString()` | `id=123`                                             |
+
 
 ### 会话和Cookise
 1. `Cookie[] getCookies()`
