@@ -42,6 +42,7 @@ brew command [--verbose|-v|--debug] [options] [formula] …
 6. `brew pin jenkins` : 锁定指定的软件版本
 7. `brew list --pinned` : 查看不升级的软件列表
 8. `brew unpin jenkins` : 解锁软件版本
+9. `brew cat jenkins` : 查看 formula 的原始定义文件
 
 ## 国内 homebrew 加速
 ```

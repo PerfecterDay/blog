@@ -6,7 +6,6 @@
 	+ Kafka 会返回集群元数据（主题、分区信息等）。
 
 
-
 2. 加入消费者组（Consumer Group）
 	+ 每个 Kafka 消费者属于一个 Consumer Group（通过 group.id 指定）。
 	+ Kafka 以组为单位为消费者分配分区，实现水平扩展。
