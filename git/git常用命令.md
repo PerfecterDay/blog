@@ -1,7 +1,7 @@
 # git 常用命令
 {docsify-updated}
 
-### Github 配置 SSH 登录
+## Github 配置 SSH 登录
 1. 打开 git bash，非 windows 下不需要
 2. 查看是否已经有 SSH keys： `ls -la ~/.ssh`
 3. 生成 SSH keys: `ssh-keygen -t rsa -b 4096 -C "your_email@example.com"`
@@ -23,10 +23,10 @@
 + Windows:
 1. 在用户的 .ssh 目录内建立 config 文件内容如上
 
-### Git 配置
+## Git 配置
 在Git中用户名和密码是保存在 git 配置文件中的。这个文件有全局配置和本地配置，全局配置指的是Git所有仓库都适用的配置，一般是 `~/.gitconfig` 文件中，本地配置指的是特定仓库适用的配置， 一般在 `.git/config` 文件中 。 `--global credential.helper store` 命令告诉Git将用户名和密码存储在本地 `.git-credentials` 文件中。
 
-#### 查看/修改配置
+### 查看/修改配置
 ```
 git config --list //查看配置
 git config --local --edit // 编辑本地配置文件
@@ -36,13 +36,14 @@ git config --global http.sslVerify false // 修改全局配置
 git config --local http.sslVerify false // 修改本地配置
 
 git -c http.sslVerify=false clone https://example.com/path/to/git //执行命令时传递参数,跳过证书验证
+git -c http.proxy=http://127.0.0.1:7890 clone https://github.com/radareorg/radare2 //只在这次使用代理
 
 //配置代理
 git config --global http.proxy http://127.0.0.1:7890
 git config --global https.proxy http://127.0.0.1:7890
 ```
 
-#### 配置账号密码避免每次都要输入账号密码
+### 配置账号密码避免每次都要输入账号密码
 1. `git config --global url."https://wangzhongzhu026484:wzz900119!@demogitlab.demo.net".insteadOf "http://demogitlab.demo.net"`
 2. 配置用户名、密码：
    ```
@@ -52,7 +53,7 @@ git config --global https.proxy http://127.0.0.1:7890
    ```
 3. `git remote set-url origin https://{username}:{password}@github.com/{username}/project.git`
 
-### git 常用命令
+## git 常用命令
 <center><img src="pics/git-frame.jpg" width="30%" /></center>
 
 1. `git status [-s]` : 查看 git 状态，-s 代表 --short
@@ -85,7 +86,7 @@ git config --global https.proxy http://127.0.0.1:7890
 28. `git stash`:将当前工作区中的修改保存起来,并用版本库中的内容恢复暂存区和工作区，当开发到一半时，需要处理另一个bug时使用
 29. `git stash pop`:将保存的内容恢复到工作区
 
-### git 分支
+## git 分支
 0. `git checkout -b 本地分支名x origin/远程分支名x `: 在本地新建分支x，并自动切换到该本地分支x
 1. `git branch -a`:查看所有分支
 2. `git branch --merged|--no-merged`:查看已经合并到/尚未合并当前分支的分支
@@ -98,7 +99,7 @@ git config --global https.proxy http://127.0.0.1:7890
 9. `git rebase <targetBranch> <sourceBranch>`: 它的原理是首先找到这两个分支(即源分支 sourceBranch 、变基操作的目标基底分支 targetBranch) 的最近共同祖先 C2，然后对比当前分支相对于该祖先的历次提交，提取相应的修改并存为临时文件，然后将当前分支指向目标基底 C3, 最后以此将之前另存为临时文件的修改依序应用。
 10. `git checkout develop_2.0_backup -- docker-compose-builder.yaml docker-compose.yaml`：将一个分支的文件拷贝到当前分支
 
-### git远程命令
+## git远程命令
 1. `git clone`: 从远程库克隆
 2. `git remote -vv` :显示远程主机
 3. `git remote show <仓库名>` :显示远程主机详细信息
@@ -122,7 +123,7 @@ git config --global https.proxy http://127.0.0.1:7890
 21. `git ls-remote -h -- ssh://git@demogitlab.demo.net:223/demo-app-platform/user-center-g/user-center-service.git`
 
 
-#### 常见问题
+### 常见问题
 1. windows乱码：  
     使用git bush时，使用git add XX 添加文件后，git status 发现中文文件名是数字形式，比如"\123\456\789.txt"，点击也无法打开，二使用ls，git log都可以显示中文，最后修改配置:
     `git config --global core.quotepath false ` 解决
@@ -140,7 +141,7 @@ git config --global https.proxy http://127.0.0.1:7890
 	Port 443
 	```
 
-### 恢复
+## 恢复
 ```
 git reflog --date=iso
 
