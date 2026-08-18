@@ -60,8 +60,9 @@ public String aa(){
 在重启时无缝刷新 Bean 对于使用 JVM 检查点恢复（如 Project CRaC）运行的应用程序尤为有用。为了实现这一功能，我们现在会实例化一个 RefreshScopeLifecycle Bean，该 Bean 会在重启时触发上下文刷新，从而重新绑定配置属性并刷新所有带有 @RefreshScope 注解的 Bean。您可以通过将 spring.cloud.refresh.on-restart.enabled 设置为 false 来禁用此行为。
 
 
-### 原理
-**1. 代理类的生成**
+## 原理
+
+### 代理类的生成
 
 `ClassPathBeanDefinitionScanner` 会将注解 `@RefreshScope` 的 bean 的 beanDefinition 重写： 
 ```
@@ -124,7 +125,7 @@ public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) t
 }
 ```
 
-综上所述，当你使用 `@RefreshScope` 注解声明一个 bean 时， Spring 会为其生成代理类 `GenericScope.LockedScopedProxyFactoryBean` 的 bean:
+**综上所述，当你使用 `@RefreshScope` 注解声明一个 bean 时， Spring 会为其生成代理类 `GenericScope.LockedScopedProxyFactoryBean` 的 bean:**
 ```
 GenericScope.LockedScopedProxyFactoryBean -> ScopedProxyFactoryBean
 
@@ -169,7 +170,7 @@ public Object getObject() {
 }
 ```
 
-**2. 动态代理bean增强执行的过程**
+### 动态代理bean增强执行的过程
 
 debug 看调用栈帧：
 <center><img src="pics/refresh.png" alt=""></center>
@@ -181,6 +182,8 @@ public Object getTarget() throws Exception {
     return getBeanFactory().getBean(getTargetBeanName());
 }
 ```
+
+**也就是说，如果一个 bean 是 `@RefreshScope` 注解的，那么每次调用该 bean 的方法时，都会通过代理实例先调用 `SimpleBeanTargetSource` 的 `getTarget()` 方法，该方法会从 `BeanFactory` 中动态实时地获取 bean 实例。**
 
 `BeanFactory` 在生产 bean 时，会根据 beandefinition 的信息来获取对应的 scope，不同的 scope 使用不同的 `Scope` 实现类来生成 bean 对象，一些常见的 `Scope` 实现类如下：
 <center><img src="pics/scope.png" alt=""></center>
@@ -287,6 +290,8 @@ enant=stg, md5=df62e629d31b4a6439a35207e7be57a2, listener=com.alibaba.cloud.naco
 2026-08-11 14:19:42.205 [nacos.client.config.listener.task-0] INFO  c.a.n.client.config.impl.CacheData [,] - [Config-fixed-stg-capnacos.gtjaidemo.net_8848] [notify-ok] dataId=cap-stg.yaml, group=DEFAULT_GROUP,tenant=stg, md5=df62e629d31b4a6439a35
 207e7be57a2, listener=com.alibaba.cloud.nacos.refresh.NacosContextRefresher$1@2ba1faa5 ,job run cost=244 millis.
 ```
+
+`RefreshEventListener` 监听到 `RefreshEvent` 后会刷新 `RefreshScope` 中的缓存，这样当再次调用 `@RefreshScope` 的 bean 时，就会重新创建 bean 实例，这样就实现了动态刷新 bean 的目的。
 
 consul:
 ```

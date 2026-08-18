@@ -110,7 +110,7 @@ public class DefaultDataConfig {
 ### Properties
 
 #### PropertySource 抽象
-表示“名称/值（name/value）属性对”来源的抽象基类。底层的 `source` 对象可以是任意类型 `T` ，只要它能够封装属性即可。
+表示“名称/值（name/value）属性对”来源的抽象基类。底层的 `source` 对象可以是任意类型 `T` ，只要它能够封装属性k-v即可。
 例如：
 + `java.util.Properties`
 + `java.util.Map`
@@ -190,7 +190,7 @@ public class AppConfig {
  }
 }
 ```
-在 `@PropertySource` 资源位置中出现的任何 `${...}` 占位符都会根据已在环境中注册的属性源集合进行解析，如下例所示：
+在 `@PropertySource` 资源位置中出现的任何 `${someKey:defaultVal}` 占位符都会根据已在环境中注册的属性源集合进行解析，如下例所示：
 ```
 @Configuration
 @PropertySource("classpath:/com/${my.placeholder:default/path}/app.properties")
@@ -205,6 +205,18 @@ public class AppConfig {
 ConfigurationClassPostProcessor
 
 #### 各种配置及其优先级
+| 项目       | Environment Variables | JVM Properties | Command Arguments |
+| -------- | --------------------- | -------------- | ----------------- |
+| 所属层      | OS                    | JVM            | Application       |
+| Linux 参数 | envp                  | JVM内部          | argv              |
+| Java访问   | getenv                | getProperty    | main(args)        |
+| 谁读取      | JVM/应用                | JVM            | 应用                |
+| 生命周期     | 进程                    | JVM            | main调用期间          |
+| 是否Java专属 | 否                     | 是              | 否                 |
+| 是否自动解析   | 否                     | JVM解析-D        | 否                 |
+| 典型用途     | 部署配置                  | JVM/框架配置       | 业务输入              |
+
+
 ```
 ┌──────────────────────────────────────────────┐
 │ Command Line Arguments                       │
