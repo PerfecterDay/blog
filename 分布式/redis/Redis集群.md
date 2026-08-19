@@ -3,14 +3,6 @@
 
 > https://redis.io/docs/management/scaling/
 
-- [Redis 分布式集群](#redis-分布式集群)
-	- [Redis 集群的数据分片](#redis-集群的数据分片)
-	- [Redis 集群的主从复制模型](#redis-集群的主从复制模型)
-	- [搭建集群](#搭建集群)
-		- [手动搭建](#手动搭建)
-		- [使用Redis自带脚本创建](#使用redis自带脚本创建)
-	- [Redis 一致性保证](#redis-一致性保证)
-
 Redis 支持一主多从的主从复制和集群分片的组合模式。
 
 #### Redis 集群的数据分片

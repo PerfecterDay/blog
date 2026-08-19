@@ -85,7 +85,7 @@ docker build --build-context modu=/Users/demo/workspace/apps/go-modu --build-arg
 + `${variable:+word}`表示如果 `variable` 设置则为word结果，否则为空字符串。
 变量前加 `\` 可以转义成普通字符串：`\$foo` or `\${foo}` ，表示转换为 `$foo` 和 `${foo}` 文字
 
-#### 多阶段构建
+#### 多Stage构建
 ```
 FROM --platform=linux/amd64 golang:alpine AS builder
 
@@ -115,14 +115,16 @@ ENTRYPOINT ["/gmt/go-trade-gmt"]
 CMD ["--config_path=configs/config-sit.yaml"]
 ```
 
-默认情况下，阶段没有命名，而是以整数编号来表示，第一条 FROM 指令从 0 开始。不过，你可以在 FROM 指令中添加 AS <NAME> 来为阶段命名。本示例通过命名阶段并在 COPY 指令中使用该名称。这意味着，即使以后 Dockerfile 中的指令重新排序，COPY 也不需要改变源引用。
+Stage 就是 `Dockerfile` 中从一个 FROM 开始，到下一个 FROM 之前结束的一段构建过程。
 
-另外 ，在使用多阶段构建时，你并不局限于从 Dockerfile 中之前创建的阶段中复制。你可以使用 `COPY --from` 指令可以从单独的镜像复制，可以使用本地镜像名称、本地或 Docker 注册表上的标签或标签 ID。如有必要，Docker 客户端会提取镜像，并从那里复制工件。语法如下
+默认情况下，Stage没有命名，而是以整数编号来表示，第一条 FROM 指令从 0 开始。不过，你可以在 FROM 指令中添加 `AS <NAME>` 来为Stage命名。本示例通过命名Stage并在 COPY 指令中使用该名称。这意味着，即使以后 Dockerfile 中的指令重新排序，COPY 也不需要改变源引用。
+
+另外 ，在使用多Stage构建时，你并不局限于从 Dockerfile 中之前创建的Stage中复制。你可以使用 `COPY --from` 指令可以从单独的镜像复制，可以使用本地镜像名称、本地或 Docker 注册表上的标签或标签 ID。如有必要，Docker 客户端会提取镜像，并从那里复制工件。语法如下
 ```
 COPY --from=nginx:latest /etc/nginx/nginx.conf /nginx.conf
 ```
 
-还可以使用 `FROM` 来引用前一阶段的构建，这样可以复用前一阶段的所有内容：
+还可以使用 `FROM` 来引用前一Stage的构建，这样可以复用前一Stage的所有内容：
 ```
 FROM alpine:latest AS builder
 RUN apk --no-cache add build-base
@@ -136,11 +138,15 @@ COPY source2.cpp source.cpp
 RUN g++ -o /binary source.cpp
 ```
 
-在使用多阶段的Dockerfile build镜像时，可以使用 `--target` 来指定特定的阶段：
+在使用多Stage的Dockerfile build镜像时，可以使用 `--target` 来指定特定的Stage：
 ```
 docker build --target builder -t hello .
 ```
-如果没有使用 `--target` 标志指定阶段，会以 Dockerfile 中定义的最后一个阶段将作为运行构建命令时构建的阶段。这适用于 `docker build` 和 `docker buildx build`。
+如果没有使用 `--target` 标志指定Stage，会以 Dockerfile 中定义的最后一个Stage将作为运行构建命令时构建的Stage。这适用于 `docker build` 和 `docker buildx build`。
+
+**最终 target 决定“最终要构建什么”，而 stage 之间的依赖决定“为了得到这个 target，需要构建哪些 stage”。**
+
+Docker 多阶段构建中，stage 不要求只能依赖前面定义的 stage。 `COPY --from=<stage>` 可以引用 `Dockerfile` 中后面才定义的 stage。真正决定构建顺序的是依赖关系，Docker 会自动构建出正确的构建顺序。
 
 ### 镜像操作
 1. 获取镜像 

@@ -100,10 +100,12 @@ Redis目录下都会有一个redis.conf配置文件，里面就是Redis的默认
    12. `renamenx key newkey`： 只有 newkey 不存在时才会重命名成功，由于重命名键期间会执行del命令删除旧的键，如果键对应的值比较大，会存在阻塞Redis的可能性，这点不要忽视。
    13. 随机返回一个键： `randomkey`
    14. 查看数据库 key 信息：`info keyspace`
+   15. `SCAN 0 MATCH 'user:*' COUNT 1000`
 
 3. 信息查看命令
    1. 查看连接的客户端：`redis 127.0.0.1:6379> CLIENT LIST` 
-
+   2. `INFO server`
+   
 
 ## Jedis 简介
 1. 直接构造操作 Jedis 

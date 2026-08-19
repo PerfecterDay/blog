@@ -20,3 +20,33 @@ slaveof命令不但可以建立复制，还可以在从节点执行 `slaveof no 
 
 
 ## Redis 哨兵
+```
+    S1 ─────┐
+    S2 ─────┼────> Master A
+    S3 ─────┘         │
+                        │
+                ┌────┴────┐
+                ▼         ▼
+                Replica B  Replica C
+```
+
+1. `SENTINEL get-master-addr-by-name mymaster`
+2. `info replication`
+      ```
+         10.5.160.73:6380> info replication
+         # Replication
+         role:master
+         connected_slaves:2
+         min_slaves_good_slaves:2
+         slave0:ip=10.5.160.37,port=6380,state=online,offset=1338195327,lag=1
+         slave1:ip=10.5.160.36,port=6380,state=online,offset=1338195327,lag=1
+         master_failover_state:no-failover
+         master_replid:79abe0e45168baf9b9ff8acd3d17917f4e3bca09
+         master_replid2:0000000000000000000000000000000000000000
+         master_repl_offset:1338195327
+         second_repl_offset:-1
+         repl_backlog_active:1
+         repl_backlog_size:268435456
+         repl_backlog_first_byte_offset:1069759872
+         repl_backlog_histlen:268435456
+      ```
