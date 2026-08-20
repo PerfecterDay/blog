@@ -142,9 +142,8 @@ RUN g++ -o /binary source.cpp
 ```
 docker build --target builder -t hello .
 ```
-如果没有使用 `--target` 标志指定Stage，会以 Dockerfile 中定义的最后一个Stage将作为运行构建命令时构建的Stage。这适用于 `docker build` 和 `docker buildx build`。
 
-**最终 target 决定“最终要构建什么”，而 stage 之间的依赖决定“为了得到这个 target，需要构建哪些 stage”。**
+**最终 target 决定“最终要构建什么”，如果没有使用 --target 标志指定Stage，会以 Dockerfile 中定义的最后一个Stage将作为运行构建命令时构建的Stage 。而 stage 之间的依赖决定“为了得到这个 target，需要构建哪些 stage”。**
 
 Docker 多阶段构建中，stage 不要求只能依赖前面定义的 stage。 `COPY --from=<stage>` 可以引用 `Dockerfile` 中后面才定义的 stage。真正决定构建顺序的是依赖关系，Docker 会自动构建出正确的构建顺序。
 

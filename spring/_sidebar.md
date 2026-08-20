@@ -65,7 +65,7 @@
         * [Introductions](/spring/core/aop/aop-programming/@AspectJ/Introductions.md)
         * [切面初始化模型](/spring/core/aop/aop-programming/@AspectJ/切面初始化模型.md)
       * [代理机制](/spring/core/aop/aop-programming/aop-代理机制.md)
-      * [编程的方式创建AspectJ代理](/spring/core/aop/aop-programming/编程的方式创建代理.md)
+      * [@AspectJ 代理的程序化创建](/spring/core/aop/aop-programming/编程的方式创建代理.md)
       * [集成使用 AspectJ](https://docs.spring.io/spring-framework/reference/core/aop/using-aspectj.html)
     * [Spring AOP APIs](#)
       * [Pointcut](/spring/core/aop/aop-api/pointcut.md)

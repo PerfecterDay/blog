@@ -53,3 +53,10 @@ AnnotationAwareAspectJAutoProxyCreator  ⭐⭐⭐⭐⭐
 ProxyFactory                            ⭐⭐⭐⭐
 DefaultAopProxyFactory                  ⭐⭐⭐⭐
 ```
+
+## ProxyFactory 的工作机制
+```
+public Object getProxy() {
+      return createAopProxy().getProxy();
+}
+```
