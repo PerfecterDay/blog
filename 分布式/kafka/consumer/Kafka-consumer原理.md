@@ -13,11 +13,9 @@
 ```
 Kafka Cluster
  └── Topic: "orders"
-      ├── Partition 0  ──► Consumer A
-      ├── Partition 1  ──► Consumer B
-      └── Partition 2  ──► Consumer A
-
-Consumer Group: "order-processor"
+      ├── Partition 0  ──► Consumer A   \ 
+      ├── Partition 1  ──► Consumer B    --  Consumer Group: "order-processor"
+      └── Partition 2  ──► Consumer A   /
 ```
 
 3. 分区分配（Partition Assignment）
@@ -44,6 +42,33 @@ Consumer Group: "order-processor"
     + 手动提交:可以通过 commitSync() 或 commitAsync() 手动提交。
 
     Offset 的提交代表“我已经成功消费并处理完这条消息”。
+
+	**Kafka 会为每一个 Consumer Group 记录它消费每一个 Topic 的每一个 Partition 的 offset。**
+
+	假设有一个 order topic, 它有三个 partion-0,1,2, 有两个 consumer group, group-payment 和 group-report, kafka记录的 offset 如下：
+	```
+	__consumer_offsets
+
+	group-payment
+		order-0 -> offset 1200
+		order-1 -> offset 3500
+		order-2 -> offset 800
+
+	group-report
+		order-0 -> offset 9000
+		order-1 -> offset 6000
+		order-2 -> offset 1000
+	```
+
+	`kafka-consumer-groups.sh --bootstrap-server <broker> --describe --group <group-id>` 可以查看各个 consumer group 的 offset 情况：
+	```
+	kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group cap-consumer-group
+
+	GROUP                 TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET LAG        CONSUMER-ID                       HOST         CLIENT-ID         
+	cap-consumer-group cms.cap.sync            0          1               1          0      consumer-cap-consumer-group-1-xxx.. /127.0.0.1   consumer-cap-consumer-group-1
+	cap-consumer-group cms.cap.sync            1          -               0          -      consumer-cap-consumer-group-1-xxx.. /127.0.0.1   consumer-cap-consumer-group-1
+	cap-consumer-group cms.cap.sync            2          -               0          -      consumer-cap-consumer-group-1-xxx.. /127.0.0.1   consumer-cap-consumer-group-1
+	```
 
 7. 心跳机制 & 再均衡（Rebalance）
 	+ Kafka 定期通过心跳机制确认消费者存活。

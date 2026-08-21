@@ -1,19 +1,10 @@
 #  Kafka 与 Spring/Spring-boot 的集成
 {docsify-updated}
-> https://www.baeldung.com/spring-kafka  
 > https://docs.spring.io/spring-boot/docs/current/reference/html/messaging.html#messaging.kafka
-
-- [Kafka 与 Spring/Spring-boot 的集成](#kafka-与-springspring-boot-的集成)
-  - [添加 maven 依赖](#添加-maven-依赖)
-  - [创建 Topic](#创建-topic)
-  - [生产者-发布消息](#生产者-发布消息)
-  - [消费者-消费消息](#消费者-消费消息)
-    - [消费特定partition的信息](#消费特定partition的信息)
-    - [添加消息过滤器](#添加消息过滤器)
-  - [Springboot 配置](#springboot-配置)
+> https://docs.spring.io/spring-kafka/reference/
 
 
-### 添加 maven 依赖
+## 添加 maven 依赖
 ```
 //spring
 <dependency>
@@ -29,7 +20,7 @@
 </dependency>
 ```
 
-### 创建 Topic
+## 创建 Topic
 之前，我们运行命令行工具来创建Kafka中的 topic:
 ```
 $ bin/kafka-topics.sh --create \
@@ -71,7 +62,7 @@ public class KafkaTopicConfig {
 }
 ```
 
-### 生产者-发布消息
+## 生产者-发布消息
 为了创建消息，我们首先需要配置一个 `ProducerFactory` 。可以在设置创建Kafka `Producer` 实例的策略。  
 然后我们需要一个 `KafkaTemplate` ，它包装了一个生产者实例，并提供了向Kafka topic 发送消息的便利方法。  
 `Producer` 实例是线程安全的。因此，在整个应用环境中使用一个实例会有更高的性能。因此， `KakfaTemplate` 实例也是线程安全的，建议使用一个实例。
@@ -130,7 +121,7 @@ public void sendMessage(String message) {
 }
 ```
 
-### 消费者-消费消息
+## 消费者-消费消息
 为了消费消息，我们需要配置一个 `ConsumerFactory` 和一个 `KafkaListenerContainerFactory` 。一旦这些 bean 在Spring bean 工厂中可用，就可以使用 `@KafkaListener` 注解来配置基于POJO的消费者。  
 如果我们没有显式地定义 `KafkaListenerContainerFactory` ，Springboot 会自动配置一个默认的 `KafkaListenerContainerFactory` ，其键定义在 `spring.kafka.listener.*`.
 
@@ -194,7 +185,7 @@ public void listenWithHeaders(
 }
 ```
 
-#### 消费特定partition的信息
+### 消费特定partition的信息
 对于一个有多个分区的主题，`@KafkaListener` 可以指定显示地指定从一个 Topic 的特定分区的初始位移处开始消费：
 ```
 @KafkaListener(
@@ -219,7 +210,7 @@ public void listenToPartition(
   = @TopicPartition(topic = "topicName", partitions = { "0", "1" }))
 ```
 
-#### 添加消息过滤器
+### 添加消息过滤器
 我们可以通过添加自定义过滤器来配置消费者以消费特定的消息内容。这可以通过给`KafkaListenerContainerFactory`设置一个`RecordFilterStrategy`来完成：
 ```
 @Bean
@@ -245,7 +236,7 @@ public void listenWithFilter(String message) {
 ```
 所有符合过滤器的信息都将被丢弃。
 
-### Springboot 配置
+## Springboot 配置
 配置类在 `KafkaProperties` 中：
 ```
 spring:

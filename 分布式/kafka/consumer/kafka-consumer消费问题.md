@@ -1,15 +1,6 @@
 # Kafka 消费常见问题
 {docsify-updated}
 
-> 相关笔记：
-> - [Kafka-consumer 设计原理](/分布式/kafka/Kafka-consumer原理.md)
-> - [Kafka-consumer 开发](/分布式/kafka/Kafka-consumer开发.md)
-> - [Kafka-位移](/分布式/kafka/kafka-consumer-offset.md)
-> - [Spring Kafka 集成](/分布式/kafka/spring-kafka集成.md)
-> - [Spring Boot 弹性设计](/架构/弹性设计/springboot-resilience.md)
-
----
-
 ## Poison Pill：某条消息消费一直失败会不会阻塞后续消息？
 
 这是 Kafka 消费者最经典的**"毒丸消息"（Poison Pill）** 问题。答案取决于**错误处理方式**。
@@ -173,6 +164,25 @@ DefaultErrorHandler errorHandler(KafkaTemplate<?,?> tpl) {
                                  MessageConversionException.class,
                                  IllegalArgumentException.class);
     return h;
+}
+
+@Bean
+public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, String>>
+kafkaListenerContainerFactory(ConsumerFactory<String, String> consumerFactory, DefaultErrorHandler errorHandler) {
+    ConcurrentKafkaListenerContainerFactory<String, String> factory =
+            new ConcurrentKafkaListenerContainerFactory<>();
+
+    // 注入消费者工厂
+    factory.setConsumerFactory(consumerFactory);
+    // 配置手动提交偏移量，与yml配置 ack-mode: manual 完全一致
+    factory.getContainerProperties().setAckMode(ackMode);
+    // 注入错误处理器，消费失败时按策略重试后放入死信队列
+    factory.setCommonErrorHandler(errorHandler);
+
+    // 可选配置：设置消费并发数，建议值 ≤ Topic分区数量，根据业务调整
+    // factory.setConcurrency(3);
+
+    return factory;
 }
 
 @KafkaListener(topics = "orders")

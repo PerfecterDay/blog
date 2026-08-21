@@ -69,7 +69,12 @@ tree
 1. CMAK(原名 Kafka Manager)：https://github.com/yahoo/CMAK
 2. kafka-ui: https://github.com/provectus/kafka-ui?tab=readme-ov-file  
    `docker run -it --name=kafka-ui -p 9090:8080 -e DYNAMIC_CONFIG_ENABLED=true provectuslabs/kafka-ui`
-
+   配置kafka 地址时使用 `host.docker.internal` 。并且宿主机kafka 配置中要加上以下配置：
+   ```
+   listeners=PLAINTEXT://0.0.0.0:9092,DOCKER://0.0.0.0:29092
+   advertised.listeners=PLAINTEXT://localhost:9092,DOCKER://host.docker.internal:29092
+   listener.security.protocol.map=PLAINTEXT:PLAINTEXT,DOCKER:PLAINTEXT
+   ```
 
 ## Kafak 负载
 1. 客户端先连 bootstrap server / F5 VIP kafka.demo.net:9094
