@@ -150,7 +150,7 @@ public interface Cache {
 	}
 }
 ```
-Spring 为很多第三方框架提供了 `Cache` 的实现，如：`EhCacheCache` 、`CaffeineCache` 、 `RedisCache` 、 `JCacheCache` 、 `ConcurrentMapCache` 等。很多实现使用了第三方的缓存框架。
+Spring 为很多第三方框架提供了 `Cache` 的实现，如：`EhCacheCache` 、`CaffeineCache` 、 `RedisCache` 、 `JCacheCache` 、 `ConcurrentMapCache` 等。就是使用第三方的缓存框架提供的类实现了上述 `Cache` 接口。
 
 `CacheManager` 用于管理 `Cache` 实例，可以用于从 `CacheManager` 中获取指定 `Cache`:
 ```

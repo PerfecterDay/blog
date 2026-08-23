@@ -17,8 +17,12 @@ public interface Pointcut {
 将 `Pointcut` 接口拆分为两部分，既能复用类和方法匹配部分，又能进行细粒度的组合操作（例如与另一个方法匹配器执行“并集”操作）。
 
 `ClassFilter` 接口用于将切点限制在给定的一组目标类上。如果 `matches()` 方法始终返回 `true` ，则表示匹配所有目标类。以下代码片段展示了 `ClassFilter` 接口的定义：
-```public interface ClassFilter {
-	boolean matches(Class clazz);
+```
+public interface ClassFilter {
+	
+	boolean matches(Class<?> clazz);
+
+	ClassFilter TRUE = TrueClassFilter.INSTANCE;
 }
 ```
 
