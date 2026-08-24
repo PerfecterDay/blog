@@ -28,7 +28,7 @@
 	总结起来，Kafka依靠以下4点达到高吞吐量、低延时的设计目标：
    1. 大量使用系统页缓存，内存操作速度高且命中率高
    2. Kafka不直接参与IO操作
-   3. 采用追加写入的方式避免了磁盘随机读写，大幅提高磁盘写入速度
+   3. 采用追加写入的方式大量避免了磁盘随机读写，大幅提高磁盘写入速度。但是注意：Kafka 的顺序写，是指对同一个 Log Segment 的文件进行不断递增文件 offset 的 append，而不是保证数据在物理磁盘上的扇区连续。
    4. 采用零拷贝技术使得网络IO速度大幅提升
 
 
@@ -46,6 +46,22 @@
 
 ## Kafka基本概念与术语
 1. 消息  
+   一个 topic 由多个 partion 组成，每个 partition 由多个 segment 组成，每个 segment 由一个 .log 文件和两个索引文件组成。一个消息被追加到一个 partition 时，会首先追加到该 partition 的当前 segment 的 .log 文件中，然后更新该 partition 的索引文件。
+   ```
+                    Kafka
+                      │
+        ┌─────────────┴─────────────┐
+        │                           │
+    业务 Topic                 __consumer_offsets
+        │                           │
+    Partition0/1/2...             Group
+        │                           │
+    Segment                       Topic
+        │                           │
+      .log                      Partition0/1/2...
+      .index                        │
+      .timeindex                  Offset
+   ```
 2. `topic` 和 `partition`  
     `topic` 是一个逻辑概念，代表了一类消息，也可以理解为**一类消息的容器**。 `topic` 通常会被多个消费者订阅，因此出于性能的考虑，Kafka并不是 `topic-message` 的两级结构，而是采用了 **topic-partition-message** 的三级结构来分散负载。本质上说每个 topic 都由若干个 partition组成，每个partition是不可修改的有序消息队列（消息日志）。每个partition都有自己的专属partition编号，通常从0开始。用户能对partition唯一能做的就是在序列尾部追加写入消息。每个消息都有一个序号，该序号被称为位移（offset）。**\<topic,partition,offset\>** 能唯一确认一条消息。
     <center>
@@ -58,6 +74,12 @@
 
 4. replica  
    replica 就是 Kafka的容错备份机制，简单来说就是备份多份日志，备份的**基本单位是partition** ，也就是说会针对**整个partition进行备份而不是一条消息**，这些备份在 Kafka 中被称为副本（replica），他们存在的唯一目的就是为了防止数据丢失。副本分为两类：**领导者副本（leader replica）和追随者副本（follower replica）**。follower replica 是不能提供服务给客户端的，也就是说客户端的读取和写入请求不会route 到follower replica。它只会被动地从 leader replica 中获取数据，一旦 leader replica 所在的 broker 宕机， Kafka 会从剩余的 replica 中选举出新的 leader 继续提供服务。
+
+   一个 Broker 可以承载很多 Partition，但一个 Partition 的多个 Replica 默认不能全部放在同一个 Broker 上。replication.factor=3 至少需要 3 个可用 Broker。**Kafka 的 replica 数量不能超过 Broker 数量。** 如果在只有一台 broker 的集群里设置 replica = 3,会报错：
+   ```
+    400 Bad Request
+    Unable to replicate the partition 3 time(s): The target replication factor of 3 cannot be reached because only 1 broker(s) are registered or some brokers have all their log directories cordoned.
+    ```
 
 5. leader 和 follower  
    Kafka保证同一个 partition 的多个 replica 一定不会分配到同一个 broker 上。

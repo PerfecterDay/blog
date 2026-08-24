@@ -3,7 +3,7 @@
 
 ## 用户管理
 mysql 用户信息存储在 mysql.user 表中。
-1. 创建用户： `CREATE USER 'username'@'ip' IDENTIFIED WITH mysql_native_password BY 'passowrd'`;
+1. 创建用户： `CREATE USER 'username'@'ip' IDENTIFIED WITH mysql_native_password BY 'passowrd'`, `CREATE USER 'username'@'ip' IDENTIFIED WITH caching_sha2_password BY 'passowrd'`; 
 2. 允许用户从任意IP登录：`update mysql.user set host='%' where user='root';`
 3. 修改用户密码： `ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '你的密码';` mysql 8  
 `update mysq.user set password=password('11111111') where xxx;` 8 以前的版本
@@ -12,9 +12,83 @@ mysql 用户信息存储在 mysql.user 表中。
 5. 查看当前登录的用户：`select user();` 或 `SELECT CURRENT_USER();`
 
 ## 授权与收回
+```
+                          MySQL 权限体系
+                              │
+                              ▼
+┌──────────────────────────────────────────────────────┐
+│ ① 全局级 Global                                      │
+│                                                      │
+│  授权范围：*.*                                       │
+│                                                      │
+│  影响整个 MySQL Server 上的所有数据库                │
+│                                                      │
+│  典型权限：                                          │
+│    CREATE USER    PROCESS    RELOAD                  │
+│    SHOW DATABASES GRANT OPTION ...                   │
+└──────────────────────────────────────────────────────┘
+                              │
+                              │ 缩小范围
+                              ▼
+┌──────────────────────────────────────────────────────┐
+│ ② 数据库级 Database                                  │
+│                                                      │
+│  授权范围：cap.*                                     │
+│                                                      │
+│  只影响 cap 数据库                                   │
+│                                                      │
+│  典型权限：                                          │
+│    SELECT   INSERT   UPDATE   DELETE                 │
+│    CREATE   ALTER    DROP     INDEX                  │
+└──────────────────────────────────────────────────────┘
+                              │
+                              │ 再缩小
+                              ▼
+┌──────────────────────────────────────────────────────┐
+│ ③ 表级 Table                                         │
+│                                                      │
+│  授权范围：cap.user                                  │
+│                                                      │
+│  只影响 cap.user 这张表                              │
+│                                                      │
+│  例如：                                              │
+│    SELECT                                            │
+│    INSERT                                            │
+│    UPDATE                                            │
+│    DELETE                                            │
+└──────────────────────────────────────────────────────┘
+                              │
+                              │ 再缩小
+                              ▼
+┌──────────────────────────────────────────────────────┐
+│ ④ 列级 Column                                        │
+│                                                      │
+│  授权范围：cap.user.name                              │
+│                                                      │
+│  只允许访问 / 修改指定列                              │
+│                                                      │
+│  例如：                                              │
+│    SELECT(name)                                      │
+│    UPDATE(name)                                      │
+└──────────────────────────────────────────────────────┘
+                              │
+                              ▼
+                    ┌──────────────────┐
+                    │   最小权限原则    │
+                    │                  │
+                    │  能给多小范围，   │
+                    │  就不要给大范围    │
+                    └──────────────────┘
+```
+
+
 SQL标准包括 select、insert、update、delete以及all权限。
 
 0. 查看用户的权限：`show grants for <user>@<host>`
+   ```
+    | GRANT USAGE ON *.* TO `flyway_user`@`%` |
+    | GRANT ALL PRIVILEGES ON `cap`.* TO `flyway_user`@`%` |
+   ```
 1. 授权语句：
     ```
     grant <权限列表>
