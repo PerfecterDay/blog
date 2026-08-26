@@ -1,6 +1,19 @@
 # 汇编基础及Bochs调试
 {docsify-updated}
 
+x86 汇编的两种主流语法：
+1. AT&T Syntax
+2. Intel Syntax
+
+```
+              x86 指令集
+                   │
+          ┌────────┴────────┐
+          │                 │
+      AT&T Syntax       Intel Syntax
+          │                 │
+         GAS           NASM / MASM / FASM
+```
 
 |       | AT&T     | Intel   |
 | ----- | -------- | ------- |
