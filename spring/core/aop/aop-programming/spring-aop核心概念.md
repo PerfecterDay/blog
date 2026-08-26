@@ -7,10 +7,10 @@
 
 
 ## 核心概念
-1. 切面- `Aspect`：对横跨多个类的关注点进行模块化处理。事务管理是企业Java应用中横切关注点的典型示例。在Spring AOP中，切面可通过常规类（基于模式的方法）或带有@Aspect注解的常规类（ `@AspectJ` 风格）实现。
+1. 切面- `Aspect`：对横跨多个类的关注点进行模块化处理。事务管理是企业Java应用中横切关注点的典型示例。在Spring AOP中，切面可通过常规类（基于模式的方法）或带有 `@Aspect` 注解的常规类（ `@AspectJ` 风格）实现。
 2. 连接点-`Join point`：程序执行过程中的某个点，例如方法执行或异常处理。在Spring AOP中，连接点只能是方法执行点。
 3. 增强-`Advice`：在特定连接点上由某个切面执行的操作。 `Advice` 类型包括"around", "before", and "after" 类型。包括Spring在内的许多AOP框架都将 `Advice` 建模为 `interceptor` ，并在连接点周围维护一个 `interceptor` 链。
-4. 切点-`Pointcut`: 用于匹配连接点的**谓词表达式**。 `Advice` 与 `Pointcut` 表达式相关联，并在 `Pointcut` 匹配到的任何连接点（例如执行特定名称的方法）处运行。 `Pointcut` 表达式匹配到的连接点概念是AOP的核心，Spring默认使用 ` `AspectJ`  Pointcut` 表达式语言。
+4. 切点-`Pointcut`: 用于匹配连接点的**谓词表达式**。 `Advice` 与 `Pointcut` 表达式相关联，并在 `Pointcut` 匹配到的任何连接点（例如执行特定名称的方法）处运行。 `Pointcut` 表达式匹配到的连接点概念是AOP的核心，Spring默认使用 `AspectJ Pointcut` 表达式语言。
 5. `Introduction` ：代表类型声明额外的方法或字段。Spring AOP允许为任何被切入对象引入新接口（及对应实现）。例如，可通过引入机制使Bean实现 `IsModified` 接口，从而简化缓存操作。（此引入机制在 `AspectJ` 社区中称为跨类型声明。）
 6. 目标对象- `Target object` ：由一个或多个切面进行增强的对象。也称为 `advised object` 。由于Spring AOP通过运行时代理实现，该对象始终是**代理对象**。
 7. AOP代理- `AOP proxy` ：由AOP框架创建的对象，用于实现切面契约（如 `Advice` 方法执行等）。在Spring框架中，AOP代理可以是JDK动态代理或CGLIB代理。
@@ -23,7 +23,7 @@ Spring AOP包含以下类型的 `Advice` ：
 + `After (finally) advice` : 无论连接点以何种方式退出（正常返回或异常返回），该 `Advice` 都应执行。
 + `Around advice` : 围绕方法调用等连接点的 `advice` 。这是最强大的 `Advice` 类型。围绕 `Advice` 可在方法调用前后执行自定义行为，同时负责决定是否继续执行连接点操作，或通过返回自身返回值或抛出异常来跳过连接点方法的执行。
 
-`Around advice` 是最通用的 `Advice` 类型。由于Spring AOP与 `AspectJ` 一样提供了完整的 `Advice` 类型体系，我们应该使用能够实现所需行为的最低权限 `Advice` 类型。例如，若仅需将方法返回值更新至缓存，采用 `after returning advice ` 比 `Around advice` 更优——尽管 `Around advice` 也能实现相同效果。采用最精确的 `Advice` 类型能简化编程模型并降低错误风险。例如，如果不使用 ``Around advice`， 就无需调用 `JoinPoint` 的 `proceed()` 方法，因此不会出现调用失败的情况。
+`Around advice` 是最通用的 `Advice` 类型。由于Spring AOP与 `AspectJ` 一样提供了完整的 `Advice` 类型体系，我们应该使用能够实现所需行为的最低权限 `Advice` 类型。例如，若仅需将方法返回值更新至缓存，采用 `after returning advice ` 比 `Around advice` 更优——尽管 `Around advice` 也能实现相同效果。采用最精确的 `Advice` 类型能简化编程模型并降低错误风险。例如，如果不使用 `Around advice`， 就无需调用 `JoinPoint` 的 `proceed()` 方法，因此不会出现调用失败的情况。
 
 切入点的匹配机制是AOP的核心概念，它使AOP区别于仅提供拦截功能的传统技术。切入点使 `Advice` 能够独立于面向对象的层次结构进行定位。例如，你可以将提供声明式事务管理的 `Around Advice` 应用于跨越多个对象的方法集（如服务层中的所有业务操作）。
 
