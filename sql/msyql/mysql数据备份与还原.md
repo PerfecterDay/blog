@@ -62,6 +62,7 @@ mysqldump --opt -d cap -u appadmin -p > create.sql
 11. `--hex-blob`：将 binary、varbinary、blob、bit类型的数据备份为十六进制的格式，默认是不可读的乱码。
 12. `--where='where_condition'(-w 'where_condition')`：导出给定条件的数据。
 13. `--opt`：只导出表结构
+14. `--no-tablespaces`: 不导出表空间信息，只导出表结构和数据。其实对导出的sql 无影响，只是控制mysqldump 在dump 过程中是否访问表空间信息。访问的话需要 PROCESS 权限。
 
 #### mysqldump 恢复
 1. `mysql -uroot -p < file_name`
