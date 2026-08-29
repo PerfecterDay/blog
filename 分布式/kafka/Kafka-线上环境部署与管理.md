@@ -67,8 +67,8 @@ tree
 
 ## Kafka 集群监控
 1. CMAK(原名 Kafka Manager)：https://github.com/yahoo/CMAK
-2. kafka-ui: https://github.com/provectus/kafka-ui?tab=readme-ov-file  
-   `docker run -it --name=kafka-ui -p 9090:8080 -e DYNAMIC_CONFIG_ENABLED=true provectuslabs/kafka-ui`
+2. [kafbat-ui](https://kafbat.io/): https://github.com/kafbat/kafka-ui
+   `docker run -it -p 9090:8080 -e DYNAMIC_CONFIG_ENABLED=true ghcr.io/kafbat/kafka-ui`
    配置kafka 地址时使用 `host.docker.internal` 。并且宿主机kafka 配置中要加上以下配置：
    ```
    listeners=PLAINTEXT://0.0.0.0:9092,DOCKER://0.0.0.0:29092

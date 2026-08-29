@@ -74,3 +74,7 @@ Kafka Cluster
 	+ Kafka 定期通过心跳机制确认消费者存活。
 	+ 如果某个消费者宕机或长时间不 poll，Kafka 会触发 Rebalance，将分区重新分配给其他存活的消费者。
 	+ 在 Rebalance 过程中，消费会短暂中断，确保每个分区只被一个消费者处理。
+
+
+## 生产问题
+1. kafka admin 能限制某个用户使用的 consumer-group 规则

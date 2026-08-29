@@ -108,3 +108,14 @@ HttpRequest req = HttpRequest.newBuilder()
 
 无论哪种情况，当将 HTTP_3 设置为首选版本时，HttpClient 实现都会尝试通过 UDP 与目标服务器建立连接（因为 HTTP/3 通过 UDP 运行）。如果基于 UDP 的 QUIC 连接尝试失败——无论是因为服务器不支持 HTTP/3，还是因为连接未能及时建立——HttpClient 实现将自动将协议版本降级为 HTTP/2（基于 TCP），并尝试使用 HTTP/2 完成请求。如果服务器不支持 HTTP/2，则请求将像以前一样进一步降级为 HTTP/1.1。
 
+## 底层实现
+`jdk.internal.net.http` 包。
++ `ConnectionPool` : 连接池实现
++ `HttpClientImpl` : HttpClient 实现
++ `HttpConnection` : HTTP 连接实现
+
+
+```
+-Djdk.httpclient.HttpClient.log=headers,channel
+-Djdk.httpclient.HttpClient.log=all
+```

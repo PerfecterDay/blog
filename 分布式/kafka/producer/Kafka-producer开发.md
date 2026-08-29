@@ -77,6 +77,12 @@ send() （max.block.ms）
       → 直接失败
 ```
 
+linger.ms： Producer 为了凑 batch 最多等多久
+request.timeout.ms： 表示一次 ProduceRequest 等待 Broker response 的时间。
+delivery.timeout.ms： 一条 record 从 send() 开始，到最终成功/失败允许经历的最长时间。
+retry.backoff.ms： 重试间隔时间
+
+
 ####  ProducerRecord
 `ProducerRecord` 代表了一条要发送的消息，由5个字段构成，它们分别如下:
 + `String topic` ：该消息所属的 topic 
