@@ -23,6 +23,62 @@ x86 汇编的两种主流语法：
 | 操作数顺序 | 源, 目的    | 目的, 源   |
 
 
+## 汇编代码的结构
+汇编代码其实有三类东西：
+```
+汇编源代码
+│
+|—— 标号：地址标记
+|—— 注释：;后边的内容是注释
+├── 真正的 CPU 指令
+│   ├── mov
+│   ├── add
+│   ├── sub
+│   ├── call
+│   ├── ret
+│   └── ...
+│
+└── 汇编器指示
+    ├── .text
+    ├── .data
+    ├── .bss
+    ├── .globl
+    ├── .section
+    ├── .type
+    ├── .size
+    ├── .align
+    ├── .byte
+    ├── .long
+    └── ...
+```
+
+### 伪指令
+汇编器指示（Assembler Directives），也叫伪指令（pseudo-instructions）。它们主要是告诉汇编器：**这段源代码应该如何组织、这些符号应该具有什么属性。** CPU 并不会执行
+
+1. `.globl`
+```
+.globl begtext, begdata, begbss, endtext, enddata, endbss
+```
+如果代码中有 begtext/begdata... 这些符号，那么它是一个全局符号（global symbols）。这些符号不仅可以在当前 .s 文件中使用，链接器也可以看到它们。但是，并不会直接定义这个符号。
+```
+.text
+
+foo:
+    mov $123, %eax
+    ret
+```
+`foo` 默认是当前汇编文件内部的符号。其他 `.o` 文件通常不能把它作为可链接的全局定义使用。
+
+2. `.text/.data/.bss...`: 以下内容直到下一个伪指令处的代码存放到对应的 `text/data/bss...` 段
+3. `.section .text` : 切换到 `.text` 段
+4. `.byte、.word、.long、.quad`: 指示生成指定字节数大小的数据
+5. `.ascii "Loading system ..."`: 把字符串直接转换成 ASCII 字节序列，写入当前 section。
+6. `.extern foo` : `foo` 是外部定义的符号
+7. `.local foo` : `foo` 是局部符号
+8. `.weak foo` : 把 `foo` 声明为弱符号
+9. `.hidden foo` : 设置符号可见性为隐藏
+10. `entry start` : 指定 `start` 作为这个目标文件/程序的入口点
+
 ### IA32指令
 <center>
 <img src="pics/IA32instructor-format.png" width="60%" height="50%">
