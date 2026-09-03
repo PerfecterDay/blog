@@ -40,3 +40,8 @@
   * [musl-libc-start-init](/os/musl-c/musl-libc-start-init.md)
   * [musl-init-libc](/os/musl-c/musl-init-libc.md)
   * [musl-init-tls](/os/musl-c/musl-init-tls.md)
+* [Linux-0.01](#)
+  * [Linux内核文档](https://www.kernel.org/doc/html/latest/)
+  * [编译与调试](/os/linux-0.01/编译.md)
+  * [boot](/os/linux-0.01/boot.md)
+  * [rootfs](/os/linux-0.01/rootfs.md)
