@@ -7,6 +7,10 @@
 break _start_c          # crt1.c 里的 C 入口
 break __libc_start_main # 启动主逻辑
 break __init_libc       # 初始化 TLS/SSP/auxv 等
+b *0x7c00    # 断点设置在 0x7c00 处
+info b      # 查看断点信息
+delete 1    # 删除断点1
+clear       # 清除断点
 ```
 + `run` 启动程序，开始调试
 + `starti` 启动程序并停在第一条可执行指令处
