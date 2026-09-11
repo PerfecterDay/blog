@@ -71,13 +71,14 @@ foo:
 
 2. `.text/.data/.bss...`: 以下内容直到下一个伪指令处的代码存放到对应的 `text/data/bss...` 段
 3. `.section .text` : 切换到 `.text` 段
-4. `.byte、.word、.long、.quad`: 指示生成指定字节数大小的数据
+4. `.byte、.word、.long、.quad`: 指示生成1/2/4/8字节数大小的数据，后边接立即数
 5. `.ascii "Loading system ..."`: 把字符串直接转换成 ASCII 字节序列，写入当前 section。
 6. `.extern foo` : `foo` 是外部定义的符号
 7. `.local foo` : `foo` 是局部符号
 8. `.weak foo` : 把 `foo` 声明为弱符号
 9. `.hidden foo` : 设置符号可见性为隐藏
 10. `entry start` : 指定 `start` 作为这个目标文件/程序的入口点
+11. `.fill 252,8,0` : 重复填充 252 个元素，每个元素 8 字节，填充值为 0。
 
 ### IA32指令
 <center>
