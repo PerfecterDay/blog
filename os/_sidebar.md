@@ -50,4 +50,5 @@
   * [Linux内核文档](https://www.kernel.org/doc/html/latest/)
   * [编译与调试](/os/linux-0.01/编译与调试.md)
   * [boot](/os/linux-0.01/boot.md)
+  * [head.s](/os/linux-0.01/head.md)
   * [rootfs](/os/linux-0.01/rootfs.md)
