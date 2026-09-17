@@ -1,4 +1,4 @@
-`include/linux/sys.h` 中定义了系统调用表
+`include/linux/sys.h` 中定义了系统调用表：维护了各个系统调用函数的地址。
 
 `kernel/sched.c` 的 `sched_init` 方法中 `set_system_gate(0x80,&system_call);` 设置系统调用门， `int 0x80` 会被 `system_call` 处理。
 

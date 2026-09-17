@@ -3,7 +3,6 @@
 
 > https://gcc.gnu.org/onlinedocs/gcc/extensions-to-the-c-language-family/how-to-use-inline-assembly-language-in-c-code.html#clobbers-and-scratch-registers
 
-
 ## 基本 asm
 基本 asm 语句的语法如下：
 ```
@@ -33,6 +32,20 @@ asm asm-qualifiers ( AssemblerTemplate
                       : InputOperands
                       : Clobbers
                       : GotoLabels)
+
+asm volatile (
+    "汇编指令"
+    : 输出操作数
+    : 输入操作数
+    : clobber
+);
+
+asm volatile (
+    "我要执行什么汇编"
+    : "执行完，我从哪里拿结果"
+    : "执行前，我要给寄存器/内存什么输入"
+    : "执行过程中，我把哪些东西破坏了"
+);          
 ```
 
 ### asm-qualifiers:
@@ -117,7 +130,7 @@ return old;
 input + output + goto操作数的总数限制为 30。
 
 
-### 为本地变量指定寄存器 (https://gcc.gnu.org/onlinedocs/gcc/extensions-to-the-c-language-family/how-to-use-inline-assembly-language-in-c-code.html#local-register-variables)
+### [为本地变量指定寄存器](https://gcc.gnu.org/onlinedocs/gcc/extensions-to-the-c-language-family/how-to-use-inline-assembly-language-in-c-code.html#local-register-variables)
 ```
 register int *foo asm ("r12");
 register int *p1 asm ("r0") = ...;
@@ -125,6 +138,51 @@ register int *p2 asm ("r1") = ...;
 register int *result asm ("r0");
 asm ("sysint" : "=r" (result) : "0" (p1), "r" (p2));
 ```
+
+## 实例分析
+```
+__asm__ __volatile__ (
+    "syscall"
+    : "=a"(ret)
+    : "a"(n), "D"(a1)
+    : "rcx", "r11", "memory"
+);
+```
+
+在 x86-64 下：
+```
+a  → RAX
+D  → RDI
+S  → RSI
+d  → RDX
+c  → RCX
+r8 → R8
+r9 → R9
+r10 → R10
+r11 → R11
+r12 → R12
+r13 → R13
+r14 → R14
+r15 → R15
+```
+
+上述代码的意思可以理解成下边这样：
+```
+执行 syscall：
+
+执行之前：
+    RAX = n
+    RDI = a1
+
+执行之后：
+    ret = RAX
+
+另外：
+    RCX 会被破坏
+    R11 会被破坏
+    内存可能被访问/修改
+```
+
 
 ## 系统调用
 ```
