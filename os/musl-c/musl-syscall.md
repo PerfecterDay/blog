@@ -1,3 +1,6 @@
+# musl-c 系统调用
+{docsify-updated}
+
 `arch/x86_64/syscall_arch.h` 下定义的系统调用函数：
 
 ```c
