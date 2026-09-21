@@ -1,6 +1,6 @@
 * [Home](/)
 * [..](../_sidebar.md)
-* [学习资料](./学习资料.md)
+* [学习资料](/os/学习资料.md)
 * [汇编](#)
   * [汇编基础及Bochs调试](/os/汇编/汇编基础及Bochs调试.md)
   * [Gcc内联汇编](/os/汇编/gcc-内联汇编.md)
@@ -56,3 +56,4 @@
   * [rootfs](/os/linux-0.01/rootfs.md)
   * [系统调用](/os/linux-0.01/sys-call.md)
   * [Linux_0.01_task_struct_详解](/os/linux-0.01/Linux_0.01_task_struct_详解.md)
+  * [信号处理机制](/os/linux-0.01/signal.md)
