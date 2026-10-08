@@ -123,8 +123,9 @@ Removing unused plist /Users/gabe/Library/LaunchAgents/homebrew.mxcl.mysql.plist
 
 `brew services list` 列出的 plist 文件在软件安装包中都会有一个对应的原始文件（在 `brew --cellar` 的对应目录中），每次执行 `brew services start` 启动服务，homebrew 都会将原始文件拷贝到 `~/Library/LaunchAgents`。所以直接边界 `~/Library/LaunchAgents` 目录下的 plist 文件不会生效。需要编辑原始文件。
 
+1. 使用指定的 plist 文件： `brew services restart jenkins --file /Users/gtja/Library/LaunchAgents/myjenkins.plist`
 
-### 常用命令
+## 常用命令
 ```
 # 显示 Homebrew 本地的 Git 仓库
 $ brew --repo
