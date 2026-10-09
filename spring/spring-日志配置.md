@@ -168,7 +168,15 @@ public class MdcTaskDecorator implements TaskDecorator {
 
 如果是自己维护的线程池，可以再创建线程池时传入自定义的 ThreadFactory threadFactory 参数，在自定义 ThreadFactory 中创建线程时，传递 MDC 对象。
 
-## 命令行启用debug 级别
+## 启用debug 级别
 ```
 java -jar myproject-0.0.1-SNAPSHOT.jar --debug
+
+logging:
+  level:
+    root: debug
+
+logging:
+  level:
+    com.zaxxer.hikari: debug
 ```

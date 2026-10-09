@@ -134,3 +134,115 @@ spring:
 - `maximumPoolSize` : 此属性控制了允许池子达到的最大尺寸，包括空闲和使用中的连接。基本上这个值会决定到数据库后端的实际连接的最大数量。这方面的合理值最好由你的执行环境决定。当数据库池达到这个大小，并且没有空闲连接可用时，对getConnection()的调用将在超时前阻塞多达`connectionTimeout`毫秒。请阅读关于池的大小。默认值：10
 
 自动配置的相关类 `DataSourceAutoConfiguration` 、 `DataSourceConfiguration` 。
+```
+DataSourceConfiguration
+
+@Bean
+@ConfigurationProperties("spring.datasource.hikari")
+HikariDataSource dataSource(DataSourceProperties properties, JdbcConnectionDetails connectionDetails,
+		Environment environment) {
+	String dataSourceClassName = environment.getProperty("spring.datasource.hikari.data-source-class-name");
+	HikariDataSource dataSource = createDataSource(connectionDetails, HikariDataSource.class,
+			properties.getClassLoader(), dataSourceClassName == null);
+	if (StringUtils.hasText(properties.getName())) {
+		dataSource.setPoolName(properties.getName());
+	}
+	return dataSource;
+}
+```
+
+`HikariDataSource` 继承自 `HikariConfig` ，所以 `spring.datasource.hikari` 配置会直接作用于 `HikariDataSource` 实例上。
+
+### HikariCP 获取连接
+线上打印日志：
+```
+2026-10-09 01:07:06.388 [https-jsse-nio-9000-exec-7] INFO  c.g.g.config.log.LoggingFilterBean [6ac7cdbac82b264a06c00f919a70812f,06c00f919a70812f] - Request:xxx
+2026-10-09 01:07:12.976 [https-jsse-nio-9000-exec-7] WARN com.zaxxer.hikari.pool.PoolBase [6ac7cdbac82b264a06c00f919a70812f,06c00f919a70812f] - HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@55b6286f (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value.
+2026-10-09 01:07:12.980 [https-jsse-nio-9000-exec-7] INFO  c.g.g.config.log.LoggingFilterBean [6ac7cdbac82b264a06c00f919a70812f,06c00f919a70812f] - Response:xxx
+```
+
+排查是从 `HikariDataSource` 获取连接耗时打印的：
+```
+public Connection getConnection(final long hardTimeout) throws SQLException
+{
+	suspendResumeLock.acquire();
+	final var startTime = currentTime();
+
+	try {
+		var timeout = hardTimeout;
+		do {
+		var poolEntry = connectionBag.borrow(timeout, MILLISECONDS);
+		if (poolEntry == null) {
+			break; // We timed out... break and throw exception
+		}
+
+		final var now = currentTime();
+		if (poolEntry.isMarkedEvicted() || (elapsedMillis(poolEntry.lastAccessed, now) > aliveBypassWindowMs && isConnectionDead(poolEntry.connection))) {
+			closeConnection(poolEntry, poolEntry.isMarkedEvicted() ? EVICTED_CONNECTION_MESSAGE : DEAD_CONNECTION_MESSAGE); //连接不可用，关闭连接
+			timeout = hardTimeout - elapsedMillis(startTime);
+		}
+		else {
+			metricsTracker.recordBorrowStats(poolEntry, startTime);
+			if (isRequestBoundariesEnabled) {
+				try {
+					poolEntry.connection.beginRequest();
+				} catch (SQLException e) {
+					logger.warn("beginRequest Failed for: {}, ({})", poolEntry.connection, e.getMessage());
+				}
+			}
+			return poolEntry.createProxyConnection(leakTaskFactory.schedule(poolEntry)); //连接可用，直接return 返回一个Connection给调用方
+		}
+		} while (timeout > 0L);
+
+		metricsTracker.recordBorrowTimeoutStats(startTime);
+		throw createTimeoutException(startTime);
+	}
+	catch (InterruptedException e) {
+		Thread.currentThread().interrupt();
+		throw new SQLException(poolName + " - Interrupted during connection acquisition", e);
+	}
+	finally {
+		suspendResumeLock.release();
+	}
+}
+```
+
+`PoolBase -> boolean isConnectionDead(final Connection connection)` 判断一个连接是否可用
+```
+boolean isConnectionDead(final Connection connection)
+{
+	try {
+		setNetworkTimeout(connection, validationTimeout);
+		try {
+		final var validationSeconds = (int) Math.max(1000L, validationTimeout) / 1000;
+
+		if (isUseJdbc4Validation) {
+			return !connection.isValid(validationSeconds);
+		}
+
+		try (var statement = connection.createStatement()) {
+			if (isNetworkTimeoutSupported != TRUE) {
+				setQueryTimeout(statement, validationSeconds);
+			}
+
+			statement.execute(config.getConnectionTestQuery());
+		}
+		}
+		finally {
+		setNetworkTimeout(connection, networkTimeout);
+
+		if (isIsolateInternalQueries && !isAutoCommit) {
+			connection.rollback();
+		}
+		}
+
+		return false;
+	}
+	catch (Exception e) {
+		lastConnectionFailure.set(e);
+		logger.warn("{} - Failed to validate connection {} ({}). Possibly consider using a shorter maxLifetime value.",
+					poolName, connection, e.getMessage());
+		return true;
+	}
+}
+```
