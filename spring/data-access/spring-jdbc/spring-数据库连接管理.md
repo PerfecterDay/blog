@@ -246,3 +246,7 @@ boolean isConnectionDead(final Connection connection)
 	}
 }
 ```
+
+#### HouseKeeper
+`HikariPool` 中会启动定时任务来启动一个 `HouseKeeper` 任务监测连接池的状态。  
+`-Dcom.zaxxer.hikari.housekeeping.periodMs=300000`来修改定时任务执行的间隔时间。
