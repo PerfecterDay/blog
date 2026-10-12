@@ -55,5 +55,6 @@
   * [head.s](/os/linux-0.01/head.md)
   * [rootfs](/os/linux-0.01/rootfs.md)
   * [系统调用](/os/linux-0.01/sys-call.md)
+  * [进程调度](/os/linux-0.01/scheduler.md)
   * [Linux_0.01_task_struct_详解](/os/linux-0.01/Linux_0.01_task_struct_详解.md)
   * [信号处理机制](/os/linux-0.01/signal.md)

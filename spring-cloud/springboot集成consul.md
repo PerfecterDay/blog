@@ -467,7 +467,8 @@ public void run() {
 }
 ```
 这个 task 会调用 `/agent/check/pass/:check_id` API 触发服务检查
-注意：以上解决方案只有在 consul 集群支持持久化存储状态的时候生效。当以 -dev 模式运行时，会产生 checkId 不存在的 404 错误，因为consul重启后所有的checks数据丢失，所以`this.ttlScheduler.client.agentCheckPass(this.checkId);`会报错。这种情况下，除了配置`spring.cloud.consul.discovery.heartbeat.reregister-service-on-failure=true`外，还要注册以下bean:
+
+注意：以上解决方案只有在 consul 集群支持持久化存储状态的时候生效。当以 -dev 模式运行时，会产生 checkId 不存在的 404 错误（`com.ecwid.consul.v1.OperationException: OperationException(statusCode=404, statusMessage='Not Found', statusContent='Unknown check ID "service:trade-gmt-9f4c97f8b-85t9j-management". Ensure that the check ID is passed, not the check name.')`），因为consul重启后所有的checks数据丢失，所以`this.ttlScheduler.client.agentCheckPass(this.checkId);`会报错。这种情况下，除了配置`spring.cloud.consul.discovery.heartbeat.reregister-service-on-failure=true`外，还要注册以下bean:
 ```java
 @Configuration
 public class ConsulConfiguration {

@@ -114,21 +114,90 @@ void schedule(void)
 }
 ```
 
-
+`switch_to` 是一个宏，定义在 `include/linux/sched.h` 中：
 ```
 #define switch_to(n) {\
-struct {long a,b;} __tmp; \
-__asm__ __volatile__("cmpl %%ecx,current\n\t" \
-	"je 1f\n\t" \
-	"xchgl %%ecx,current\n\t" \
-	"movw %%dx,%1\n\t" \
-	"ljmp *%0\n\t" \
-	"cmpl %%ecx,%2\n\t" \
-	"jne 1f\n\t" \
-	"clts\n" \
-	"1:\n\t" \
-	: \
-    :"m" (*&__tmp.a),"m" (*&__tmp.b), \
-	"m" (last_task_used_math),"d" _TSS(n),"c" ((long) task[n])); \
+    struct {long a,b;} __tmp; \
+    __asm__ __volatile__(
+        "cmpl %%ecx,current\n\t"
+        "je 1f\n\t"
+        "xchgl %%ecx,current\n\t"
+        "movw %%dx,%1\n\t"
+        "ljmp *%0\n\t"
+        "cmpl %%ecx,%2\n\t"
+        "jne 1f\n\t"
+        "clts\n"
+        "1:\n\t"
+        :
+        : "m" (*&__tmp.a),
+          "m" (*&__tmp.b),
+          "m" (last_task_used_math),
+          "d" _TSS(n),
+          "c" ((long) task[n])
+    ); \
 }
 ```
+这段代码是 Linux 0.01 中最核心的进程切换代码之一。它利用 x86 的硬件任务切换机制，通过修改 current、执行远跳转 `ljmp` ，让 CPU 从当前任务切换到目标任务。
+
+1. 第一阶段：判断是否真的需要切换
+```
+cmpl %%ecx,current
+je 1f
+```
+
+先看输入操作数： `"c" ((long) task[n])` ，这会让编译器把 `task[n]` 的地址放入 ECX。因此，执行时：
+```
+ECX     = task[n] 的地址
+current = 当前正在运行的任务地址
+```
+
+2. 第二阶段：更新 `current`
+`xchgl %%ecx,current` : `xchg` 会交换两个操作数的值。`current` 被交换成新任务的地址，而 `ECX` 被交换成旧任务的地址，这个值也有后续用途：硬件任务切换时会保存当前任务的寄存器状态，而目标任务恢复时，会恢复它自己此前保存的 ECX。
+
+3. 第三阶段：构造远跳转指针
+```
+movw %%dx,%1
+ljmp *%0
+```
+
+输入操作数： `"d" _TSS(n)`,将 `DX` 中的 16 位 TSS 选择子写入 `__tmp.b` 的低 16 位。于是，__tmp 的内存布局可以表示为：
+```
+__tmp
+低地址
+┌────────────────────────────┐
+│ a：32 位偏移字段            │
+├────────────────────────────┤
+│ b 的低 16 位：TSS 选择子    │
+├────────────────────────────┤
+│ b 的高 16 位                 │
+└────────────────────────────┘
+高地址
+```
+这里有一个容易忽略的细节：`__tmp.a` 并没有被显式初始化。但在 32 位保护模式下，当 `ljmp` 的目标选择子指向 TSS 描述符时，CPU 执行的是任务切换，远指针中的偏移字段不会作为普通代码地址执行。
+
+`ljmp *%0` 到底做了什么？ 这是一个通过内存中的远指针执行的间接远跳转。普通远跳转可能是：加载新的 `CS:EIP`。
+
+但这里的选择子指向的是 `TSS` 描述符，所以 CPU 会识别出这不是普通代码段跳转，而是硬件任务切换。其效果可以简化表示为：
+```
+ljmp 指向目标 TSS
+         │
+         ▼
+CPU 查找 GDT 中的 TSS 描述符
+         │
+         ▼
+保存当前任务的硬件上下文
+         │
+         ▼
+从目标任务的 TSS 恢复上下文
+         │
+         ▼
+继续执行目标任务之前保存的指令位置
+```
+注意， `ljmp` 不会像普通 `call` 那样调用目标函数。**它触发的是 x86 处理器提供的硬件任务切换机制**。在 32 位 x86 保护模式下，TSS 保存着硬件任务切换所需的状态，包括：
+- EIP：任务恢复后从哪里继续执行；
+- EFLAGS：标志寄存器；
+- EAX、EBX、ECX、EDX、ESI、EDI、EBP、ESP：通用寄存器；
+- CS、SS、DS、ES、FS、GS：段寄存器；
+- CR3：页目录基址寄存器；
+- LDTR：局部描述符表寄存器等状态。
+具体保存和恢复哪些状态，由 32 位 x86 硬件任务切换机制规定

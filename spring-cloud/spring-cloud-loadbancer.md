@@ -215,3 +215,8 @@ public LoadBalancerClientRequestTransformer transformer() {
 }
 ```
 若定义了多个转换器，它们将按Beans定义的顺序应用。或者可以使用 `LoadBalancerRequestTransformer.DEFAULT_ORDER` 或 `LoadBalancerClientRequestTransformer.DEFAULT_ORDER` 来指定顺序。
+
+
+`
+2026-10-12 10:16:58.846 [main] WARN  o.s.c.l.c.LoadBalancerCacheAutoConfiguration$LoadBalancerCaffeineWarnLogger   - Spring Cloud LoadBalancer is currently working with the default cache. While this cache implementation is useful for development and tests, it's recommended to use Caffeine cache in production.You can switch to using Caffeine cache, by adding it and org.springframework.cache.caffeine.CaffeineCacheManager to the classpath.
+`
