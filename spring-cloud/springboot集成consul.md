@@ -142,6 +142,8 @@ public class ConsulAutoServiceRegistrationAutoConfiguration {
 6. 注册服务时提供 MetaData
 7. `prefer-ip-address: true`: 注册时的地址信息使用IP，k8s环境下默认使用 pod 名字，会导致发现方调用失败
 
+spring-cloud-commons 中的 `AutoServiceRegistrationProperties` 也会控制服务注册的相关行为。
+
 ```
 spring:
   application:

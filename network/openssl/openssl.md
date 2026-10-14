@@ -217,9 +217,18 @@ openssl s_time -connect myhost:4433 -www / -new -ssl3
 ```
 openssl pkcs12 -in ClientCert.pfx -nocerts -nodes -out cms.key
 openssl pkcs12 -in ClientCert.pfx -clcerts -nokeys -out cms.crt
+```
 
-当不使用证书时：
-1e8a2045-7eb3-458c-95f1-ebe46da1574f
+有时候某些 pfx 使用了较旧的算法，执行上述操作时会报错：
+```
+809D1EFA01000000:error:0308010C:digital envelope routines:inner_evp_generic_fetch:unsupported:crypto/evp/evp_fetch.c:376:Global default library context, Algorithm (RC2-40-CBC : 0), Properties (<null>)
+809D1EFA01000000:error:030000A0:digital envelope routines:EVP_PBE_CipherInit_ex:unknown cipher:crypto/evp/evp_pbe.c:127:RC2-40-CBC
+```
+
+这时，就需要添加 `-legacy` 选项：
+```
+openssl pkcs12 -legacy -in ClientCert.pfx -nocerts -nodes -out cms.key
+openssl pkcs12 -legacy -in ClientCert.pfx -clcerts -nokeys -out cms.crt
 ```
 
 ## 实战

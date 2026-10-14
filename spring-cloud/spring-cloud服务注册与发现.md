@@ -80,6 +80,17 @@ public interface AutoServiceRegistration {
 
 `AutoServiceRegistration/AbstractAutoServiceRegistration` 主要为了支持微服务在启动时自动注册到服务注册中心，在关闭时自动注销。
 
+### 服务注册的自动配置
++ `AutoServiceRegistrationAutoConfiguration`
++ `AutoServiceRegistrationConfiguration`
++ `AutoServiceRegistrationProperties` 
+  
+三个类支持了服务注册过程中的自动配置，`spring.cloud.service-registry.auto-registration` 前缀的配置属性控制了服务注册的自动配置行为。  
+比如：
++ `spring.cloud.service-registry.auto-registration.enabled=false` 可以禁用自动注册。
++ `spring.cloud.service-registry.auto-registration.register-management=false` 可以禁止注册管理端点。
++ `spring.cloud.service-registry.auto-registration.fail-fast=true` 可以开启快速失败模式。
+
 ## 服务发现-DiscoveryClient
 Spring cloud 使用接口 `DiscoveryClient` 来抽象服务发现客户端，各服务发现框架提供自己的实现。
 ```
