@@ -1,5 +1,6 @@
 * [Home](/)
 * [..](../_sidebar.md)
+  * [openAI API](https://developers.openai.com/api/reference/overview)
   * [监督学习](/AI/监督学习.md)
   * [spring-ai](/AI/spring-ai.md)
   * [spring-ai-demo分析](/AI/spring-ai-demo分析.md)
