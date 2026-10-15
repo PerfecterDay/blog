@@ -48,7 +48,12 @@
       },
     }
   </script>
-
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true });
+    window.mermaid = mermaid;
+  </script>
+  <script src=".js/docsify-mermaid.js"></script>
     <script src=".js/katex.min.js"></script>
     <script src="./.js/docsify.js"></script>
     <script src="./.js/docsify-sidebar-collapse.min.js"></script>

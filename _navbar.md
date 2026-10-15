@@ -12,6 +12,6 @@
 * [Spring Cloud](/spring-cloud/_sidebar.md)
 * [SQL](/sql/_sidebar.md)
 * [容器与K8S](/docker/_sidebar.md)
-* [分布式](/分布式/_sidebar.md)
+* [分布式组件](/架构/分布式/_sidebar.md)
 * [设计模式](/架构/设计模式/_sidebar.md)
 * [架构分层](/架构/_sidebar.md)

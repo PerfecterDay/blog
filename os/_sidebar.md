@@ -57,4 +57,7 @@
   * [系统调用](/os/linux-0.01/sys-call.md)
   * [进程调度](/os/linux-0.01/scheduler.md)
   * [Linux_0.01_task_struct_详解](/os/linux-0.01/Linux_0.01_task_struct_详解.md)
+  * [do_execve-原理详解](/os/linux-0.01/linux-0.01-do_execve-原理详解.md)
   * [信号处理机制](/os/linux-0.01/signal.md)
+  * [tty](/os/linux-0.01/tty.md)
+  * [文件系统](/os/linux-0.01/硬盘镜像文件.md)

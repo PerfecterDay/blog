@@ -17,7 +17,7 @@
 * [Spring Cloud](/spring-cloud/_sidebar.md)
 * [SQL](/sql/_sidebar.md)
 * [容器与K8S](/docker/_sidebar.md)
-* [分布式](/分布式/_sidebar.md)
+* [分布式组件](/架构/分布式/_sidebar.md)
 * [nginx](/nginx/_sidebar.md)
 * [架构](/架构/_sidebar.md)
 * [resilience4j](/resilience4j/_sidebar.md)

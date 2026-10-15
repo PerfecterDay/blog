@@ -505,6 +505,47 @@ ReregistrationPredicate DEFAULT = e -> e.getStatusCode() == 500;
 }
 ```
 
+如果同时注册了 HTTP 和 TTL 两种健康检查，那么 HTTP 检查会失效，只有 TTL 有效。
+```
+2026-10-14 17:44:25.753 [main] INFO  o.s.c.c.s.ConsulServiceRegistry  - Registering service with consul: NewService{id='trade-center-service-8100', name='trade-center-service', tags=[], address='10.106.39.1', meta={secure=false, gRPC_port=8101}, port=8101, enableTagOverride=null, check=Check{script='null', dockerContainerID='null', shell='null', interval='null', ttl='30s', http='null', method='null', header=null, tcp='null', timeout='null', deregisterCriticalServiceAfter='3m', tlsSkipVerify=null, status='null', grpc='null', grpcUseTLS=null}, checks=null}
+
+2026-10-14 17:45:41.611 [main] INFO  o.s.c.c.s.ConsulServiceRegistry  - Registering service with consul: NewService{id='trade-center-service-8100', name='trade-center-service', tags=[], address='10.106.39.1', meta={secure=false, gRPC_port=8101}, port=8101, enableTagOverride=null, check=Check{script='null', dockerContainerID='null', shell='null', interval='10s', ttl='null', http='http://localhost:8091/actuator/health', method='null', header={}, tcp='null', timeout='null', deregisterCriticalServiceAfter='3m', tlsSkipVerify=null, status='null', grpc='null', grpcUseTLS=null}, checks=null}
+```
+
+因为在 `ConsulAutoRegistration` 中的 `createCheck` 方法中，当启用 ttl 时，会直接返回，不会设置 http 相关的属性：
+```
+public static NewService.Check createCheck(Integer port, HeartbeatProperties ttlConfig,
+            ConsulDiscoveryProperties properties) {
+      NewService.Check check = new NewService.Check();
+      if (StringUtils.hasText(properties.getHealthCheckCriticalTimeout())) {
+            check.setDeregisterCriticalServiceAfter(properties.getHealthCheckCriticalTimeout());
+      }
+      if (ttlConfig.isEnabled()) {
+            // FIXME 3.0.0
+            // https://github.com/spring-cloud/spring-cloud-consul/issues/614
+            check.setTtl(ttlConfig.getTtl().getSeconds() + "s");
+            return check;
+      }
+
+      Assert.notNull(port, "createCheck port must not be null");
+      Assert.isTrue(port > 0, "createCheck port must be greater than 0");
+
+      if (properties.getHealthCheckUrl() != null) {
+            check.setHttp(properties.getHealthCheckUrl());
+      }
+      else {
+            check.setHttp(String.format("%s://%s:%s%s", properties.getScheme(), properties.getHostname(), port,
+                        properties.getHealthCheckPath()));
+      }
+      check.setHeader(properties.getHealthCheckHeaders());
+      check.setInterval(properties.getHealthCheckInterval());
+      check.setTimeout(properties.getHealthCheckTimeout());
+      check.setTlsSkipVerify(properties.getHealthCheckTlsSkipVerify());
+      return check;
+}
+```
+
+
 ### 问题
 1. preferIpAddress ： 测试环境需要IP访问，主机名不通
 2. critical状态的service 不会自动取消注册：
