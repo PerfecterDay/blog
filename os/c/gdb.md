@@ -49,6 +49,7 @@ clear       # 清除断点
 + `c` continue继续执行
 + `n` next单步执行
 + `si` step into进入函数
++ `until 80` GDB 会继续执行到 80 行，用于跳过循环
 + `fin` finish执行到当前函数结束
 + `kill` 杀死当前调试的程序
 + `exit` 退出
