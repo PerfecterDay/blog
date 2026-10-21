@@ -54,12 +54,12 @@ public class MyService {
     private String url;
 }
 ```
-此时的 url 不会更新成新值，因为 @Value 的注入是在 Bean 创建时完成的，Spring 不会因为 Environment 变化就重新注入 Bean 的字段。
+此时的 url 不会更新成新值，因为 `@Value` 的注入是在 `Bean` 创建时完成的，Spring 不会因为 `Environment` 变化就重新注入 `Bean` 的字段。
 
 为解决这些需求，我们引入了 `@RefreshScope` 注解。
 
-## Spring Cloud Commons
-诸如服务发现、负载均衡和熔断限流等模式，天然适合构建一个通用抽象层，该层可被所有Spring Cloud客户端使用，且与具体实现无关。（比如使用 Eurika 或者 Consul 都可以实现服务发现）。
+## Common Abstractions - 通用抽象
+诸如服务发现、负载均衡和熔断限流等模式，天然适合构建一个通用抽象层，该层可被所有Spring Cloud客户使用，且与具体实现无关。（比如使用 Eurika 或者 Consul 都可以实现服务发现）。
 
 ### 服务注册与发现
 

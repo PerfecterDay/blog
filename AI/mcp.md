@@ -55,6 +55,7 @@ MCP 还定义了客户端可以暴露的原语。这些原语使 MCP 服务器�
 
 ### inspector
 ```
-npx -y @modelcontextprotocol/inspector \
-  npx -y @modelcontextprotocol/server-memory
+npx @modelcontextprotocol/inspector //启动 inspector 服务,然后在界面上选择要inspect 的 mcp server
+
+npx -y @modelcontextprotocol/inspector npx -y @modelcontextprotocol/server-memory // 启动 inspector 服务并连接到 memory server
 ```

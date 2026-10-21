@@ -77,6 +77,10 @@ Or, if you don't want/need launchctl, you can just run:
  ```
 如果按上面的说明操作的话，未免太麻烦了，而且也很难记住 plist 的位置。还好 Homebrew 提供了一个易用的接口来管理 plist，然后你就不用再纠结什么 `ln`，`launchctl`，和 plist 的位置了。
 
+```
+launchctl print gui/501/sh.brew.vault
+```
+
 ## brew services
 首先安装 `brew services` 命令
  ```

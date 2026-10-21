@@ -43,7 +43,7 @@ mysqldump -uroot -p nrng < nrng.sql
 mysqldump -u root -p block_chain_management system_users --no-create-info --skip-triggers --skip-add-locks --skip-comments > data.sql
 mysqldump -u root -p block_chain_management system_users --no-create-info --skip-triggers --skip-add-locks --skip-comments --skip-extended-insert > data.sql
 
-mysqldump --opt -d cap -u appadmin -p > create.sql
+mysqldump --no-tablespaces -t -u appadmin -p cap > cap.sql
 ```
 
 重要参数：
@@ -65,7 +65,7 @@ mysqldump --opt -d cap -u appadmin -p > create.sql
 14. `--no-tablespaces`: 不导出表空间信息，只导出表结构和数据。其实对导出的sql 无影响，只是控制mysqldump 在dump 过程中是否访问表空间信息。访问的话需要 PROCESS 权限。
 
 #### mysqldump 恢复
-1. `mysql -uroot -p < file_name`
+1. `mysql -uroot -p cap < ~/Downloads/cap-dump.sql`
 2. 登录到mysql后，执行：`source file_name`
 
 #### SELECT...INTO OUTFILE 备份

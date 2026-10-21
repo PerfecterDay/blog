@@ -23,23 +23,104 @@ consumer 提交位移的主要机制是通过向所属的 coordinator 发送位�
 <center><img src="pics/consumer_offset.jpg" width="50%"></center>
 
 ### 查看 `__consumer_offsets` 的数据格式
-`kafka-console-consumer --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" --bootstrap-server localhost:9092 --topic __consumer_offsets --from-beginning`
+```
+kafka-console-consumer \
+  --bootstrap-server localhost:9092 \
+  --topic __consumer_offsets \
+  --from-beginning \
+  --formatter 'org.apache.kafka.tools.consumer.GroupMetadataMessageFormatter'
+
+
+kafka-console-consumer \
+  --bootstrap-server localhost:9092 \
+  --topic __consumer_offsets \
+  --from-beginning \
+  --formatter 'org.apache.kafka.tools.consumer.OffsetsMessageFormatter'
+```
 
 输出如下：
 ```
-[bj,G_P_USER_PROD_CPZX2HK_DEV,1]::OffsetAndMetadata(offset=0, leaderEpoch=Optional.empty, metadata=, commitTimestamp=1706166373455, expireTimestamp=None)
-[bj,G_P_USER_PROD_CPZX2HK_DEV,0]::OffsetAndMetadata(offset=0, leaderEpoch=Optional.empty, metadata=, commitTimestamp=1706166373455, expireTimestamp=None)
-[bj,G_P_USER_PROD_CPZX2HK_DEV,2]::OffsetAndMetadata(offset=0, leaderEpoch=Optional.empty, metadata=, commitTimestamp=1706166373455, expireTimestamp=None)
-[bj,G_P_USER_PROD_CPZX2HK_DEV,2]::OffsetAndMetadata(offset=1, leaderEpoch=Optional.empty, metadata=, commitTimestamp=1706166471643, expireTimestamp=None)
-[bj,G_P_USER_PROD_CPZX2HK_DEV,2]::OffsetAndMetadata(offset=2, leaderEpoch=Optional.empty, metadata=, commitTimestamp=1706166582269, expireTimestamp=None)
-[bj,G_P_USER_PROD_CPZX2HK_DEV,2]::OffsetAndMetadata(offset=3, leaderEpoch=Optional.empty, metadata=, commitTimestamp=1706166707883, expireTimestamp=None)
-[bj,G_P_USER_PROD_CPZX2HK_DEV,2]::OffsetAndMetadata(offset=4, leaderEpoch=Optional.empty, metadata=, commitTimestamp=1706166719632, expireTimestamp=None)
-[bj,G_P_USER_PROD_CPZX2HK_DEV,1]::OffsetAndMetadata(offset=0, leaderEpoch=Optional.empty, metadata=, commitTimestamp=1706166804585, expireTimestamp=None)
-[bj,G_P_USER_PROD_CPZX2HK_DEV,0]::OffsetAndMetadata(offset=0, leaderEpoch=Optional.empty, metadata=, commitTimestamp=1706166804585, expireTimestamp=None)
+{
+    "key": {
+        "type": 1,
+        "data": {
+            "group": "userCenterGroup",
+            "topic": "MobilePhoneChange",
+            "partition": 0
+        }
+    },
+    "value": {
+        "version": 4,
+        "data": {
+            "offset": 3,
+            "leaderEpoch": -1,
+            "metadata": "",
+            "commitTimestamp": 1785133657963,
+            "topicId": "FuLKYhCyS6yB7hlt50tFGA"
+        }
+    }
+},
+{
+    "key": {
+        "type": 1,
+        "data": {
+            "group": "cap-consumer-group",
+            "topic": "cms.cap.sync",
+            "partition": 0
+        }
+    },
+    "value": {
+        "version": 4,
+        "data": {
+            "offset": 5,
+            "leaderEpoch": -1,
+            "metadata": "",
+            "commitTimestamp": 1787302861630,
+            "topicId": "ow7JZXNlTh6HDMDxPowG3g"
+        }
+    }
+},
+{
+    "key": {
+        "type": 1,
+        "data": {
+            "group": "trade-gmt",
+            "topic": "test",
+            "partition": 0
+        }
+    },
+    "value": {
+        "version": 4,
+        "data": {
+            "offset": 1,
+            "leaderEpoch": -1,
+            "metadata": "",
+            "commitTimestamp": 1792472982842,
+            "topicId": "pycQ9yfiRFGDQtk4FeZ1DA"
+        }
+    }
+},
+{
+    "key": {
+        "type": 1,
+        "data": {
+            "group": "trade-gmt",
+            "topic": "test",
+            "partition": 0
+        }
+    },
+    "value": {
+        "version": 4,
+        "data": {
+            "offset": 2,
+            "leaderEpoch": -1,
+            "metadata": "",
+            "commitTimestamp": 1792473037472,
+            "topicId": "pycQ9yfiRFGDQtk4FeZ1DA"
+        }
+    }
+}
 ```
-
-`[bj,G_P_USER_PROD_CPZX2HK_DEV,0]::OffsetAndMetadata(offset=18, leaderEpoch=Optional.empty, metadata=, commitTimestamp=1706174258923, expireTimestamp=None)`
-代表 group_id = bj 的 consumers 在 topic=G_P_USER_PROD_CPZX2HK_DEV 的 partion=0 的 partion 上的最新的消费到的位移位置是 18.
 
 ### 检查各个消费者情况
 `kafka-run-class.sh kafka.admin.ConsumerGroupCommand --bootstrap-server localhost:9092 --group bj --describe`
