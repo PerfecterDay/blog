@@ -103,7 +103,7 @@ definitionHolder =AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, defi
 在处理 `BeanDefinition` 的时候就会生成一个 `beanClass` 属性改为 `ScopedProxyFactoryBean` 的代理类型的 bean。 而将原始的 baan 改名为 `scopedTarget.xxx` 。
 <center><img src="pics/refreshScope1.png" alt=""></center>
 
-更进一步， `GenericScope` 类会进一步将 beanClass 改为 `GenericScope.LockedScopedProxyFactoryBean` 的类型。至此完成偷天换日。
+更进一步， `GenericScope` 作为 `BeanDefinitionRegistryPostProcessor` 实例会进一步将 beanClass 改为 `GenericScope.LockedScopedProxyFactoryBean` 的类型。至此完成偷天换日。
 ```
 @Override
 public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
@@ -129,6 +129,8 @@ public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) t
 ```
 GenericScope.LockedScopedProxyFactoryBean -> ScopedProxyFactoryBean
 
+private final SimpleBeanTargetSource scopedTargetSource = new SimpleBeanTargetSource();
+
 @Override
 public void setBeanFactory(BeanFactory beanFactory) {
     if (!(beanFactory instanceof ConfigurableBeanFactory cbf)) {
@@ -138,7 +140,7 @@ public void setBeanFactory(BeanFactory beanFactory) {
 
     ProxyFactory pf = new ProxyFactory();
     pf.copyFrom(this);
-    pf.setTargetSource(this.scopedTargetSource);
+    pf.setTargetSource(this.scopedTargetSource); //设置 TargetSource 为 SimpleBeanTargetSource
 
     Assert.notNull(this.targetBeanName, "Property 'targetBeanName' is required");
     Class<?> beanType = beanFactory.getType(this.targetBeanName);

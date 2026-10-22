@@ -355,6 +355,7 @@ HttpServiceProxyFactory httpServiceProxyFactory = HttpServiceProxyFactory
 return httpServiceProxyFactory.createClient(ISmsClient.class);
 ```
 
+当使用 JDK 内置的 `HttpClient` 时，如果需要忽略 host 的匹配检查，只能在启动命令行添加 `-Djdk.internal.httpclient.disableHostnameVerification=true` 。
 
 ## HTTP Service Client-OpenFeign 的替代
 > https://docs.spring.io/spring-framework/reference/integration/rest-clients.html#rest-http-service-client
@@ -476,6 +477,30 @@ public interface ISprintClient {
 			.map(FaultVO::getCode)
 			.filter(code -> code == 7006)
 			.isPresent();
+}
+```
+
+### 分组配置
+如果有多个 `@HttpExchange` 接口，可以使用 `@ImportHttpServices` 注解将它们分组，然后在 `RestClientHttpServiceGroupConfigurer` 中进行统一配置：
+```
+@Configuration
+@ImportHttpServices(group = "echo", types = {EchoServiceA.class, EchoServiceB.class})
+@ImportHttpServices(group = "greeting", basePackageClasses = GreetServiceA.class)
+public class ClientConfig {
+
+	@Bean
+	public RestClientHttpServiceGroupConfigurer groupConfigurer() {
+		return groups -> {
+			// configure client for group "echo"
+			groups.filterByName("echo").forEachClient((group, clientBuilder) -> ...);
+
+			// configure the clients for all groups
+			groups.forEachClient((group, clientBuilder) -> ...);
+
+			// configure client and proxy factory for each group
+			groups.forEachGroup((group, clientBuilder, factoryBuilder) -> ...);
+		};
+	}
 }
 ```
 
