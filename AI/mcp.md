@@ -2,7 +2,7 @@
 {docsify-updated}
 
 > https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro
-
+> [寻找MCP](https://registry.modelcontextprotocol.io/)
 
 ## 什么是 MCP
 MCP（模型上下文协议）是一项用于将**人工智能应用**与**外部系统**连接的开源标准。  
@@ -59,3 +59,19 @@ npx @modelcontextprotocol/inspector //启动 inspector 服务,然后在界面上
 
 npx -y @modelcontextprotocol/inspector npx -y @modelcontextprotocol/server-memory // 启动 inspector 服务并连接到 memory server
 ```
+
+### RAG vs Resource
+MCP Resource
+数据访问与暴露机制
+- 通过 URI 标识资源，例如 file:///docs/design.md 或 db://users/123。
+- MCP Client 可以通过协议读取资源内容。
+- 资源由 MCP Server 暴露，具体数据来源可以是文件、数据库或其他系统。
+- 协议本身不要求实现向量检索、语义搜索或分块索引。
+
+
+RAG
+知识检索与生成方案
+- 将文档切分为适合检索的片段。
+- 建立向量索引、全文索引或其他检索结构。
+- 根据用户问题检索相关内容，必要时进行重排。
+- 将检索结果放入 LLM 上下文，再生成答案。
