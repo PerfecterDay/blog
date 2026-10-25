@@ -42,6 +42,7 @@
   * [宏](/os/c/c-宏.md)
   * [gcc](/os/c/gcc.md)
   * [gdb](/os/c/gdb.md)
+  * [c-ABI](/os/c/c-ABI.md)
 * [musl-c](#)
   * [musl-c的编译](/os/musl-c/musl-c.md)
   * [musl-libc-start-init](/os/musl-c/musl-libc-start-init.md)
