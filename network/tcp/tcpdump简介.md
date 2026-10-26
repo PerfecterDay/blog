@@ -66,6 +66,13 @@ src > dst: flags data-seqno ack window urg <options>
 ### 实战
 `sudo tcpdump -i lo0 host localhost and port 9527 --print`
 
+```
+sudo nohup tcpdump -i any -nn -s 0 \
+  -w /root/capture.pcap \
+  'tcp port 8080 or tcp port 9000' \
+  > /root/tcpdump.log 2>&1 &
+```
+
 
 ### Wifi Mac 帧
 <center><img src="pics/wifi-frame.jpg" width="60%"></center>
