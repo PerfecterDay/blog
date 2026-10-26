@@ -27,3 +27,22 @@ Spring Cloud 致力于为典型用例提供良好的开箱即用体验，并提�
 如果你想在现有的 Spring Boot 应用中添加 Spring Cloud，第一步是确定应使用哪个版本的 Spring Cloud。应使用的版本取决于你当前使用的 Spring Boot 版本。  
 具体的Spring boot 和相关项目的版本兼容性信息可以参考： https://spring.io/projects/generations
 
+
+建议您使用 BOM（`spring-cloud-dependencies`）。这是一个仅包含 BOM 的版本，其中仅包含依赖项管理内容，不包含任何插件声明，也不直接引用 Spring 或 Spring Boot。可以使用 Spring Boot 父 POM，或者使用 Spring Boot 提供的 BOM（`spring-boot-dependencies`）来独立管理 Spring Boot 版本。
+
+与 Spring Boot 一样，许多 Spring Cloud 项目都包含启动器（starter），可以将其作为依赖项添加，从而为项目增添各种云原生功能。在许多情况下，只需将启动器添加到类路径中，即可启用诸多功能。各启动器的名称已在相应项目中进行了说明。
+
+
+## 主要的 Spring Cloud 项目
++ [Spring Cloud Config](https://spring.io/projects/spring-cloud-config)
++ [Spring Cloud Gateway](https://spring.io/projects/spring-cloud-gateway)
++ [Spring Cloud Netflix](https://spring.io/projects/spring-cloud-netflix)
++ [Spring Cloud Consul](https://spring.io/projects/spring-cloud-consul)
++ [Spring Cloud Kubernetes](https://spring.io/projects/spring-cloud-kubernetes)
++ [Spring Cloud Function](http://github.com/spring-cloud/spring-cloud-function)
++ [Spring Cloud Stream](https://spring.io/projects/spring-cloud-stream)
++ [Spring Cloud Task](https://spring.io/projects/spring-cloud-task)
++ [Spring Cloud Zookeeper](https://spring.io/projects/spring-cloud-zookeeper)
++ [Spring Cloud OpenFeign](https://spring.io/projects/spring-cloud-openfeign)
++ [Spring Cloud Bus](https://spring.io/projects/spring-cloud-bus)
++ [Spring Cloud Circuit Breaker](https://spring.io/projects/spring-cloud-circuitbreaker)
