@@ -1,10 +1,6 @@
 # wireshark 常用命令
 {docsify-updated}
 
-- [wireshark 常用命令](#wireshark-常用命令)
-  - [](#)
-
-
 1. 过滤地址
     + `ip.addr==192.168.10.10`  或  `ip.addr eq 192.168.10.10`  #过滤地址
     + `ip.src==192.168.10.10`     #过滤源地址
@@ -36,4 +32,10 @@
 
 
 ## 
-`dst host 198.18.1.227`
+```
+dst host 198.18.1.227`
+
+frame.time >= "Oct 26, 2026 16:52:29"
+&&
+frame.time <= "Oct 26, 2026 16:52:36" && (ip.addr==10.4.152.21 || ip.addr==10.5.160.98) && (tcp.port ==443 || tcp.port == 36034) && tcp.port != 36020
+```

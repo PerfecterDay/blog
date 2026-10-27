@@ -10,6 +10,7 @@
   * [Spring cloud consul 配置中心](/架构/分布式/consul/consul-config.md)
   * [Spring cloud loadbancer](./spring-cloud-loadbancer.md)
   * [Spring cloud open feign](./spring-cloud-openfeign.md)
+  * [Spring cloud circuit breaker](./spring-cloud-circuitBreaker.md)
   * [Spring cloud gateway](#)
     * [基本配置](/spring-cloud/spring-cloud-gateway.md)
     * [原理](/spring-cloud/spring-cloud-gateway原理.md)
