@@ -67,6 +67,8 @@ src > dst: flags data-seqno ack window urg <options>
 `sudo tcpdump -i lo0 host localhost and port 9527 --print`
 
 ```
+tcpdump -i any -nn -s 0 -w /tmp/https.pcap host 10.5.160.98 and tcp port 443 &
+
 sudo nohup tcpdump -i any -nn -s 0 \
   -w /root/capture.pcap \
   'tcp port 8080 or tcp port 9000' \

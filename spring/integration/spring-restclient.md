@@ -480,8 +480,41 @@ public interface ISprintClient {
 }
 ```
 
-### 分组配置
-如果有多个 `@HttpExchange` 接口，可以使用 `@ImportHttpServices` 注解将它们分组，然后在 `RestClientHttpServiceGroupConfigurer` 中进行统一配置：
+### 使用注解配置
+使用 `HttpServiceProxyFactory` 创建客户端代理非常简单，但若将其声明为 Bean，则会导致配置重复。此外，可能需要配置多个目标主机，从而需要配置多个客户端，甚至需要创建更多的客户端代理 Bean。
+
+为了更轻松地在大规模环境中处理接口客户端，Spring 框架提供了专门的配置支持。它允许应用程序专注于按组识别 HTTP 服务，并为每个组定制客户端，而框架会透明地创建一个客户端代理注册表，并将每个代理声明为 Bean。
+
+HTTP 服务组仅仅是一组共享相同客户端配置以及用于创建代理的 `HttpServiceProxyFactory` 实例的接口集合。通常，这意味着每个主机对应一个组，但若底层客户端需要不同的配置，也可以为同一目标主机设置多个组。
+
+声明 HTTP 服务组的一种方法是在 `@Configuration` 类中使用 `@ImportHttpServices` 注解，如下所示：
+```
+@Configuration
+@ImportHttpServices(group = "echo", types = {EchoServiceA.class, EchoServiceB.class})
+@ImportHttpServices(group = "echo2", types = {EchoServiceA.class})
+@ImportHttpServices(group = "greeting", basePackageClasses = GreetServiceA.class)
+public class ClientConfig {
+}
+```
+
+或者也可以使用编程的方式：
+```
+public class MyHttpServiceRegistrar extends AbstractHttpServiceRegistrar {
+
+	@Override
+	protected void registerHttpServices(GroupRegistry registry, AnnotationMetadata metadata) {
+		registry.forGroup("echo").register(EchoServiceA.class, EchoServiceB.class);
+		registry.forGroup("greeting").detectInBasePackages(GreetServiceA.class);
+	}
+}
+
+@Configuration
+@Import(MyHttpServiceRegistrar.class)
+public class ClientConfig {
+}
+```
+
+声明 HTTP 服务组后，请添加一个 `HttpServiceGroupConfigurer` Bean 来为每个组自定义客户端。例如：
 ```
 @Configuration
 @ImportHttpServices(group = "echo", types = {EchoServiceA.class, EchoServiceB.class})
@@ -503,6 +536,40 @@ public class ClientConfig {
 	}
 }
 ```
+
+然后直接就可以注入使用了：
+```
+@Service
+public class MyService {
+
+	private final EchoServiceA echoServiceA;
+
+	public MyService(EchoServiceA echoServiceA) {
+		this.echoServiceA = echoServiceA;
+	}
+
+	public void doSomething() {
+		echoServiceA.echo();
+	}
+}
+```
+
+但是，如果存在多个同类型的客户端代理（例如，多个组中存在相同的接口），则该类型不存在唯一的 Bean，因此无法仅通过类型进行自动注入。对于此类情况，可以直接使用存储所有代理的 `HttpServiceProxyRegistry` ，并按组获取所需的代理：
+```
+@RestController
+public class EchoController {
+	private final EchoService echoService1;
+	private final EchoService echoService2;
+
+	public EchoController(HttpServiceProxyRegistry registry) {
+		this.echoService1 = registry.getClient("echo1", EchoService.class);
+		this.echoService2 = registry.getClient("echo2", EchoService.class);
+	}
+}
+```
+
+### Springboot 中的支持
+
 
 ### 注解
 1. `AppResponse unTrust(@RequestParam(name = "acct") String acct);` ：使用 `@RequestParam` 注解时必须使用 `name=xxx` 属性显式指明参数名，如果不想显式指定 `AppResponse unTrust(@RequestParam String acct);` 则需要 `javac -parameters` 
