@@ -480,6 +480,102 @@ public interface ISprintClient {
 }
 ```
 
+### 方法参数
++ `URI`
++ `UriBuilderFactory`
++ `HttpMethod`
++ `@RequestHeader`
++ `@PathVariable`
++ `@RequestAttribute`
++ `@RequestBody`
++ `@RequestParam`
++ `@RequestPart`
++ `MultipartFile`
++ `@CookieValue`
+
+除非将 `required` 属性（若参数注解中提供该属性）设置为 `false` ，或者该参数被标记为可选（由 `MethodParameter#isOptional` 确定），否则方法参数不能为 null。
+
+`RestClientAdapter` 为类型为 `StreamingHttpOutputMessage.Body` 的方法参数提供了额外支持，允许通过向 `OutputStream` 写入数据来发送请求正文。
+
+### Custom Arguments
+可以配置一个自定义的 `HttpServiceArgumentResolver` 。下面的示例接口使用了一个自定义的 `Search` 方法参数类型：
+
+```
+public interface RepositoryService {
+	@GetExchange("/repos/search")
+	List<Repository> searchRepository(Search search);
+}
+
+static class SearchQueryArgumentResolver implements HttpServiceArgumentResolver {
+	@Override
+	public boolean resolve(Object argument, MethodParameter parameter, HttpRequestValues.Builder requestValues) {
+		if (parameter.getParameterType().equals(Search.class)) {
+			Search search = (Search) argument;
+			requestValues.addRequestParameter("owner", search.owner());
+			requestValues.addRequestParameter("language", search.language());
+			requestValues.addRequestParameter("query", search.query());
+			return true;
+		}
+		return false;
+	}
+}
+
+
+RestClient restClient = RestClient.builder().baseUrl("https://api.github.com/").build();
+RestClientAdapter adapter = RestClientAdapter.create(restClient);
+HttpServiceProxyFactory factory = HttpServiceProxyFactory
+		.builderFor(adapter)
+		.customArgumentResolver(new SearchQueryArgumentResolver())
+		.build();
+RepositoryService repositoryService = factory.createClient(RepositoryService.class);
+
+Search search = Search.create()
+		.owner("spring-projects")
+		.language("java")
+		.query("rest")
+		.build();
+List<Repository> repositories = repositoryService.searchRepository(search);
+```
+
+### 返回值
++ `void`
++ `HttpHeaders`
++ `<T>`
++ `ResponseEntity<Void>`
++ `ResponseEntity<T>`
+
+### 错误处理
+```
+// For RestClient
+RestClient restClient = RestClient.builder()
+		.defaultStatusHandler(HttpStatusCode::isError, (request, response) -> ...)
+		.build();
+RestClientAdapter adapter = RestClientAdapter.create(restClient);
+
+// or for WebClient...
+WebClient webClient = WebClient.builder()
+		.defaultStatusHandler(HttpStatusCode::isError, resp -> ...)
+		.build();
+WebClientAdapter adapter = WebClientAdapter.create(webClient);
+```
+
+### Decorating the Adapter
+`HttpExchangeAdapter` 和 `ReactorHttpExchangeAdapter` 是用于将 HTTP 接口客户端基础设施与调用底层客户端的细节解耦的契约。它们分别提供了针对 `RestClient` 、 `WebClient` 和 `RestTemplate` 的适配器实现。
+
+有时，通过在 `HttpServiceProxyFactory.Builder` 中可配置的装饰器拦截客户端调用可能会很有用。例如，你可以应用内置装饰器来抑制 404 异常，并返回一个包含 `NOT_FOUND` 状态码且正文为空的  `ResponseEntity ：
+```
+// For RestClient
+HttpServiceProxyFactory factory = HttpServiceProxyFactory.builderFor(restClientAdapter)
+		.exchangeAdapterDecorator(NotFoundRestClientAdapterDecorator::new)
+		.build();
+
+// or for WebClient...
+HttpServiceProxyFactory proxyFactory = HttpServiceProxyFactory.builderFor(webClientAdapter)
+		.exchangeAdapterDecorator(NotFoundWebClientAdapterDecorator::new)
+		.build();
+```
+
+
 ### 使用注解配置
 使用 `HttpServiceProxyFactory` 创建客户端代理非常简单，但若将其声明为 Bean，则会导致配置重复。此外，可能需要配置多个目标主机，从而需要配置多个客户端，甚至需要创建更多的客户端代理 Bean。
 
@@ -569,7 +665,213 @@ public class EchoController {
 ```
 
 ### Springboot 中的支持
+在 Springboot 中使用 HTTP Services client 与在 Spring 中基本一致，只是在自动配置上有所不同。主要有
++ 使用 `@HttpExchange` 等声明接口
++ 使用 `@ImportHttpServices` 导入接口，也可以用前边说的编程方式
++ `spring.http.serviceclient.echo.base-url=https://echo.zuplo.io` 使用springboot 配置配置相关信息
+  ```
+    spring.http.clients.connect-timeout=2s
+	spring.http.clients.read-timeout=1s
+	spring.http.clients.redirects=dont-follow
 
+	spring.http.serviceclient.echo.base-url=https://echo.zuplo.io
+	spring.http.serviceclient.echo.connect-timeout=2s
+	spring.http.serviceclient.echo.read-timeout=2s
+  ```
++ 如果需要自定义配置，可以使用 `RestClientHttpServiceGroupConfigurer/WebClientHttpServiceGroupConfigurer` 或者其它的 `HttpServiceGroupConfigurer` 实现。
+  ```
+	@Configuration(proxyBeanMethods = false)
+	public class MyHttpServiceGroupConfiguration {
+
+		@Bean
+		RestClientHttpServiceGroupConfigurer myHttpServiceGroupConfigurer() {
+			return (groups) -> groups.forEachClient((group, clientBuilder) -> {
+				String groupName = group.name();
+				clientBuilder.defaultHeader("service-group", groupName);
+			});
+		}
+
+	}
+  ```
 
 ### 注解
 1. `AppResponse unTrust(@RequestParam(name = "acct") String acct);` ：使用 `@RequestParam` 注解时必须使用 `name=xxx` 属性显式指明参数名，如果不想显式指定 `AppResponse unTrust(@RequestParam String acct);` 则需要 `javac -parameters` 
+
+
+## 原理
+`HttpServiceProxyFactory` 中的主要方法：
+```
+public <S> S createClient(Class<S> serviceType) {
+	List<HttpServiceMethod> httpServiceMethods =
+			MethodIntrospector.selectMethods(serviceType, this::isExchangeMethod).stream()
+					.map(method -> createHttpServiceMethod(serviceType, method))
+					.toList();
+
+	return getProxy(serviceType, httpServiceMethods);
+}
+
+private <S> HttpServiceMethod createHttpServiceMethod(Class<S> serviceType, Method method) {
+	Assert.notNull(this.argumentResolvers,
+			"No argument resolvers: afterPropertiesSet was not called");
+
+	return new HttpServiceMethod(
+			method, serviceType, this.argumentResolvers, this.requestValuesProcessor,
+			this.exchangeAdapter, this.embeddedValueResolver);
+}
+
+@SuppressWarnings("unchecked")
+private <S> S getProxy(Class<S> serviceType, List<HttpServiceMethod> httpServiceMethods) {
+	MethodInterceptor interceptor = new HttpServiceMethodInterceptor(httpServiceMethods);
+	ProxyFactory factory = new ProxyFactory(serviceType, interceptor);
+	for (ProxyFactoryCustomizer customizer : this.proxyFactoryCustomizers) {
+		customizer.customize(factory, serviceType);
+	}
+	return (S) factory.getProxy(serviceType.getClassLoader());
+}
+```
+
+可以看出就是创建了 `HttpServiceMethod` 的实例，并且用其作为代理增强 `HttpServiceMethodInterceptor` 的初始化。然后，使用 `ProxyFactory` 生成了代理对象。如果配置了 `ProxyFactoryCustomizer` 还会调用其 `customize` 方法。
+
+`HttpServiceMethodInterceptor` 的 `invoke` 方法如下：
+```
+@Override
+public @Nullable Object invoke(MethodInvocation invocation) throws Throwable {
+	Method method = invocation.getMethod();
+	HttpServiceMethod httpServiceMethod = this.httpServiceMethods.get(method);
+	if (httpServiceMethod != null) {
+		@Nullable Object[] arguments = KotlinDetector.isSuspendingFunction(method) ?
+				resolveCoroutinesArguments(invocation.getArguments()) : invocation.getArguments();
+		return httpServiceMethod.invoke(arguments);
+	}
+	if (method.isDefault()) {
+		if (invocation instanceof ReflectiveMethodInvocation reflectiveMethodInvocation) {
+			Object proxy = reflectiveMethodInvocation.getProxy();
+			return InvocationHandler.invokeDefault(proxy, method, invocation.getArguments());
+		}
+	}
+	throw new IllegalStateException("Unexpected method invocation: " + method);
+}
+```
+
+可以看出，最后还是委托 `HttpServiceMethod` 的 `invoke` 方法实现功能。
+```
+final class HttpServiceMethod {
+
+	private static final boolean REACTOR_PRESENT =
+			ClassUtils.isPresent("reactor.core.publisher.Mono", HttpServiceMethod.class.getClassLoader());
+
+	private final Method method;
+	private final MethodParameter[] parameters;
+	private final List<HttpServiceArgumentResolver> argumentResolvers;
+	private final HttpRequestValues.Processor requestValuesProcessor;
+	private final HttpRequestValuesInitializer requestValuesInitializer;
+	private final ResponseFunction responseFunction;
+
+	HttpServiceMethod(
+			Method method, Class<?> serviceType, List<HttpServiceArgumentResolver> argumentResolvers,
+			HttpRequestValues.Processor valuesProcessor, HttpExchangeAdapter adapter,
+			@Nullable StringValueResolver embeddedValueResolver) {
+
+		this.method = method;
+		this.parameters = initMethodParameters(method);
+		this.argumentResolvers = argumentResolvers;
+		this.requestValuesProcessor = valuesProcessor;
+
+		boolean isReactorAdapter = (REACTOR_PRESENT && adapter instanceof ReactorHttpExchangeAdapter);
+
+		this.requestValuesInitializer =
+				HttpRequestValuesInitializer.create(
+						method, serviceType, embeddedValueResolver,
+						(isReactorAdapter ? ReactiveHttpRequestValues::builder : HttpRequestValues::builder));
+
+		this.responseFunction = (isReactorAdapter ?
+				ReactorExchangeResponseFunction.create((ReactorHttpExchangeAdapter) adapter, method, serviceType) :
+				ExchangeResponseFunction.create(adapter, method, serviceType));
+	}
+
+	public @Nullable Object invoke(@Nullable Object[] arguments) {
+		HttpRequestValues.Builder requestValues = this.requestValuesInitializer.initializeRequestValuesBuilder();
+		applyArguments(requestValues, arguments);
+		this.requestValuesProcessor.process(this.method, this.parameters, arguments, requestValues);
+		return this.responseFunction.execute(requestValues.build());
+	}
+}	
+```
+
+`HttpExchangeAdapter` 正是我们在配置 `HttpServiceProxyFactory` 时创建的：
+```
+HttpServiceProxyFactory httpServiceProxyFactory
+                = HttpServiceProxyFactory.builderFor(RestClientAdapter.create(restClient))
+                .build();
+```
+
+常见的 `HttpExchangeAdapter` 有:
++ `RestClientAdapter`
++ `WebClientAdapter`
++ `RestTemplateAdapter`
+
+这里使用了适配器模式， 比如 `RestClientAdapter` 实现了 `HttpExchangeAdapter` 接口，但是 `RestClient` 没有实现任何接口。`RestClientAdapter` 底层就是将 `RestClient` 的功能适配成 `HttpExchangeAdapter` 需要的形式。
+
+`HttpServiceArgumentResolver/HttpRequestValues.Processor` 等能够处理请求请求对象的类也是在 `HttpServiceMethod` 中发挥作用的。
+
+此外，这套体系中还使用了装饰器模式： `HttpExchangeAdapterDecorator` :
+```
+public class HttpExchangeAdapterDecorator implements HttpExchangeAdapter {
+
+	private final HttpExchangeAdapter delegate;
+
+
+	public HttpExchangeAdapterDecorator(HttpExchangeAdapter delegate) {
+		this.delegate = delegate;
+	}
+
+
+	/**
+	 * Return the wrapped delegate {@code HttpExchangeAdapter}.
+	 */
+	public HttpExchangeAdapter getHttpExchangeAdapter() {
+		return this.delegate;
+	}
+
+
+	@Override
+	public boolean supportsRequestAttributes() {
+		return this.delegate.supportsRequestAttributes();
+	}
+
+	@Override
+	public void exchange(HttpRequestValues requestValues) {
+		this.delegate.exchange(requestValues);
+	}
+
+	@Override
+	public HttpHeaders exchangeForHeaders(HttpRequestValues requestValues) {
+		return this.delegate.exchangeForHeaders(requestValues);
+	}
+
+	@Override
+	public <T> @Nullable T exchangeForBody(HttpRequestValues requestValues, ParameterizedTypeReference<T> bodyType) {
+		return this.delegate.exchangeForBody(requestValues, bodyType);
+	}
+
+	@Override
+	public ResponseEntity<Void> exchangeForBodilessEntity(HttpRequestValues requestValues) {
+		return this.delegate.exchangeForBodilessEntity(requestValues);
+	}
+
+	@Override
+	public <T> ResponseEntity<T> exchangeForEntity(HttpRequestValues requestValues, ParameterizedTypeReference<T> bodyType) {
+		return this.delegate.exchangeForEntity(requestValues, bodyType);
+	}
+
+}
+```
+默认的 `HttpExchangeAdapterDecorator` 装饰器没有增加任何功能，只是调用被装饰的 `HttpExchangeAdapter delegate` 的方法。但是如果需要增加额外功能，可以重写对应的方法实现自定义逻辑，比如常见的实现有：
++ `CircuitBreakerAdapterDecorator` : 使用 `CircuitBreaker` 实现了熔断降级的功能
++ `NotFoundRestClientAdapterDecorator` ： 包装了 404 错误处理
++ `ReactiveCircuitBreakerAdapterDecorator` 
++ `ReactorHttpExchangeAdapterDecorator` 
+
+
+在 `pring-cloud-circuitBreaker` 中会沿着以下路径增加 `CircuitBreakerAdapterDecorator` 装饰器：
+`CommonsClientAutoConfiguration` ---> `CircuitBreakerRestClientHttpServiceGroupConfigurer`  ---> `CircuitBreakerAdapterDecorator` 
