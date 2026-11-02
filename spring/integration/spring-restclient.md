@@ -668,7 +668,7 @@ public class EchoController {
 在 Springboot 中使用 HTTP Services client 与在 Spring 中基本一致，只是在自动配置上有所不同。主要有
 + 使用 `@HttpExchange` 等声明接口
 + 使用 `@ImportHttpServices` 导入接口，也可以用前边说的编程方式
-+ `spring.http.serviceclient.echo.base-url=https://echo.zuplo.io` 使用springboot 配置配置相关信息
++ 使用springboot 配置配置相关信息
   ```
     spring.http.clients.connect-timeout=2s
 	spring.http.clients.read-timeout=1s
