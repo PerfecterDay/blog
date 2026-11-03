@@ -4,5 +4,7 @@
   * [监督学习](/AI/监督学习.md)
   * [spring-ai](/AI/spring-ai.md)
   * [spring-ai-demo分析](/AI/spring-ai-demo分析.md)
-  * [mcp](/AI/mcp.md)
+  * [mcp](#)
+    * [mcp入门](/AI/mcp/mcp.md)
+    * [mcp实战](/AI/mcp/mcp-实战.md)
   * [skill](/AI/skill.md)

@@ -693,6 +693,7 @@ public class EchoController {
 
 	}
   ```
+注意，使用以上配置时必须引入 `org.springframework.boot:spring-boot-restclient` 依赖， `HttpServiceClientAutoConfiguration` 会自动配置 `RestClient` 相关的属性。
 
 ### 注解
 1. `AppResponse unTrust(@RequestParam(name = "acct") String acct);` ：使用 `@RequestParam` 注解时必须使用 `name=xxx` 属性显式指明参数名，如果不想显式指定 `AppResponse unTrust(@RequestParam String acct);` 则需要 `javac -parameters` 
@@ -871,6 +872,9 @@ public class HttpExchangeAdapterDecorator implements HttpExchangeAdapter {
 + `NotFoundRestClientAdapterDecorator` ： 包装了 404 错误处理
 + `ReactiveCircuitBreakerAdapterDecorator` 
 + `ReactorHttpExchangeAdapterDecorator` 
+
+
+`@ImportHttpServices` 使用 `@Import(ImportHttpServiceRegistrar.class)` 导入了 `ImportHttpServiceRegistrar` , 该类继承自 `AbstractHttpServiceRegistrar` , 跟踪它的 `registerBeanDefinitions` 方法。
 
 
 在 `pring-cloud-circuitBreaker` 中会沿着以下路径增加 `CircuitBreakerAdapterDecorator` 装饰器：

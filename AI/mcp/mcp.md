@@ -75,3 +75,22 @@ RAG
 - 建立向量索引、全文索引或其他检索结构。
 - 根据用户问题检索相关内容，必要时进行重排。
 - 将检索结果放入 LLM 上下文，再生成答案。
+
+## 使用
+```
+{
+  "mcpServers": {
+    "gitlab": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@zereight/mcp-gitlab@latest"
+      ],
+      "env": {
+        "GITLAB_PERSONAL_ACCESS_TOKEN": "xxxxx",
+        "GITLAB_API_URL": "https://gitlab.demo.com.cn/api/v4",
+      }
+    }
+  }
+}
+```
