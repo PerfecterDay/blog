@@ -240,19 +240,28 @@ acceptCount-等待队列长度（连接请求排队数）-------> 100
 
 ```
 
+根据选用的容器，Springboot 有针对更具体的容器配置类：
++ `TomcatServerProperties`
++ `JettyServerProperties`
++ `UndertowServerProperties`
+
+
 可以通过以下配置项修改：
 ```
 server:
   tomcat:
-    maxConnections: 100   # 同时允许100个TCP连接
-    acceptCount: 5        # 超出maxConnections时，最多再排队5个
+	connection-timeout: 20s  # 服务端 TCP 连接建立后，等待客户端发送 HTTP 请求数据最多等待30s，30s 未收到 http请求就关闭连接。
+    keep-alive-timeout: 30s  # 一个 HTTP 请求处理完成后，等待同一 TCP 连接上的下一个 HTTP 请求的超时时间。如果1m没有新的请求，就会断开连接
+    max-keep-alive-requests: 1000  # 一个TCP连接最多处理1000个 http 请求
+    max-connections: 100   # 同时允许100个TCP连接
+    accept-count: 5        # 超出maxConnections时，最多再排队5个
     threads:
       max: 5              # 同时能处理的请求线程只有 5 个
-      minSpare: 3
+      min-spare: 3
   http2: enabled          # 启用 http2
   ssl:
-	keyStore: classpath:spring.keystore
-	keyStorePassword: 123456
+	key-store: classpath:spring.keystore
+	key-store-password: 123456
 ```
 按照上述配置假设同时有500个并发请求过来：
 + 前 100 个请求 会被 Tomcat 接受建立连接（TCP accepted）

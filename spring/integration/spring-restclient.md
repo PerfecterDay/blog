@@ -873,9 +873,128 @@ public class HttpExchangeAdapterDecorator implements HttpExchangeAdapter {
 + `ReactiveCircuitBreakerAdapterDecorator` 
 + `ReactorHttpExchangeAdapterDecorator` 
 
+### ImportHttpServices 注解自动配置的原理
 
 `@ImportHttpServices` 使用 `@Import(ImportHttpServiceRegistrar.class)` 导入了 `ImportHttpServiceRegistrar` , 该类继承自 `AbstractHttpServiceRegistrar` , 跟踪它的 `registerBeanDefinitions` 方法。
 
+```
+@Override
+public final void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry beanRegistry) {
+	registerHttpServices(new DefaultGroupRegistry(), metadata); //收集 @ImportHttpServices 注解中的信息
 
+	if (this.groupsMetadata.isEmpty()) {
+		return;
+	}
+
+	RootBeanDefinition proxyRegistryBeanDef = createOrGetRegistry(beanRegistry); //注册 HttpServiceProxyRegistryFactoryBean
+	mergeGroups(proxyRegistryBeanDef);
+
+	// 注册HttpServiceClient的bean
+	this.groupsMetadata.forEachRegistration((groupName, types) -> types.forEach(type -> {
+		RootBeanDefinition proxyBeanDef = new RootBeanDefinition();
+		proxyBeanDef.setBeanClassName(type);
+		proxyBeanDef.setAttribute(HTTP_SERVICE_GROUP_NAME_ATTRIBUTE, groupName);
+		proxyBeanDef.setInstanceSupplier(() -> getProxyInstance(groupName, type));
+		String beanName = (groupName + "#" + type);
+		if (!beanRegistry.containsBeanDefinition(beanName)) {
+			beanRegistry.registerBeanDefinition(beanName, proxyBeanDef);
+		}
+	}));
+}
+```
+
+首先，会在容器中注册一个 `HTTP_SERVICE_PROXY_REGISTRY_BEAN_NAME = "httpServiceProxyRegistry"` 的 bean: 
+```
+private RootBeanDefinition createOrGetRegistry(BeanDefinitionRegistry beanRegistry) {
+	if (!beanRegistry.containsBeanDefinition(HTTP_SERVICE_PROXY_REGISTRY_BEAN_NAME)) {
+		RootBeanDefinition proxyRegistryBeanDef = new RootBeanDefinition();
+		proxyRegistryBeanDef.setBeanClass(HttpServiceProxyRegistryFactoryBean.class);
+		ConstructorArgumentValues args = proxyRegistryBeanDef.getConstructorArgumentValues();
+		args.addIndexedArgumentValue(0, new GroupsMetadata());
+		beanRegistry.registerBeanDefinition(HTTP_SERVICE_PROXY_REGISTRY_BEAN_NAME, proxyRegistryBeanDef);
+		return proxyRegistryBeanDef;
+	}
+	else {
+		return (RootBeanDefinition) beanRegistry.getBeanDefinition(HTTP_SERVICE_PROXY_REGISTRY_BEAN_NAME);
+	}
+}
+```
+
+看一下 `HttpServiceProxyRegistryFactoryBean` 的 `afterPropertiesSet` 方法：
+```
+@Override
+public void afterPropertiesSet() {
+	...
+	// Create the groups from the metadata
+	Set<ConfigurableGroup> groups = this.groupsMetadata.groups(this.beanClassLoader).stream()
+			.map(group -> new ConfigurableGroup(group, this.embeddedValueResolver))
+			.collect(Collectors.toSet());
+
+	// Apply group configurers
+	groupAdapters.forEach((clientType, groupAdapter) ->
+			this.applicationContext.getBeanProvider(groupAdapter.getConfigurerType())
+					.orderedStream()
+					.forEach(configurer -> configurer.configureGroups(new DefaultGroups<>(groups, clientType))));
+
+	// Create proxies
+	Map<String, Map<Class<?>, Object>> proxies = groups.stream()
+			.collect(Collectors.toMap(ConfigurableGroup::name, ConfigurableGroup::createProxies));
+
+	this.proxyRegistry = new DefaultHttpServiceProxyRegistry(proxies);
+}
+```
+
+`HttpServiceProxyRegistryFactoryBean` 在类加载的时候会加载对应的 `HttpServiceGroupAdapter` :
+```
+static Map<HttpServiceGroup.ClientType, HttpServiceGroupAdapter<?>> initGroupAdapters() {
+	Map<HttpServiceGroup.ClientType, HttpServiceGroupAdapter<?>> map = new LinkedHashMap<>(2);
+	addGroupAdapter(map, HttpServiceGroup.ClientType.REST_CLIENT, REST_CLIENT_HTTP_SERVICE_GROUP_ADAPTER);
+	addGroupAdapter(map, HttpServiceGroup.ClientType.WEB_CLIENT, WEB_CLIENT_HTTP_SERVICE_GROUP_ADAPTER);
+	return map;
+}
+```
+会尝试加载 `org.springframework.web.client.support.RestClientHttpServiceGroupAdapter` 和 `org.springframework.web.reactive.function.client.support.WebClientHttpServiceGroupAdapter` ，如果加载成功，就加入 `groupAdapters` MAP 中。 `RestClientHttpServiceGroupAdapter` 会关联上 `RestClientHttpServiceGroupConfigurer` ， `WebClientHttpServiceGroupAdapter` 会关联上 `WebClientHttpServiceGroupConfigurer` 。
+
+所以在 Apply group configurers 这一步，会根据 `groupAdapter` 的类型，获取到对应的 `Configurer` , 然后调用 `configureGroups` 方法对 `groups` 进行配置。举例来说，就是 `REST_CLIENT` 类型，会获取容器中所有 `RestClientHttpServiceGroupConfigurer` 类型 bean , 然后调用 `configurer.configureGroups(groups)` 方法对 `groups` 进行配置。这也解释了前文说的注册一个 `RestClientHttpServiceGroupConfigurer` bean 就能够进行配置的原因。
+
+最后，调用 `ConfigurableGroup::createProxies` 创建代理对象保存到 Map 中：
+```
+public Map<Class<?>, Object> createProxies() {
+	Map<Class<?>, Object> map = new LinkedHashMap<>(this.group.httpServiceTypes().size());
+	HttpExchangeAdapter adapter = this.groupAdapter.createExchangeAdapter(getClientBuilder());
+	HttpServiceProxyFactory factory = this.proxyFactoryBuilder.exchangeAdapter(adapter).build();
+	this.group.httpServiceTypes().forEach(type -> map.put(type, factory.createClient(type)));
+	return map;
+}
+```
+
+最终将创建好的代理对象保存到 `proxyRegistry` 中。
+
+再回到 `AbstractHttpServiceRegistrar` 中：
+```
+// 注册HttpServiceClient的bean
+this.groupsMetadata.forEachRegistration((groupName, types) -> types.forEach(type -> {
+	RootBeanDefinition proxyBeanDef = new RootBeanDefinition();
+	proxyBeanDef.setBeanClassName(type);
+	proxyBeanDef.setAttribute(HTTP_SERVICE_GROUP_NAME_ATTRIBUTE, groupName);
+	proxyBeanDef.setInstanceSupplier(() -> getProxyInstance(groupName, type));
+	String beanName = (groupName + "#" + type);
+	if (!beanRegistry.containsBeanDefinition(beanName)) {
+		beanRegistry.registerBeanDefinition(beanName, proxyBeanDef);
+	}
+}));
+```
+
+会为每个group代理对象注册一个 bean 定义，bean 的名称为 `groupName + "#" + type` , bean 的类型为 `type` , bean 的实例化逻辑为 `() -> getProxyInstance(groupName, type)`：
+```
+private Object getProxyInstance(String groupName, String httpServiceType) {
+	Assert.state(this.beanFactory != null, "BeanFactory has not been set");
+	HttpServiceProxyRegistry registry = this.beanFactory.getBean(HTTP_SERVICE_PROXY_REGISTRY_BEAN_NAME, HttpServiceProxyRegistry.class);
+	return registry.getClient(groupName, ClassUtils.resolveClassName(httpServiceType, this.beanClassLoader));
+}
+```
+
+
+### spring-cloud-circuitBreaker 集成
 在 `pring-cloud-circuitBreaker` 中会沿着以下路径增加 `CircuitBreakerAdapterDecorator` 装饰器：
 `CommonsClientAutoConfiguration` ---> `CircuitBreakerRestClientHttpServiceGroupConfigurer`  ---> `CircuitBreakerAdapterDecorator` 

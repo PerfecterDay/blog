@@ -1,17 +1,6 @@
 # Springboot 启动原理-run方法及扩展点
 {docsify-updated}
 
-- [Springboot 启动原理-run方法及扩展点](#springboot-启动原理-run方法及扩展点)
-  - [扩展点](#扩展点)
-    - [SpringApplicationRunListener](#springapplicationrunlistener)
-    - [ApplicationContextInitializer](#applicationcontextinitializer)
-    - [ApplicationRunner 和 CommandLineRunner](#applicationrunner-和-commandlinerunner)
-      - [ApplicationRunner](#applicationrunner)
-      - [CommandLineRunner](#commandlinerunner)
-      - [自定义添加 Runner](#自定义添加-runner)
-    - [测试代码](#测试代码)
-  - [通过 SpringApplication 的 setXXX() 方法自定义 SpringApplication](#通过-springapplication-的-setxxx-方法自定义-springapplication)
-  - [Headless 模式](#headless-模式)
 
 实例化了 `SpringApplication` 对象之后，紧接着就是调用了 `run()` 方法：
 <center><img src="pics/springapplication-run.png" width="70%"></center>
