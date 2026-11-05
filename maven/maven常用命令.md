@@ -77,6 +77,20 @@
   </build>
   ```
 
+5. 指定maven打包后的文件名
+  ```
+  <build>
+    <finalName>my-project</finalName>
+  </build>
+  ```
+  如果想在打包时通过命令行指定，可以在pom 中配置：
+  ```
+  <build>
+    <finalName>${buildName}</finalName>
+  </build>
+  ```
+  然后在打包时通过 `-DbuildName=my-project` 指定，这样就不需要每次修改pom 文件了
+
 ## maven 问题
 1. 有时候使用 https 时会遇到如下错误：`sun.security.validator.ValidatorException: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target`
 

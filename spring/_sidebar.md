@@ -96,6 +96,7 @@
     * [Spring 数据库初始化](/spring/data-access/spring-数据库初始化.md)
 * [Spring MVC](#)
   * [JavaEE](#)
+    * [Tomcat 线程模型](/spring/spring_mvc/javaee/tomcat线程模型.md)
     * [Web程序基本结构](/spring/spring_mvc/javaee/javaEE基础之Web程序基本结构.md)
     * [Filter](/spring/spring_mvc/javaee/javaEE基础之Filter.md)
     * [Listener](/spring/spring_mvc/javaee/javaEE基础之Listener.md)

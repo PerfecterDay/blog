@@ -230,21 +230,25 @@ Springboot 中使用 `ServletWebServerFactoryAutoConfiguration/DispatcherServlet
 
 ### Springboot 内置容器配置
 > https://docs.spring.io/spring-boot/docs/2.0.9.RELEASE/reference/html/howto-embedded-web-servers.html
-
-默认配置如下（`org.springframework.boot.autoconfigure.web.ServerProperties`）：
-```
-maxConnections - 最大连接数 -----> 8192
-maxThreads-最大工作线程数（最大并发请求数） ---> 200
-minSpareThreads-预创建的空闲线程数 -----> 10
-acceptCount-等待队列长度（连接请求排队数）-------> 100
-
-```
+`org.springframework.boot.autoconfigure.web.ServerProperties`
 
 根据选用的容器，Springboot 有针对更具体的容器配置类：
 + `TomcatServerProperties`
 + `JettyServerProperties`
 + `UndertowServerProperties`
 
+`TomcatServerProperties` 的部分默认配置如下：
+```
+	private int maxConnections = 8192;
+	private int acceptCount = 100;
+	private @Nullable Duration keepAliveTimeout; //未设置，使用
+	private int maxKeepAliveRequests = 100;
+	private @Nullable Duration connectionTimeout;
+Thread:
+	private int max = 200;
+	private int minSpare = 10;
+	private int maxQueueCapacity = 2147483647;
+```
 
 可以通过以下配置项修改：
 ```

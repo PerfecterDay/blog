@@ -4,9 +4,17 @@
 > https://www.ruanyifeng.com/blog/2016/03/systemd-tutorial-commands.html  
 > https://www.ruanyifeng.com/blog/2016/03/systemd-tutorial-part-two.html
 
+`systemd` 中需要区分两个概念：
+- 安装（Installed）：存在 .service 文件。
+- 启用（Enabled）：配置了开机启动依赖关系
 
++ `systemctl is-enabled nginx` : 查看是否配置了自启动
++ `systemctl enable nginx` : 配置自启动
++ `systemctl disable nginx` : 取消自启动
+
+## 配置开机自启动
 1. 创建一个Systemd服务单元文件,即在 `/etc/systemd/system/` 目录下创建一个以 `demo-thrift-proxy.service` 的文件
-2. 修改 `/root/demo-thrift-proxy/start.sh` ：加上 `cd /root/demo-thrift-proxy` 。 systemd 默认的执行路径不是脚本所在的路径， `java -jar xxx.jar` 会找不到
+2. 修改 `/root/demo-thrift-proxy/start.sh` ：加上 `cd /root/demo-thrift-proxy` , systemd 默认的执行路径不是脚本所在的路径， `java -jar xxx.jar` 会找不到
 3. 
 ```
 [Unit]

@@ -1,7 +1,7 @@
 # vim 手册
 {docsify-updated}
 
-<center><img src="pics/vim.png" width="80%"></center>
+<center><img src="pics/vim-commands_CN.png" width="60%"></center>
 
 Mac 下可以使用 vimtutor 学习 vim。 直接在终端输入命令 vimtutor 即可。
 
