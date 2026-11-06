@@ -128,3 +128,23 @@ public class NettyModel {
 ```
 
 Netty 也可以通过 EventExecutorGroup 把 Handler 转移到独立业务线程池中执行；Tomcat 也支持 Servlet 异步处理。因此，这里比较的是两者的默认调度模型，而不是它们全部的能力。
+
+## tomcat 相关底层配置
+```
+org.apache.catalina.startup.Tomcat
+    │
+    ▼
+org.apache.catalina.Server
+    │
+    ▼
+org.apache.catalina.Service
+    │
+    ▼
+org.apache.catalina.connector.Connector
+    │
+    ▼
+org.apache.coyote.http11.Http11NioProtocol（ProtocolHandler）
+    │
+    ▼
+org.apache.tomcat.util.net.NioEndpoint
+```

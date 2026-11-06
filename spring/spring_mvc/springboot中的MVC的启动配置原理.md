@@ -241,7 +241,7 @@ Springboot 中使用 `ServletWebServerFactoryAutoConfiguration/DispatcherServlet
 ```
 	private int maxConnections = 8192;
 	private int acceptCount = 100;
-	private @Nullable Duration keepAliveTimeout; //未设置，使用
+	private @Nullable Duration keepAliveTimeout; //未设置，使用默认值 60s
 	private int maxKeepAliveRequests = 100;
 	private @Nullable Duration connectionTimeout;
 Thread:
@@ -278,3 +278,12 @@ server:
 如果希望使用编程式的方式对Web服务器进行配置，Spring Boot则 提供了如下两种方式:  
 + 定义一个实现 `WebServerFactoryCustomizer` 接口的Bean实例。
 + 直接在容器中配置一个自定义的 `ConfigurableServletWebServerFactory` ，它负责创建Web服务器。
+
+
+`TomcatServletWebServerAutoConfiguration` 注册了两个Bean:
++ `TomcatServletWebServerFactory`
++ `TomcatServletWebServerFactoryCustomizer`
+
+同时 `import` 了 ：
++ `ServletWebServerConfiguration` : 注册`ServletWebServerFactoryCustomizer`，`WebServerFactoryCustomizerBeanPostProcessor`
++ `TomcatWebServerConfiguration`: 注册 `TomcatWebServerFactoryCustomizer`, `TomcatVirtualThreadsWebServerFactoryCustomizer`, `WebSocketTomcatWebServerFactoryCustomizer`
