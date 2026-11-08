@@ -17,7 +17,7 @@ public static ConfigurableApplicationContext run(Class<?>[] primarySources, Stri
 }
 ```
 
-SpringApplication 对象的构造过程入下：
+SpringApplication 对象的构造过程入下, 其中 `resourceLoader=null`：
 
 ```java
 public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
@@ -130,7 +130,10 @@ shared before the {@link ApplicationContext} is available.
 
 <center><img src="pics/bootstrapcontext.png" width="60%"></center>
 
-从注释及源码中可以看出 `BootstrapContext` 主要在 `ApplicationContext` 准备好之前充当容器功能使用。
+从注释及源码中可以看出 `BootstrapContext` 主要在 `ApplicationContext` 准备好之前充当容器功能使用。 
+如果要添加自定义的 `BootstrapRegistryInitializer`
++ 在应用中可以调用 `SpringApplication.addBootstrapRegistryInitializer()` 方法添加。
++ 如果是在编写一个库，就定义在 `META-INF/spring.factories` 文件中。
 
 ### ApplicationContextInitializer和ApplicationListener
 `ApplicationContextInitializer` 和 `ApplicationListener` 在后文会介绍。下边是 SpringApplication 实例化后加载到的实例：

@@ -35,10 +35,19 @@ Springboot 默认创建的 `ApplicationContext` 是 `AnnotationConfigServletWebS
 `AnnotationConfigApplicationContext`/`AnnotationConfigServletWebServerApplicationContext` 的构造函数中都会创建 `AnnotatedBeanDefinitionReader/ClassPathBeanDefinitionScanner` 来读取 `BeanDefinition` 。并且都会在构造函数中直接 `new` 这些对象：
 ```
 AnnotationConfigApplicationContext
+
+public AnnotationConfigApplicationContext(String... basePackages) {
+    this();
+    scan(basePackages);
+    refresh();
+}
+
 public AnnotationConfigApplicationContext() {
     this.reader = new AnnotatedBeanDefinitionReader(this);
     this.scanner = new ClassPathBeanDefinitionScanner(this);
 }
+
+
 
 AnnotationConfigServletWebServerApplicationContext
 public AnnotationConfigServletWebServerApplicationContext() {
@@ -130,12 +139,12 @@ public static Set<BeanDefinitionHolder> registerAnnotationConfigProcessors(
 }
 ```
 总结下来， `AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry)` 方法会视情况向 `BeanDefinitionRegistry` 中注册以下 `BeanDefinition` ：
-1. `org.springframework.context.annotation.internalConfigurationAnnotationProcessor` -> `ConfigurationClassPostProcessor` : 处理 `@Configuration` 、`@Bean` 、`@Import` 、`@ImportResource` 、`@ComponentScan` 等注解，另外会将 `@PropertySource` 注解的属性文件加载到 `Environment` 中。
+1. `org.springframework.context.annotation.internalConfigurationAnnotationProcessor` -> `ConfigurationClassPostProcessor` : 处理 `@Configuration` 的配置类，`@Bean` 、`@Import` 、`@ImportResource` 、`@ComponentScan` 等注解也会被它处理，另外会将 `@PropertySource` 注解的属性文件加载到 `Environment` 中。
 2. `org.springframework.context.annotation.internalAutowiredAnnotationProcessor` -> `AutowiredAnnotationBeanPostProcessor` : 处理 `@Autowired` 、`@Value` 、 `@Injec` 等注解
-3. `org.springframework.context.annotation.internalCommonAnnotationProcessor` -> `CommonAnnotationBeanPostProcessor` : 处理 `@Resource` 、`@PostConstruct` 、`@PreDestroy` 等注解
+3. `org.springframework.context.annotation.internalCommonAnnotationProcessor` -> `CommonAnnotationBeanPostProcessor` : 处理 `jakarta.annotation` 包下的注解， 如 `@Resource` 、`@PostConstruct` 、`@PreDestroy` 等注解
 4. `org.springframework.context.annotation.internalPersistenceAnnotationProcessor` -> `PersistenceAnnotationBeanPostProcessor` : 处理 JPA 相关注解，如果添加了 JPA 依赖
 5. `org.springframework.context.event.internalEventListenerProcessor` -> `EventListenerMethodProcessor` : 处理 `@EventListener` 注解
-6. `org.springframework.context.event.internalEventListenerFactory` -> `DefaultEventListenerFactory` : 事件监听器工厂
+6. `org.springframework.context.event.internalEventListenerFactory` -> `DefaultEventListenerFactory` : 与 `EventListenerMethodProcessor` 搭配使用支持事件机制
 
 如下图，就是在 `AbstractApplicationContext` 的 `refresh()` 开始执行时，注册的 `BeanDefinition` ：
 
@@ -146,8 +155,12 @@ public static Set<BeanDefinitionHolder> registerAnnotationConfigProcessors(
 + `CommonAnnotationBeanPostProcessor` ，是一个 `BeanPostProcessor` ，用于处理 `@Resource` 、`@PostConstruct` 、`@PreDestroy` 等注解
 + `PersistenceAnnotationBeanPostProcessor` ，是一个 `BeanPostProcessor` ，用于处理 JPA 相关注解，如果添加了 JPA 依赖
 
+其中 `ConfigurationClassPostProcessor` 是一个 `BeanFactoryPostProcessor` ,结合前文的分析， `ApplicationContext` 在 `refresh()` 时会调用 `invokeBeanFactoryPostProcessors()` 方法来调用 `BeanFactoryPostProcessor` 的 `postProcessBeanFactory()` 方法。 `ConfigurationClassPostProcessor` 的主要作用就是在 `postProcessBeanFactory()` 方法中调用 `processConfigBeanDefinitions()` 方法来处理 `@Configuration` 注解的配置类，`@Bean` 、`@Import` 、`@ImportResource` 、`@ComponentScan` 等注解也会被它处理，另外会将 `@PropertySource` 注解的属性文件加载到 `Environment` 中。处理这些注解的过程中，就会向容器中注册大量的 `BeanDefinition` 。
 
-## ConfigurationClassPostProcessor
+
+### ConfigurationClassPostProcessor
+
+`ConfigurationClassUtils` 会找出需要处理的配置类： `@Component` `@ComponentScan` `@Import` `@ImportResource` 注解的类都会被处理，另外如果 `BeanDefinitio` 中有 `@Bean` 方法也会被处理。所以， `@Component` 中的 `@Bean` 也可以注册 bean .
 
 ```
 public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPostProcessor,
@@ -169,7 +182,7 @@ ConfigurationClassPostProcessor.postProcessBeanDefinitionRegistry()
 ```
 
 
-### ConfigurationClassParser
+#### ConfigurationClassParser
 ```
 protected final @Nullable SourceClass doProcessConfigurationClass(
         ConfigurationClass configClass, SourceClass sourceClass, Predicate<String> filter)
@@ -276,7 +289,7 @@ protected final @Nullable SourceClass doProcessConfigurationClass(
 5. 处理 `@Bean` 注解
 
 
-#### @Import 注解
+##### @Import 注解
 ```
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -365,7 +378,7 @@ private void processImports(ConfigurationClass configClass, SourceClass currentS
 以上代码可以看出，分别处理了 `@Import` 导入的 `ImportSelector` 、`BeanRegistrar` 、`ImportBeanDefinitionRegistrar` 、其它 `@Configuration` 配置类的场景。
 
 
-#### ConfigurationClassParser 总结
+##### ConfigurationClassParser 总结
 `ConfigurationClassParser` 只是解析 `@Configuration` 标注的配置类，将其解析成 `ConfigurationClass` 中各个字段的配置：
 ```
 final class ConfigurationClass {
@@ -395,7 +408,7 @@ final class ConfigurationClass {
 ```
 真正从配置类 `ConfigurationClass` 对象中加载 `BeanDefinition` 到 `BeanFactory` 中的是 `ConfigurationClassBeanDefinitionReader` 。
 
-### ConfigurationClassBeanDefinitionReader
+#### ConfigurationClassBeanDefinitionReader
 `ConfigurationClassBeanDefinitionReader` 负责根据 `ConfigurationClass` 对象中的属性值，加载 `BeanDefinition` 到 `BeanFactory` 中。
 
 ```
@@ -430,7 +443,7 @@ private void loadBeanDefinitionsForConfigurationClass(
 }
 ```
 
-## Spring提供的实用工具类
+### Spring提供的实用工具类
 + `BeanDefinitionBuilder` ：Programmatic means of constructing BeanDefinitions using the builder pattern. Intended primarily for use when implementing Spring 2.0 NamespaceHandlers.
 + `ClassPathScanningCandidateComponentProvider` : 自定义的 bean 扫描器，比如 `Feign` 就是用它扫描 bean
     ```
@@ -455,8 +468,8 @@ private void loadBeanDefinitionsForConfigurationClass(
     ```
     也就是说，默认会自动扫描并注册这些注解标识的类为 Spring Bean。 使用这个工具类能方便的扫描出 classpath 下指定条件的 bean 。
 
-## 实例分析
-### ImportBeanDefinitionRegistrar 的实例
+### 实例分析
+#### ImportBeanDefinitionRegistrar 的实例
 ```
 @EnableAspectJAutoProxy → AspectJAutoProxyRegistrar
 @EnableTransactionManagement → TransactionManagementConfigurationSelector（用 ImportSelector，但底层结合 Registrar）
@@ -475,7 +488,7 @@ Spring Data 的 @Enable*Repositories → *RepositoriesRegistrar
 3. 不能在里面注册 `BeanDefinitionRegistryPostProcessor`
 4. `Registrar` 的执行时机: 它在 `BeanFactoryPostProcessor` 阶段（具体说在 `BeanDefinitionRegistryPostProcessor` 阶段）执行，早于任何 Bean 的实例化。它注册的 `BeanDefinition` 也会被后续的 `BeanFactoryPostProcessor` （比如属性占位符解析）正常处理。
 
-### @EnableFeignClients → FeignClientsRegistrar 分析
+#### @EnableFeignClients → FeignClientsRegistrar 分析
 ```
 public void registerFeignClients(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
     LinkedHashSet<BeanDefinition> candidateComponents = new LinkedHashSet<>();
@@ -573,7 +586,7 @@ private void registerFeignClient(BeanDefinitionRegistry registry, AnnotationMeta
 
 <center><img src="/pics/feignClient.png" alt=""></center>
 
-### @MapperScan → MapperScannerRegistrar 分析
+#### @MapperScan → MapperScannerRegistrar 分析
 `MapperScannerRegistrar` 的 `registerBeanDefinitions` 方法：
 ```
 void registerBeanDefinitions(AnnotationMetadata annoMeta, AnnotationAttributes annoAttrs,
@@ -633,9 +646,93 @@ public Set<BeanDefinitionHolder> doScan(String... basePackages) {
 }
 ```
 
-### 总结
+#### 总结
 通过以上两个实例，我们发现 `Feign` 和 `Mybatis` 都使用了 `ImportBeanDefinitionRegistrar` 来注册 `BeanDefinition` 到 `BeanFactory` 中。但是有一些小小的差异就是 `Feign` 在 `ImportBeanDefinitionRegistrar` 中直接扫描 `@FeignClient` 注解的类，然后生成 `BeanDefinition` 注册到 `BeanFactory` 中。  
 
 而 `Mybatis` 则是注册了一个 `MapperScannerConfigurer` 的 `BeanDefinitionRegistryPostProcessor` 类型到 `BeanFactory` 中，然后由 `MapperScannerConfigurer` 来扫描 `@Mapper` 注解的类，然后生成 `BeanDefinition` 注册到 `BeanFactory` 中。  
 
 类似地，两者都使用了工厂来创建 bean 实例，分别是用了 `FeignClientFactoryBean` 和 `MapperFactoryBean` 。
+
+### ClassPathBeanDefinitionScanner
+官方 java doc:
+```
+A bean definition scanner that detects bean candidates on the classpath, registering corresponding bean definitions with a given registry (BeanFactory or ApplicationContext).
+Candidate classes are detected through configurable type filters. The default filters include classes that are annotated or meta-annotated with Spring's @Component annotation, such as the @Repository, @Service, and @Controller stereotypes.
+```
+
+翻译过来就是会扫描类路径下 `@Component` 注解的类，将他们注册到容器中。注意， `@Component` 是 `@Repository` 、 `@Service` 、 `@Controller` 的父注解，所以默认情况下， `ClassPathBeanDefinitionScanner` 会扫描这些到注解的类。
+
+另外， `@Configuration` 注解也标注了 `@Component` 注解，所以也会被扫描并注册到容器中，这里需要强调的是： `ClassPathBeanDefinitionScanner` 负责将 `@Configuration` 注解的类注册到容器中，但是它**不会**去解析 `@Bean` 方法或 `@Import` 等注解，这是由 `ConfigurationClassPostProcessor` 负责的。 `ClassPathBeanDefinitionScanner` 负责将 `@Configuration` 注解的类注册到容器中， `ConfigurationClassPostProcessor` 从容器中找出这些类并完成上述的解析过程。
+
+
+## Springboot自动配置原理
+
+```Java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@SpringBootConfiguration
+@EnableAutoConfiguration
+@ComponentScan(excludeFilters = { @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
+		@Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
+public @interface SpringBootApplication {
+    ....
+}
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@AutoConfigurationPackage
+@Import(AutoConfigurationImportSelector.class)
+public @interface EnableAutoConfiguration {
+    ...
+}
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@Import(AutoConfigurationPackages.Registrar.class)
+public @interface AutoConfigurationPackage {
+    ....
+}
+```
+
+<center><img src="pics/process-imports.png" width="60%"></center>
+
+通过 `@SpringBootApplication`注解， `AutoConfigurationImportSelector` 和 `AutoConfigurationPackages.Registrar` 被 `@Import` 导入。
+
+Springboot 中的`AutoConfigurationImportSelector`（委托 `ImportCandidates` 真正实现）会检查发布的 jar 中的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 文件。
+
+<center><img src="pics/auto-config.png" alt=""></center>
+
+该文件应列出配置类，每行一个类名，如下例所示：
+```
+com.mycorp.libx.autoconfigure.LibXAutoConfiguration
+com.mycorp.libx.autoconfigure.LibXWebAutoConfiguration
+```
+这些类中往往使用了 `@Conditional` 等注解实现了自定义的自动配置。以下是一个简单的 Springboot 项目，导入了81 个自动配置类：
+
+<center><img src="pics/ImportCandidates.png" width="60%"></center>
+
+spring-boot-autoconfigure-4.1.2.jar 中的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 文件内容如下：
+```
+org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration
+org.springframework.boot.autoconfigure.aop.AopAutoConfiguration
+org.springframework.boot.autoconfigure.availability.ApplicationAvailabilityAutoConfiguration
+org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration
+org.springframework.boot.autoconfigure.context.LifecycleAutoConfiguration
+org.springframework.boot.autoconfigure.context.MessageSourceAutoConfiguration
+org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration
+org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration
+org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration
+org.springframework.boot.autoconfigure.ssl.SslAutoConfiguration
+org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration
+org.springframework.boot.autoconfigure.task.TaskSchedulingAutoConfiguration
+```
+
+自动配置必须通过在导入文件中命名的方式加载。确保它们被定义在特定的包空间中，并且永远不会成为组件扫描的目标。此外，自动配置类不应允许组件扫描查找其他组件,应使用特定的 `@Import` 注解来代替。
+
+也就是说自动配置类不应该处于应用程序自动扫描的包路径下，否则就会被重复加载。而前文说的 `ClassPathBeanDefinitionScanner` 通常只会扫描 `@SpringBootApplication` 注解类所在的包路径，不会扫描到自动配置类。也不应该允许自动配置类被扫描到。

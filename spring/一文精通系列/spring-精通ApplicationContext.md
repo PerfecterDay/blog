@@ -176,6 +176,8 @@ protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory b
 ```
 主要是调用 `BeanFactoryPostProcessor.postProcessBeanFactory(beanfactory)` 处理 beanfactory . 主要关注 `PostProcessorRegistrationDelegate` 这个类中的调用细节，其中会有 `BeanDefinitionRegistryPostProcessor` 的处理。
 
+**值得注意的是：并不是简单的调用 `private final List<BeanFactoryPostProcessor> beanFactoryPostProcessors = new ArrayList<>();` 中保存的实例，而是通过 `beanFactory.getBean()` 获取 `BeanFactoryPostProcessor` 类型以及子类型的 bean 并调用。**
+
 ### registerBeanPostProcessors
 主要完成 `BeanPostProcessor` 类型 bean 的生成与注册：
 ```

@@ -149,7 +149,14 @@ System.out.println("Does my environment contain the 'my-property' property? " + 
 ```
 在前面的代码段中，向 Spring 询问当前 `Environment` 是否定义了 `my-property` 属性的高级方法。为了回答这个问题，环境对象会对一组 `PropertySource` 对象进行搜索。 `PropertySource` 是对任何 `key-value` 来源的简单抽象。
 
-Spring 的 `StandardEnvironment` 配置了两个 `PropertySource` 对象，一个代表 JVM 系统属性集（`System.getProperties()`），另一个代表系统环境变量集（`System.getenv()`）。
+Spring 的 `StandardEnvironment` 配置了两个 `PropertySource` 对象，一个代表 JVM 系统属性集（`System.getProperties()` ，通过 `java -Dxxx=xxx` 形式传入），另一个代表系统环境变量集（`System.getenv()`）。
+
+| 类型 | 传递方式 | 获取方式 |
+|---|---|---|
+| JVM 系统属性 | `-Dkey=value` | `System.getProperty()` |
+| JVM 参数 | `-Xmx512m` | JVM 内部使用 |
+| 环境变量 | `export KEY=value` | `System.getenv()` |
+| Java 应用参数 | `--key=value` | `args[]` |
 
 用于web环境的 `StandardServletEnvironment` 中还增加了其他默认属性源，包括 `servlet` 配置、 `servlet` 上下文参数，以及 JNDI 可用时的 `JndiPropertySource` 。
 

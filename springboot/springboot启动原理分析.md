@@ -1,11 +1,41 @@
 # Springboot 启动原理-run方法及扩展点
 {docsify-updated}
 
+实例化了 `SpringApplication` 对象之后，可以调用 `setXXX()` 方法自定义 `SpringApplication` 的一些属性：
+```
+SpringApplication.setApplicationStartup 设置 ApplicationStartup 
+SpringApplication.setBeanNameGenerator 可以设置 BeanNameGenerator
+SpringApplication.setResourceLoader 可以设置 ResourceLoader
+SpringApplication.setAllowCircularReferences 可以设置是否允许循环引用
+SpringApplication.setAllowBeanDefinitionOverriding 可以设置是否允许bean定义覆盖，重复定义相同的bean 名字
+SpringApplication.setLazyInitialization 可以设置是否懒加载，true 时就会注册 LazyInitializationBeanFactoryPostProcessor bean
+SpringApplication.setBanner/setBannerMode 可以设置 Banner 相关
+SpringApplication.setDefaultProperties(Map<String, Object> defaultProperties)/setDefaultProperties(Properties defaultProperties) //设置默认属性
+SpringApplication.setAdditionalProfiles(String... profiles) //设置 profiles 
+SpringApplication.setSources(Set<String> sources) //设置配置源 
+SpringApplication.addInitializers(ApplicationContextInitializer<?>... initializers) //添加 ApplicationContextInitializer
+SpringApplication.addListeners(ApplicationListener<?>... listeners) //添加 ApplicationListener
+SpringApplication.setApplicationStartup(ApplicationStartup applicationStartup) //设置 ApplicationStartup
+```
 
-实例化了 `SpringApplication` 对象之后，紧接着就是调用了 `run()` 方法：
+紧接着就是调用了 `run()` 方法：
 <center><img src="pics/springapplication-run.png" width="70%"></center>
 
-运行到 `refresh(context)` 将会调用 `applicationContext` 的核心 `refresh()` 方法，就是 [spring 的核心启动过程](../core-ioc/spring-ioc-核心原理.md)
+`prepareContext`:
+```
+AOT相关的设置： AotApplicationContextInitializer
+
+调用：ApplicationContextInitializer.initialize 初始化 ConfigurableApplicationContext
+
+beanFactory.registerSingleton("springApplicationArguments", applicationArguments); //注册 ApplicationArguments 
+beanFactory.registerSingleton("springBootBanner", printedBanner); //    注册 Banner
+if (this.properties.isLazyInitialization()) {
+    context.addBeanFactoryPostProcessor(new LazyInitializationBeanFactoryPostProcessor()); //注册 LazyInitializationBeanFactoryPostProcessor
+}
+context.addBeanFactoryPostProcessor(new PropertySourceOrderingBeanFactoryPostProcessor(context)); //注册 PropertySourceOrderingBeanFactoryPostProcessor
+```
+
+运行到 `refresh(context)` 将会调用 `applicationContext` 的核心 `refresh()` 方法，就是 [Spring 一文精通ApplicationContext](/spring/一文精通系列/spring-精通ApplicationContext.md)
 
 ## 扩展点
 

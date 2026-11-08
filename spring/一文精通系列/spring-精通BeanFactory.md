@@ -22,7 +22,8 @@ doGetBean : 首先尝试从三级缓存中获取，获取到直接返回；没�
                 applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName)：调用 BeanPostProcessor.postProcessAfterInitialization(...) 方法
 ```
 
-另外，还有一点需要强调的是，如果直接使用 `BeanFactory` ，要想使用 `BeanPostProcessor` ,  `InstantiationAwareBeanPostProcessor` 这些扩展点，必须手动实例化这些组件实例并且注册到 `BeanFactory` 中才能生效。 `BeanFactoryPostProcessor` 则必须实例化后手动调用处理 `BeanFactory` 才能生效。
+**另外，还有一点需要强调的是，如果直接使用 `BeanFactory` ，要想使用 `BeanPostProcessor` ,  `InstantiationAwareBeanPostProcessor` 这些扩展点，必须手动实例化这些组件实例并且注册到 `BeanFactory` 中才能生效。具体的讲就是添加到 `	private final List<BeanPostProcessor> beanPostProcessors = new BeanPostProcessorCacheAwareList();
+` 这个 `list` 中。 `BeanFactoryPostProcessor` 则必须实例化后手动调用处理 `BeanFactory` 实例才能生效。**
 
 ## BeanFactory
 提供了获取 bean 的接口：

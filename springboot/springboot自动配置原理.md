@@ -99,9 +99,30 @@ Springboot 中的`AutoConfigurationImportSelector`（委托 `ImportCandidates` �
 com.mycorp.libx.autoconfigure.LibXAutoConfiguration
 com.mycorp.libx.autoconfigure.LibXWebAutoConfiguration
 ```
-这些类中往往使用了 `@Conditional` 等注解实现了自定义的自动配置。
+这些类中往往使用了 `@Conditional` 等注解实现了自定义的自动配置。以下是一个简单的 Springboot 项目，导入了81 个自动配置类：
+
+<center><img src="pics/ImportCandidates.png" width="60%"></center>
+
+spring-boot-autoconfigure-4.1.2.jar 中的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 文件内容如下：
+```
+org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration
+org.springframework.boot.autoconfigure.aop.AopAutoConfiguration
+org.springframework.boot.autoconfigure.availability.ApplicationAvailabilityAutoConfiguration
+org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration
+org.springframework.boot.autoconfigure.context.LifecycleAutoConfiguration
+org.springframework.boot.autoconfigure.context.MessageSourceAutoConfiguration
+org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration
+org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration
+org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration
+org.springframework.boot.autoconfigure.ssl.SslAutoConfiguration
+org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration
+org.springframework.boot.autoconfigure.task.TaskSchedulingAutoConfiguration
+```
 
 自动配置必须通过在导入文件中命名的方式加载。确保它们被定义在特定的包空间中，并且永远不会成为组件扫描的目标。此外，自动配置类不应允许组件扫描查找其他组件,应使用特定的 `@Import` 注解来代替。
+
+也就是说自动配置类不应该处于应用程序自动扫描的包路径下，否则就会被重复加载。而前文说的 `ClassPathBeanDefinitionScanner` 通常只会扫描 `@SpringBootApplication` 注解类所在的包路径，不会扫描到自动配置类。也不应该允许自动配置类被扫描到。
+
 
 ## @Configuration 注解
 使用 @Configuration 注解的类，可以在其内定义用 @Bean 注解的方法，方法的返回对象将注入到 Spring bean 容器中 。

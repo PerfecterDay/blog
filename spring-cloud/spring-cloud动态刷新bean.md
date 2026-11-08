@@ -337,3 +337,23 @@ Bean刷新
 ### 总结
 Spring 会为 `@RefreshScope` 标注的bean 生成一个代理对象，调用代理对象的方法时，每次会去会去 `Beanfactory` 中获取 bean 实例， `Beanfactory` 对于不同的 scope 使用不同的 `Scope` 实现类来生成 bean 实例，其中 `RefreshScope` 继承自 `GenericScope` ，`GenericScope` 的 `get` 方法会从 `GenericScope` 中获取 bean 实例，如果存在就返回该实例，如果实例不存在，就会创建一个新的实例对象并且缓存下来，下次再调用该方法时，就直接从缓存中获取。
 当配置刷新时（`RefreshScope.refreshAll()`）, `GenericScope` 中缓存的 bean 就会被清空，下次调用时就会重新创建一个新的实例对象。这时候 `Beanfactory` 会重新执行一遍 bean 实例化的过程，从而刷新最新配置。
+
+
+## 配置的 RefreshScope
+`RefreshAutoConfiguration`
+
+`RefreshScopeBeanDefinitionEnhancer` 和 `ClassPathBeanDefinitionScanner` 都可能让 Bean 进入 `refresh` Scope，但它们处理的是两种不同的场景。
+- `ClassPathBeanDefinitionScanner` ：处理开发者显式使用 `@RefreshScope` 标注的组件。
+- `RefreshScopeBeanDefinitionEnhancer` ：处理没有标注 `@RefreshScope` ，但通过配置指定需要支持刷新的 Bean。
+ 
+后者主要解决一个问题：有些 Bean 来自第三方自动配置，我们无法直接修改它的源码添加 `@RefreshScope` 。
+
+```
+spring:
+  cloud:
+    refresh:
+      refreshable:
+        - com.example.MyDataSource
+      extra-refreshable:
+        - com.example.MyClient
+```
