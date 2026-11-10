@@ -245,6 +245,57 @@ values
 ```
 如果关系r后边没有指出具体的某些列，则默认插入所有列，需要为每列指定值。如果只为指定列赋值了，那么未赋值的列将被赋予空值 null。
 
+假设有个表 acct(acctcode,name,type), profile(acctcode,type)， 我们想插入：
+1. (1,"张三","individual")
+2. (2,"李四","individual")
+3. (3,"王五","joint")
+
+其中 individual/joint 是 profile 表中已经存在的数据:
+```
++----+----------+------------+
+| id | acctcode | tyep       |
++----+----------+------------+
+|  1 | 1        | individual |
+|  2 | 2        | individual |
+|  3 | 3        | joint      |
++----+----------+------------+
+```
+
+那么可以这样写：
+```
+INSERT INTO acct (acctcode, name, type)
+SELECT
+    t.acctcode,
+    t.name,
+    p.type
+FROM (
+    SELECT '1' AS acctcode, '张三' AS name
+    UNION ALL
+    SELECT '2', '李四'
+    UNION ALL
+    SELECT '3', '王五'
+) t
+INNER JOIN profile p ON p.acctcode = t.acctcode;
+```
+
+mysql 8 中可以这样写：
+```
+INSERT INTO acct (acctcode, name, type)
+WITH new_users AS (
+    SELECT '1' AS uid, '张三' AS name
+    UNION ALL
+    SELECT '2', '李四'
+    UNION ALL
+    SELECT '3', '王五'
+)
+SELECT
+    nu.acctcode,
+    nu.name,
+    p.type
+FROM new_users nu
+JOIN profile p ON nu.acctcode = ut.acctcode;
+```
+
 ## SQL 更新
 ```
 update r
