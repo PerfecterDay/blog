@@ -282,7 +282,7 @@ mysql 8 中可以这样写：
 ```
 INSERT INTO acct (acctcode, name, type)
 WITH new_users AS (
-    SELECT '1' AS uid, '张三' AS name
+    SELECT '1' AS acctcode, '张三' AS name
     UNION ALL
     SELECT '2', '李四'
     UNION ALL
@@ -293,7 +293,7 @@ SELECT
     nu.name,
     p.type
 FROM new_users nu
-JOIN profile p ON nu.acctcode = ut.acctcode;
+JOIN profile p ON nu.acctcode = p.acctcode;
 ```
 
 ## SQL 更新
