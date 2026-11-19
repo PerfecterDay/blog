@@ -1,3 +1,22 @@
+# 概念入门
+{docsify-updated}
+
+## agent
+Agent 最终调用大模型 API，本质上还是一次普通的 LLM API 请求。
+
+但与直接调用 Chat Completion 不同的是：Agent 会在多次 API 调用之间维护对话状态、收集上下文、调用工具，并把工具执行结果再次提交给大模型。
+
+所以，一个 Agent 解决问题，通常不是一次 API 调用，而是一个循环：
+1. 收到用户任务。
+2. 组织 Prompt 和 Context。
+3. 调用 LLM。
+4. LLM 决定直接回答，还是调用工具。
+5. Agent 执行工具。
+6. 把工具结果追加到上下文。
+7. 再次调用 LLM。
+8. 重复以上过程，直到任务完成。
+
+
 ```
 你输入一句话（Prompt）        ←（被切成 tokens）
         ↓
@@ -62,17 +81,50 @@ System Prompt + User Prompt
 Prompt Engineering 解决的是如何正确地告诉 AI 做什么；Context Engineering 解决的是如何让 AI 知道完成任务所需要的信息；Agent Engineering 则解决的是如何让 AI 自主完成整个任务闭环。
 
 
-## agent
-Agent 最终调用大模型 API，本质上还是一次普通的 LLM API 请求。
+## 术语解释
+Prompt：告诉 Agent 当前要做什么任务。
+Rules：规定 Agent 必须遵守什么。
+Guidelines：告诉 Agent 做事时应该遵循什么原则、风格和建议, 遇到问题应该优先如何思考
+Skills：教 Agent 在特定任务中如何执行一套具体流程。
+Context：给 Agent 提供完成任务所需的信息。
+MCP:	提供连接：可以使用哪些外部工具和数据
 
-但与直接调用 Chat Completion 不同的是：Agent 会在多次 API 调用之间维护对话状态、收集上下文、调用工具，并把工具执行结果再次提交给大模型。
+### prompt
+```
+开发一个用户登录接口。
 
-所以，一个 Agent 解决问题，通常不是一次 API 调用，而是一个循环：
-1. 收到用户任务。
-2. 组织 Prompt 和 Context。
-3. 调用 LLM。
-4. LLM 决定直接回答，还是调用工具。
-5. Agent 执行工具。
-6. 把工具结果追加到上下文。
-7. 再次调用 LLM。
-8. 重复以上过程，直到任务完成。
+支持账号密码登录。
+
+要求：
+
+- 使用现有用户体系。
+- 支持账号锁定检查。
+- 登录成功返回 Token。
+- 完成后运行相关测试。
+```
+
+### rules
+```
+# Java Development Rules
+
+- 使用 Java 21。
+- 使用 Spring Boot 开发。
+- Controller 不允许直接访问数据库。
+- 数据库访问必须通过 Repository 层。
+- 不允许在业务代码中吞掉异常。
+- 修改代码后必须运行相关测试。
+- 不允许未经授权修改公共 API。
+```
+
+### Guidelines
+```
+# Development Guidelines
+
+- 优先选择简单、易维护的实现。
+- 尽量复用现有代码，避免重复实现。
+- 修改代码时优先保持与当前项目风格一致。
+- 避免引入不必要的依赖。
+- 对复杂问题先分析原因，再进行修改。
+- 如果存在多个方案，优先选择可维护性更高的方案。
+- 不要为了局部优化而增加系统整体复杂度。
+```
