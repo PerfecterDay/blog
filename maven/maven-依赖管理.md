@@ -43,3 +43,7 @@ Spring Boot 本身通过“依赖管理”机制简化了依赖版本的控制�
 ```
 
 spring-cloud 版本与 springboot 的[兼容性查询](https://spring.io/projects/spring-cloud#overview).
+
+0. `<repositories>` —— 声明依赖从哪里下载
+1. `Mirror` 决定某个 Repository 的请求是否被替换，以及替换到哪里。
+2. `mirrorOf` 决定匹配范围，匹配成功后 Maven 使用 Mirror 的 URL，而不是原始 URL。使用的是 `Repository` 的 `id` 进行匹配的。

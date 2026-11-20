@@ -57,3 +57,6 @@ metadata:
   version: "1.0"
 ---
 ```
+
+https://github.com/github/awesome-copilot  
+https://awesome-copilot.github.com/
