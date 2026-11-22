@@ -1,3 +1,5 @@
+# Augment Code
+{docsify-updated}
 
 ## 安装
 `npm install -g @augmentcode/auggie@prerelease`
@@ -35,6 +37,7 @@ index 目录：
 4. `~/.augment/settings.json` 用户级的配置文件
 
 ## subagents
+
 子代理是可自定义的代理，您可以对其进行配置以执行特定任务，例如代码审查或项目初始化。每个子代理都拥有自己的工具和功能，您可以将其用于处理特定任务。您可以使用本地子代理，也可以通过将配置添加到代码库中与团队共享这些子代理。
 + 子代理拥有独立于主代理的上下文窗口
 + 子代理具有自定义提示，用于向代理下达指令
@@ -45,8 +48,8 @@ Auggie 包含三个内置代理：`general-purpose` 、 `explore` 和 `plan` 。
 
 可以使用 `/agents` 命令创建代理，也可以使用配置文件创建。
 
-
 可以通过创建配置文件手动创建子代理。该配置文件应为 Markdown 文件，并存储在 `~/.augment/agents/`（仅限用户）或 `./.augment/agents/`（共享）目录下。如：
+
 ```
 ---
 name: code-review

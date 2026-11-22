@@ -1,6 +1,31 @@
 #  Springboot 自动配置原理
 {docsify-updated}
 
+
+重要答案就是一个标准 springboot 程序上的注解： `@SpringBootApplication` ，它会导入几个其它注解：
++ `@EnableAutoConfiguration` 会导入 `AutoConfigurationImportSelector` 从而会导入自动配置类
++ `@ComponentScan` 会扫描 `@SpringBootApplication` 所在类的包路径，以及子包路径下的所有组件
++ `@SpringBootConfiguration` 会将 `@SpringBootApplication` 所在类注册为一个配置类
+
+其中自动配置关系最大的是 `@EnableAutoConfiguration` 注解：
+```
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@AutoConfigurationPackage
+@Import(AutoConfigurationImportSelector.class)
+public @interface EnableAutoConfiguration {...}
+
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@Import(AutoConfigurationPackages.Registrar.class)
+public @interface AutoConfigurationPackage {...}
+```
+
 大体的步骤是：
 1. springboot 官方提供了很多有自动配置功能的配置类。这些配置类如何被扫描加载呢？
 2. `AutoConfigurationImportSelector` 这个类会扫描特定目录下的文件来加载一些配置类或者接口实现类，springboot官方的自动配置类就在这些扫描目录下
