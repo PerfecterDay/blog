@@ -790,6 +790,48 @@ final class HttpServiceMethod {
 				ExchangeResponseFunction.create(adapter, method, serviceType));
 	}
 
+	public static ResponseFunction create(HttpExchangeAdapter client, Method method) {
+		if (KotlinDetector.isSuspendingFunction(method)) {
+			throw new IllegalStateException(
+					"Kotlin Coroutines are only supported with reactive implementations");
+		}
+
+		MethodParameter param = new MethodParameter(method, -1).nestedIfOptional();
+		Class<?> paramType = param.getNestedParameterType();
+
+		Function<HttpRequestValues, @Nullable Object> responseFunction;
+		if (ClassUtils.isVoidType(paramType)) {
+			responseFunction = requestValues -> {
+				client.exchange(requestValues);
+				return null;
+			};
+		}
+		else if (paramType.equals(HttpHeaders.class)) {
+			responseFunction = request -> asOptionalIfNecessary(client.exchangeForHeaders(request), param);
+		}
+		else if (paramType.equals(ResponseEntity.class)) {
+			MethodParameter bodyParam = param.nested();
+			if (bodyParam.getNestedParameterType().equals(Void.class)) {
+				responseFunction = request ->
+						asOptionalIfNecessary(client.exchangeForBodilessEntity(request), param);
+			}
+			else {
+				ParameterizedTypeReference<?> bodyTypeRef =
+						ParameterizedTypeReference.forType(bodyParam.getNestedGenericParameterType());
+				responseFunction = request ->
+						asOptionalIfNecessary(client.exchangeForEntity(request, bodyTypeRef), param);
+			}
+		}
+		else {
+			ParameterizedTypeReference<?> bodyTypeRef =
+					ParameterizedTypeReference.forType(param.getNestedGenericParameterType());
+			responseFunction = request ->
+					asOptionalIfNecessary(client.exchangeForBody(request, bodyTypeRef), param);
+		}
+
+		return new ExchangeResponseFunction(responseFunction);
+	}
+
 	public @Nullable Object invoke(@Nullable Object[] arguments) {
 		HttpRequestValues.Builder requestValues = this.requestValuesInitializer.initializeRequestValuesBuilder();
 		applyArguments(requestValues, arguments);
@@ -799,7 +841,7 @@ final class HttpServiceMethod {
 }	
 ```
 
-`HttpExchangeAdapter` 正是我们在配置 `HttpServiceProxyFactory` 时创建的：
+`HttpServiceMethod` 的构造器中会根据方法的信息创建 `ExchangeResponseFunction` 的实例， 最终调用 `HttpExchangeAdapter` 不同的方法实现远程调用， `HttpExchangeAdapter` 正是我们在配置 `HttpServiceProxyFactory` 时创建的：
 ```
 HttpServiceProxyFactory httpServiceProxyFactory
                 = HttpServiceProxyFactory.builderFor(RestClientAdapter.create(restClient))
@@ -811,7 +853,7 @@ HttpServiceProxyFactory httpServiceProxyFactory
 + `WebClientAdapter`
 + `RestTemplateAdapter`
 
-这里使用了适配器模式， 比如 `RestClientAdapter` 实现了 `HttpExchangeAdapter` 接口，但是 `RestClient` 没有实现任何接口。`RestClientAdapter` 底层就是将 `RestClient` 的功能适配成 `HttpExchangeAdapter` 需要的形式。
+这里使用了适配器模式， 比如 `RestClientAdapter` 实现了 `HttpExchangeAdapter` 接口，但是 `RestClient` 没有实现任何接口。`RestClientAdapter` 底层就是将 `RestClient` 的功能适配成 `HttpExchangeAdapter` 需要的形式。最终， `HttpExchangeAdapter` 会在
 
 `HttpServiceArgumentResolver/HttpRequestValues.Processor` 等能够处理请求请求对象的类也是在 `HttpServiceMethod` 中发挥作用的。
 
