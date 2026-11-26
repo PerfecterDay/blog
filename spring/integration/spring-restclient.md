@@ -731,7 +731,7 @@ private <S> S getProxy(Class<S> serviceType, List<HttpServiceMethod> httpService
 }
 ```
 
-可以看出就是创建了 `HttpServiceMethod` 的实例，并且用其作为代理增强 `HttpServiceMethodInterceptor` 的初始化。然后，使用 `ProxyFactory` 生成了代理对象。如果配置了 `ProxyFactoryCustomizer` 还会调用其 `customize` 方法。
+可以看出，首先对接口中的每个方法都根据方法的信息创建了 `HttpServiceMethod` 的实例对象，然后将 `List<HttpServiceMethod>` 用其作为代理增强 `HttpServiceMethodInterceptor` 的初始化参数。然后，使用 `ProxyFactory` 生成了代理对象。如果配置了 `ProxyFactoryCustomizer` 还会调用其 `customize` 方法。
 
 `HttpServiceMethodInterceptor` 的 `invoke` 方法如下：
 ```
@@ -754,7 +754,7 @@ public @Nullable Object invoke(MethodInvocation invocation) throws Throwable {
 }
 ```
 
-可以看出，最后还是委托 `HttpServiceMethod` 的 `invoke` 方法实现功能。
+可以看出，最后还是委托 `HttpServiceMethod` 的 `invoke` 方法最终实现调用功能。
 ```
 final class HttpServiceMethod {
 
@@ -788,6 +788,13 @@ final class HttpServiceMethod {
 		this.responseFunction = (isReactorAdapter ?
 				ReactorExchangeResponseFunction.create((ReactorHttpExchangeAdapter) adapter, method, serviceType) :
 				ExchangeResponseFunction.create(adapter, method, serviceType));
+	}
+
+	public @Nullable Object invoke(@Nullable Object[] arguments) {
+		HttpRequestValues.Builder requestValues = this.requestValuesInitializer.initializeRequestValuesBuilder();
+		applyArguments(requestValues, arguments);
+		this.requestValuesProcessor.process(this.method, this.parameters, arguments, requestValues);
+		return this.responseFunction.execute(requestValues.build());
 	}
 
 	public static ResponseFunction create(HttpExchangeAdapter client, Method method) {
@@ -831,17 +838,10 @@ final class HttpServiceMethod {
 
 		return new ExchangeResponseFunction(responseFunction);
 	}
-
-	public @Nullable Object invoke(@Nullable Object[] arguments) {
-		HttpRequestValues.Builder requestValues = this.requestValuesInitializer.initializeRequestValuesBuilder();
-		applyArguments(requestValues, arguments);
-		this.requestValuesProcessor.process(this.method, this.parameters, arguments, requestValues);
-		return this.responseFunction.execute(requestValues.build());
-	}
 }	
 ```
 
-`HttpServiceMethod` 的构造器中会根据方法的信息创建 `ExchangeResponseFunction` 的实例， 最终调用 `HttpExchangeAdapter` 不同的方法实现远程调用， `HttpExchangeAdapter` 正是我们在配置 `HttpServiceProxyFactory` 时创建的：
+`HttpServiceMethod` 的构造器中会根据每个方法的信息创建 `ExchangeResponseFunction` 的实例， 最终调用 `HttpExchangeAdapter` 不同的方法实现远程调用， `HttpExchangeAdapter` 正是我们在配置 `HttpServiceProxyFactory` 时创建的：
 ```
 HttpServiceProxyFactory httpServiceProxyFactory
                 = HttpServiceProxyFactory.builderFor(RestClientAdapter.create(restClient))
